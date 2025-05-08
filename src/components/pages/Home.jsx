@@ -69,13 +69,11 @@ const Home = () => {
     const authors = {};
 
     for (const post of postList) {
-      // 댓글 수 계산
       const commentSnap = await getDocs(
         query(collection(db, "comments"), where("postId", "==", post.id))
       );
       counts[post.id] = commentSnap.size;
 
-      // 옵션별 퍼센트 계산
       if (Array.isArray(post.options)) {
         const total = post.options.reduce((sum, o) => sum + (o.votes || 0), 0);
         percents[post.id] = post.options.reduce((obj, o) => {
@@ -85,7 +83,6 @@ const Home = () => {
         }, {});
       }
 
-      // 작성자 닉네임 가져오기
       if (post.authorUid) {
         const userSnap = await getDoc(doc(db, "users", post.authorUid));
         authors[post.id] = userSnap.exists() ? userSnap.data().nickname || "익명" : "익명";
@@ -96,7 +93,6 @@ const Home = () => {
     setVotePercents((prev) => ({ ...prev, ...percents }));
     setAuthorData((prev) => ({ ...prev, ...authors }));
   };
-
   const filterPopularPosts = (days) => {
     const cutoff = new Date(Date.now() - days * 86400000);
     return posts
@@ -179,108 +175,99 @@ const Home = () => {
         ))}
       </div>
     );
-
-  return (
-    <div className="min-h-screen bg-gray-100">
-      <Header
-        categories={[]}
-        selectedCategory={selectedCategory}
-        setSelectedCategory={setSelectedCategory}
-        searchTerm={searchTerm}
-        setSearchTerm={setSearchTerm}
-      />
-
-      <div className="w-full flex justify-start px-4 pt-4">
-        <div className="flex gap-32 w-full max-w-6xl">
-          {/* 사이드바 */}
-          <div className="w-48 shrink-0 space-y-4">
-            <div className="bg-white p-3 rounded shadow-sm">
-              <h3 className="text-sm font-bold mb-2 text-blue-500 flex items-center gap-1">
-                📅 주간 인기글
-              </h3>
-              <ul className="text-xs space-y-1">
-                {weeklyPopularPosts.map((p) => (
-                  <li key={p.id}>
-                    {p.thumbnail
-                      ? (
+    return (
+      <div className="min-h-screen bg-gray-100">
+        <Header
+          categories={[]}
+          selectedCategory={selectedCategory}
+          setSelectedCategory={setSelectedCategory}
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+        />
+  
+        <div className="w-full flex justify-start px-4 pt-4">
+          <div className="flex flex-col lg:flex-row gap-4 w-full max-w-6xl">
+            
+            {/* 사이드바 */}
+            <div className="w-full lg:w-1/4 space-y-4">
+              <div className="bg-white p-3 rounded shadow-sm">
+                <h3 className="text-sm font-bold mb-2 text-blue-500 flex items-center gap-1">
+                  📅 주간 인기글
+                </h3>
+                <ul className="text-xs space-y-1">
+                  {weeklyPopularPosts.map((p) => (
+                    <li key={p.id}>
+                      {p.thumbnail ? (
                         <img
                           src={p.thumbnail}
                           alt=""
                           className="w-full h-20 object-cover rounded mb-1"
                         />
-                      )
-                      : renderMainImages(p)
-                    }
-                    <Link to={`/post/${p.id}`} className="truncate block">
-                      {p.title} [{commentCounts[p.id] || 0}]
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div className="bg-white p-3 rounded shadow-sm">
-              <h3 className="text-sm font-bold mb-2 text-purple-500 flex items-center gap-1">
-                🗓 월간 인기글
-              </h3>
-              <ul className="text-xs space-y-1">
-                {monthlyPopularPosts.map((p) => (
-                  <li key={p.id}>
-                    {p.thumbnail
-                      ? (
+                      ) : renderMainImages(p)}
+                      <Link to={`/post/${p.id}`} className="truncate block">
+                        {p.title} [{commentCounts[p.id] || 0}]
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div className="bg-white p-3 rounded shadow-sm">
+                <h3 className="text-sm font-bold mb-2 text-purple-500 flex items-center gap-1">
+                  🗓 월간 인기글
+                </h3>
+                <ul className="text-xs space-y-1">
+                  {monthlyPopularPosts.map((p) => (
+                    <li key={p.id}>
+                      {p.thumbnail ? (
                         <img
                           src={p.thumbnail}
                           alt=""
                           className="w-full h-20 object-cover rounded mb-1"
                         />
-                      )
-                      : renderMainImages(p)
-                    }
-                    <Link to={`/post/${p.id}`} className="truncate block">
-                      {p.title} [{commentCounts[p.id] || 0}]
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-
-          {/* 메인 컨텐츠 */}
-          <div className="flex-1">
-            {/* 인기글 */}
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="text-lg font-bold text-naver flex items-center gap-1">
-                🔥 인기글
-              </h2>
-              <div className="flex items-center gap-2">
-                {["일간", "주간", "월간"].map((tab) => (
-                  <button
-                    key={tab}
-                    onClick={() => setActiveHotTab(tab)}
-                    className={`px-2 py-1 rounded text-sm ${
-                      activeHotTab === tab
-                        ? "bg-naver text-white font-semibold"
-                        : "bg-white text-gray-600 border"
-                    }`}
-                  >
-                    {tab}
-                  </button>
-                ))}
+                      ) : renderMainImages(p)}
+                      <Link to={`/post/${p.id}`} className="truncate block">
+                        {p.title} [{commentCounts[p.id] || 0}]
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
               </div>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+  
+            {/* 본문 */}
+            <div className="w-full lg:w-3/4">
+              {/* 인기글 섹션 */}
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="text-lg font-bold text-naver flex items-center gap-1">
+                  🔥 인기글
+                </h2>
+                <div className="flex items-center gap-2">
+                  {["일간", "주간", "월간"].map((tab) => (
+                    <button
+                      key={tab}
+                      onClick={() => setActiveHotTab(tab)}
+                      className={`px-2 py-1 rounded text-sm ${
+                        activeHotTab === tab
+                          ? "bg-naver text-white font-semibold"
+                          : "bg-white text-gray-600 border"
+                      }`}
+                    >
+                      {tab}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
               {filteredPopular.map((p) => (
                 <Link to={`/post/${p.id}`} key={p.id}>
                   <div className="bg-green-50 p-3 rounded shadow hover:bg-green-100 transition flex flex-col justify-between min-h-[120px]">
-                    {p.thumbnail
-                      ? (
-                        <img
-                          src={p.thumbnail}
-                          alt=""
-                          className="w-full h-20 object-cover rounded mb-1"
-                        />
-                      )
-                      : renderMainImages(p)
-                    }
+                    {p.thumbnail ? (
+                      <img
+                        src={p.thumbnail}
+                        alt=""
+                        className="w-full h-20 object-cover rounded mb-1"
+                      />
+                    ) : renderMainImages(p)}
                     <div>
                       <div className="text-sm font-bold truncate mb-1">
                         {p.title}
@@ -332,16 +319,13 @@ const Home = () => {
               {sortedPosts.map((p) => (
                 <Link to={`/post/${p.id}`} key={p.id}>
                   <div className="bg-white p-3 rounded shadow-sm hover:bg-gray-50 transition flex flex-col justify-between min-h-[120px]">
-                    {p.thumbnail
-                      ? (
-                        <img
-                          src={p.thumbnail}
-                          alt=""
-                          className="w-full h-20 object-cover rounded mb-1"
-                        />
-                      )
-                      : renderMainImages(p)
-                    }
+                    {p.thumbnail ? (
+                      <img
+                        src={p.thumbnail}
+                        alt=""
+                        className="w-full h-20 object-cover rounded mb-1"
+                      />
+                    ) : renderMainImages(p)}
                     <div>
                       <div className="font-medium text-sm truncate mb-1">
                         {p.title}
@@ -378,3 +362,4 @@ const Home = () => {
 };
 
 export default Home;
+  

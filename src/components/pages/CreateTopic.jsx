@@ -1,3 +1,4 @@
+// ✅ 1/2: CreateTopic.jsx 상단 ~ form 중간까지
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { db, auth } from "../../firebase";
 import { collection, addDoc } from "firebase/firestore";
@@ -22,7 +23,6 @@ const CreateTopic = () => {
   const [uploadProgress, setUploadProgress] = useState(0);
   const dragData = useRef({ index: null, startX: 0, startY: 0, targetType: null });
 
-  // 이미지 붙여넣기
   useEffect(() => {
     const handlePaste = (e) => {
       const items = e.clipboardData.items;
@@ -106,255 +106,252 @@ const CreateTopic = () => {
   };
 
   const handleAddOption = () => {
-    if (options.length < 2) {
+    if (options.length < 6) {
       setOptions(prev => [...prev, { text: "", file: null, previewUrl: null, position: { x: 50, y: 50 } }]);
     } else {
-      alert("선택지는 최대 2개까지 가능합니다.");
+      alert("선택지는 최대 6개까지 가능합니다.");
     }
   };
+// ✅ 2/2: form 나머지 및 제출 로직
+const handleOptionTextChange = (i, value) => {
+  setOptions(prev => {
+    const updated = [...prev];
+    updated[i].text = value;
+    return updated;
+  });
+};
 
-  const handleOptionTextChange = (i, value) => {
-    setOptions(prev => {
-      const updated = [...prev];
-      updated[i].text = value;
-      return updated;
+const handleOptionImageChange = (i, file) => {
+  if (!file) return;
+  const previewUrl = URL.createObjectURL(file);
+  setOptions(prev => {
+    const updated = [...prev];
+    updated[i] = { ...updated[i], file, previewUrl, position: { x: 50, y: 50 } };
+    return updated;
+  });
+};
+
+const handleMainImageChange = (e) => {
+  const files = Array.from(e.target.files);
+  const uniqueFiles = files.filter(file => !mainImages.some(f => f.name === file.name));
+  const selected = uniqueFiles.slice(0, MAX_MAIN_IMAGES - mainImages.length);
+  setMainImages(prev => [...prev, ...selected]);
+  setMainPreview(prev => [...prev, ...selected.map(f => URL.createObjectURL(f))]);
+  setImagePositions(prev => [...prev, ...selected.map(() => ({ x: 50, y: 50 }))]);
+};
+
+const handleThumbnailChange = (e) => {
+  const file = e.target.files[0];
+  if (file) {
+    setThumbnail(file);
+    setThumbnailPreview(URL.createObjectURL(file));
+  }
+};
+
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  if (!title.trim() || !content.trim() || options.filter(opt => opt.text.trim()).length < 2) {
+    alert("제목, 내용, 선택지 2개 이상을 입력해주세요.");
+    return;
+  }
+
+  try {
+    setIsUploading(true);
+    setUploadProgress(0);
+    const user = auth.currentUser;
+    const authorUid = user ? user.uid : "anonymous";
+
+    let progress = 0;
+    const totalUploads = (thumbnail ? 1 : 0) + mainImages.length + options.filter(o => o.file).length;
+    const step = totalUploads > 0 ? 100 / totalUploads : 100;
+
+    const uploadAndTrack = async (file) => {
+      const url = await uploadImageAndGetURL(file, authorUid);
+      progress += step;
+      setUploadProgress(Math.min(100, Math.round(progress)));
+      return url;
+    };
+
+    const uploadedThumbnail = thumbnail ? await uploadAndTrack(thumbnail) : "";
+    const uploadedMainImages = await Promise.all(
+      mainImages.map(file => uploadAndTrack(file))
+    );
+    const uploadedOptionImages = await Promise.all(
+      options.map(opt => opt.file ? uploadAndTrack(opt.file) : Promise.resolve(""))
+    );
+
+    const filteredOptionData = options.map((opt, idx) => ({
+      text: opt.text,
+      label: opt.text || `옵션 ${idx + 1}`,
+      imageUrl: uploadedOptionImages[idx],
+      imagePosition: uploadedOptionImages[idx] ? opt.position : null,
+      votes: 0
+    }));
+
+    await addDoc(collection(db, "posts"), {
+      title,
+      content,
+      createdAt: new Date(),
+      views: 0,
+      reports: 0,
+      isFixed: false,
+      authorUid,
+      thumbnail: uploadedThumbnail,
+      imageUrls: uploadedMainImages,
+      imagePositions: imagePositions.slice(0, uploadedMainImages.length),
+      options: filteredOptionData
     });
-  };
 
-  const handleOptionImageChange = (i, file) => {
-    if (!file) return;
-    const previewUrl = URL.createObjectURL(file);
-    setOptions(prev => {
-      const updated = [...prev];
-      updated[i] = { ...updated[i], file, previewUrl, position: { x: 50, y: 50 } };
-      return updated;
-    });
-  };
+    alert("주제가 등록되었습니다!");
+    window.location.href = "/";
+  } catch (error) {
+    console.error("업로드 중 오류 발생:", error);
+    alert("업로드 중 오류가 발생했습니다.");
+  } finally {
+    setIsUploading(false);
+  }
+};
 
-  const handleMainImageChange = (e) => {
-    const files = Array.from(e.target.files);
-    const uniqueFiles = files.filter(file => !mainImages.some(f => f.name === file.name));
-    const selected = uniqueFiles.slice(0, MAX_MAIN_IMAGES - mainImages.length);
-    setMainImages(prev => [...prev, ...selected]);
-    setMainPreview(prev => [...prev, ...selected.map(f => URL.createObjectURL(f))]);
-    setImagePositions(prev => [...prev, ...selected.map(() => ({ x: 50, y: 50 }))]);  
-  };
-
-  const handleThumbnailChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setThumbnail(file);
-      setThumbnailPreview(URL.createObjectURL(file));
-    }
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!title.trim() || !content.trim() || options.filter(opt => opt.text.trim()).length < 2) {
-      alert("제목, 내용, 선택지 2개 이상을 입력해주세요.");
-      return;
-    }
-
-    try {
-      setIsUploading(true);
-      setUploadProgress(0);
-      const user = auth.currentUser;
-      const authorUid = user ? user.uid : "anonymous";
-
-      let progress = 0;
-      const totalUploads = (thumbnail ? 1 : 0) + mainImages.length + options.filter(o => o.file).length;
-      const step = totalUploads > 0 ? 100 / totalUploads : 100;
-
-      const uploadAndTrack = async (file) => {
-        const url = await uploadImageAndGetURL(file, authorUid);
-        progress += step;
-        setUploadProgress(Math.min(100, Math.round(progress)));
-        return url;
-      };
-
-      const uploadedThumbnail = thumbnail ? await uploadAndTrack(thumbnail) : "";
-      const uploadedMainImages = await Promise.all(
-        mainImages.map(file => uploadAndTrack(file))
-      );
-      const uploadedOptionImages = await Promise.all(
-        options.map(opt => opt.file ? uploadAndTrack(opt.file) : Promise.resolve(""))
-      );
-
-      const filteredOptionData = options.map((opt, idx) => ({
-        text: opt.text,
-        label: opt.text || `옵션 ${idx + 1}`,
-        imageUrl: uploadedOptionImages[idx],
-        imagePosition: uploadedOptionImages[idx] ? opt.position : null,
-        votes: 0
-      }));
-
-      await addDoc(collection(db, "posts"), {
-        title,
-        content,
-        createdAt: new Date(),
-        views: 0,
-        reports: 0,
-        isFixed: false,
-        authorUid,
-        thumbnail: uploadedThumbnail,
-        imageUrls: uploadedMainImages,
-        imagePositions: imagePositions.slice(0, uploadedMainImages.length),
-        options: filteredOptionData
-      });
-
-      alert("주제가 등록되었습니다!");
-      window.location.href = "/";
-    } catch (error) {
-      console.error("업로드 중 오류 발생:", error);
-      alert("업로드 중 오류가 발생했습니다.");
-    } finally {
-      setIsUploading(false);
-    }
-  };
-
-  return (
-    <div
-      className="min-h-screen bg-gray-100 flex flex-col items-center py-10 px-4 space-y-6"
-      onDrop={handleDrop}
-      onDragOver={e => e.preventDefault()}
-    >
-      <form onSubmit={handleSubmit} className="bg-white p-8 rounded shadow w-full max-w-md space-y-4 relative">
-        {isUploading && (
-          <div className="absolute top-0 left-0 w-full p-4 bg-white bg-opacity-75">
-            <div className="w-full bg-gray-200 rounded-full h-3">
-              <div
-                className="h-3 rounded-full transition-all"
-                style={{ width: `${uploadProgress}%` }}
-              />
-            </div>
-            <p className="text-center text-sm mt-1">{uploadProgress}% 업로드 중...</p>
+return (
+  <div
+    className="min-h-screen bg-gray-100 flex flex-col items-center py-10 px-4 space-y-6"
+    onDrop={handleDrop}
+    onDragOver={e => e.preventDefault()}
+  >
+    <form onSubmit={handleSubmit} className="bg-white p-8 rounded shadow w-full max-w-md space-y-4 relative">
+      {isUploading && (
+        <div className="absolute top-0 left-0 w-full p-4 bg-white bg-opacity-75">
+          <div className="w-full bg-gray-200 rounded-full h-3">
+            <div
+              className="h-3 rounded-full transition-all bg-blue-500"
+              style={{ width: `${uploadProgress}%` }}
+            />
           </div>
-        )}
-
-        <h2 className="text-xl font-bold text-center">📝 주제 만들기</h2>
-
-        <input
-          type="text"
-          placeholder="제목을 입력하세요"
-          value={title}
-          onChange={e => setTitle(e.target.value)}
-          className="w-full border p-2 rounded"
-        />
-
-        <textarea
-          placeholder="본문 내용을 입력하세요"
-          value={content}
-          onChange={e => setContent(e.target.value)}
-          rows={4}
-          className="w-full border p-2 rounded"
-        />
-
-        {/* 썸네일 업로드 */}
-        <label className="text-sm font-semibold">🌟 썸네일 이미지 업로드</label>
-        <input
-          type="file"
-          accept="image/*"
-          onChange={handleThumbnailChange}
-          className="w-full border p-2 rounded"
-        />
-        {thumbnailPreview && (
-          <div className="w-full h-32 bg-gray-100 rounded overflow-hidden">
-            <img src={thumbnailPreview} alt="썸네일 미리보기" className="w-full h-full object-cover" />
-          </div>
-        )}
-
-        {/* 본문 이미지 업로드 */}
-        <label className="text-sm font-semibold">📷 본문 이미지 업로드 (최대 {MAX_MAIN_IMAGES}개)</label>
-        <input
-          type="file"
-          multiple
-          accept="image/*"
-          onChange={handleMainImageChange}
-          className="w-full border p-2 rounded"
-        />
-
-        <div className="grid grid-cols-2 gap-2">
-          {mainPreview.map((url, i) => (
-            <div key={i} className="relative group overflow-hidden w-full h-32 bg-gray-100 rounded">
-              <img
-                src={url}
-                draggable={false}
-                onMouseDown={e => handleImageMouseDown(e, i, "main")}
-                style={{
-                  position: "absolute",
-                  top: `${50 - (imagePositions[i]?.y || 50)}%`,
-                  left: `${50 - (imagePositions[i]?.x || 50)}%`,
-                  width: "100%",
-                  height: "100%",
-                  objectFit: "cover",
-                  cursor: "grab"
-                }}
-                alt={`main-${i}`}
-              />
-            </div>
-          ))}
+          <p className="text-center text-sm mt-1">{uploadProgress}% 업로드 중...</p>
         </div>
+      )}
 
-        {/* 선택지 영역 */}
-        {options.map((opt, idx) => (
-          <div key={idx} className="space-y-2">
-            <label className="text-sm font-semibold">🎯 선택지 {idx + 1}</label>
-            <input
-              type="text"
-              placeholder={`선택지 ${idx + 1}`}
-              value={opt.text}
-              onChange={e => handleOptionTextChange(idx, e.target.value)}
-              className="w-full border p-2 rounded"
+      <h2 className="text-xl font-bold text-center">📝 주제 만들기</h2>
+
+      <input
+        type="text"
+        placeholder="제목을 입력하세요"
+        value={title}
+        onChange={e => setTitle(e.target.value)}
+        className="w-full border p-2 rounded"
+      />
+
+      <textarea
+        placeholder="본문 내용을 입력하세요"
+        value={content}
+        onChange={e => setContent(e.target.value)}
+        rows={4}
+        className="w-full border p-2 rounded"
+      />
+
+      <label className="text-sm font-semibold">🌟 썸네일 이미지 업로드</label>
+      <input
+        type="file"
+        accept="image/*"
+        onChange={handleThumbnailChange}
+        className="w-full border p-2 rounded"
+      />
+      {thumbnailPreview && (
+        <div className="w-full h-32 bg-gray-100 rounded overflow-hidden">
+          <img src={thumbnailPreview} alt="썸네일 미리보기" className="w-full h-full object-cover" />
+        </div>
+      )}
+
+      <label className="text-sm font-semibold">📷 본문 이미지 업로드 (최대 {MAX_MAIN_IMAGES}개)</label>
+      <input
+        type="file"
+        multiple
+        accept="image/*"
+        onChange={handleMainImageChange}
+        className="w-full border p-2 rounded"
+      />
+
+      <div className="grid grid-cols-2 gap-2">
+        {mainPreview.map((url, i) => (
+          <div key={i} className="relative group overflow-hidden w-full h-32 bg-gray-100 rounded">
+            <img
+              src={url}
+              draggable={false}
+              onMouseDown={e => handleImageMouseDown(e, i, "main")}
+              style={{
+                position: "absolute",
+                top: `${50 - (imagePositions[i]?.y || 50)}%`,
+                left: `${50 - (imagePositions[i]?.x || 50)}%`,
+                width: "100%",
+                height: "100%",
+                objectFit: "cover",
+                cursor: "grab"
+              }}
+              alt={`main-${i}`}
             />
-            <input
-              type="file"
-              accept="image/*"
-              onChange={e => handleOptionImageChange(idx, e.target.files[0])}
-              className="w-full border p-2 rounded"
-            />
-            {opt.previewUrl && (
-              <div className="relative group overflow-hidden w-full h-32 bg-gray-100 rounded">
-                <img
-                  src={opt.previewUrl}
-                  draggable={false}
-                  onMouseDown={e => handleImageMouseDown(e, idx, "option")}
-                  style={{
-                    position: "absolute",
-                    top: `${50 - opt.position.y}%`,
-                    left: `${50 - opt.position.x}%`,
-                    height: "100%",
-                    cursor: "grab"
-                  }}
-                  alt={`opt-${idx}`}
-                />
-              </div>
-            )}
           </div>
         ))}
+      </div>
 
+      {options.map((opt, idx) => (
+        <div key={idx} className="space-y-2">
+          <label className="text-sm font-semibold">🎯 선택지 {idx + 1}</label>
+          <input
+            type="text"
+            placeholder={`선택지 ${idx + 1}`}
+            value={opt.text}
+            onChange={e => handleOptionTextChange(idx, e.target.value)}
+            className="w-full border p-2 rounded"
+          />
+          <input
+            type="file"
+            accept="image/*"
+            onChange={e => handleOptionImageChange(idx, e.target.files[0])}
+            className="w-full border p-2 rounded"
+          />
+          {opt.previewUrl && (
+            <div className="relative group overflow-hidden w-full h-32 bg-gray-100 rounded">
+              <img
+                src={opt.previewUrl}
+                draggable={false}
+                onMouseDown={e => handleImageMouseDown(e, idx, "option")}
+                style={{
+                  position: "absolute",
+                  top: `${50 - opt.position.y}%`,
+                  left: `${50 - opt.position.x}%`,
+                  height: "100%",
+                  cursor: "grab"
+                }}
+                alt={`opt-${idx}`}
+              />
+            </div>
+          )}
+        </div>
+      ))}
+
+      <button
+        type="button"
+        onClick={handleAddOption}
+        className="w-full bg-gray-100 border rounded py-2"
+      >
+        + 선택지 추가 (최대 6개)
+      </button>
+
+      <div className="flex justify-between gap-2">
+        <button type="submit" className="w-full bg-blue-500 text-white py-2 rounded">
+          생성하기
+        </button>
         <button
           type="button"
-          onClick={handleAddOption}
-          className="w-full bg-gray-100 border rounded py-2"
+          className="w-full bg-gray-300 text-black py-2 rounded"
+          onClick={() => (window.location.href = "/")}
         >
-          + 선택지 추가 (최대 2개)
+          홈으로 돌아가기
         </button>
-
-        <div className="flex justify-between gap-2">
-          <button type="submit" className="w-full bg-blue-500 text-white py-2 rounded">
-            생성하기
-          </button>
-          <button
-            type="button"
-            className="w-full bg-gray-300 text-black py-2 rounded"
-            onClick={() => (window.location.href = "/")}
-          >
-            홈으로 돌아가기
-          </button>
-        </div>
-      </form>
-    </div>
-  );
+      </div>
+    </form>
+  </div>
+);
 };
 
 export default CreateTopic;

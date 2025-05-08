@@ -12,7 +12,7 @@ import {
   deleteDoc,
   orderBy,
   limit,
-  startAfter
+  startAfter,
 } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
 import { v4 as uuidv4 } from "uuid";
@@ -71,11 +71,11 @@ const CommentSection = ({ postId, optionIndex, votePercent, myVote }) => {
     }
     return id;
   }, []);
-
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => setCurrentUser(user));
     return () => unsubscribe();
   }, []);
+
   useEffect(() => {
     fetchPost();
     fetchComments(true);
@@ -106,7 +106,6 @@ const CommentSection = ({ postId, optionIndex, votePercent, myVote }) => {
     const q = query(
       collection(db, "comments"),
       where("postId", "==", postId),
-      where("optionIndex", "==", optionIndex),
       sortType === "공감순" ? orderBy("score", "desc") : orderBy("createdAt", "desc"),
       ...(lastVisible && !isInitial ? [startAfter(lastVisible)] : []),
       limit(COMMENTS_PER_PAGE)
@@ -149,6 +148,12 @@ const CommentSection = ({ postId, optionIndex, votePercent, myVote }) => {
     return false;
   };
 
+  const canInteractWith = (comment, isReply = false) => {
+    if (post?.authorUid && currentUser?.uid === post.authorUid) return true;
+    if (!isReply && Number(myVote) === comment.optionIndex) return true;
+    if (isReply) return true;
+    return false;
+  };
   const handleEmojiReact = async (commentId, emoji) => {
     const reactionKey = `reaction-${commentId}`;
     const prev = localStorage.getItem(reactionKey);
@@ -186,6 +191,7 @@ const CommentSection = ({ postId, optionIndex, votePercent, myVote }) => {
       console.error("이모지 반영 오류:", e);
     }
   };
+
   const handleSubmit = async (optIndex, parentId = null) => {
     const text = parentId ? replyText.trim() : newComment.trim();
     if (!text) return;
@@ -194,7 +200,7 @@ const CommentSection = ({ postId, optionIndex, votePercent, myVote }) => {
     let imageUrls = [];
     if (imageFile) {
       const url = await uploadImageAndGetURL(imageFile);
-      imageUrls.push(url);
+      if (url) imageUrls.push(url);
     }
 
     await addDoc(collection(db, "comments"), {
@@ -268,7 +274,6 @@ const CommentSection = ({ postId, optionIndex, votePercent, myVote }) => {
     setLastVisible(null);
     fetchComments(true);
   };
-
   const handleDelete = async (commentId) => {
     if (!window.confirm("정말 삭제하시겠습니까?")) return;
     await deleteDoc(doc(db, "comments", commentId));
@@ -316,9 +321,30 @@ const CommentSection = ({ postId, optionIndex, votePercent, myVote }) => {
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  const canInteractWith = (comment) => {
-    return myVote === comment.optionIndex || (post?.authorUid && currentUser?.uid === post.authorUid);
+  const renderEmojiButtons = (comment, isReply = false) => {
+    if (!canInteractWith(comment, isReply) || comment.isBlind) return null;
+    const selected = reactionMap[comment.id];
+    return (
+      <div className="flex flex-wrap gap-2 mt-2">
+        {EMOJI_REACTIONS.map((emoji) => {
+          const isSelected = selected && selected === emoji;
+          return (
+            <button
+              key={emoji}
+              onClick={() => handleEmojiReact(comment.id, emoji)}
+              className={`flex items-center gap-1 px-2 py-1 rounded text-sm border ${
+                isSelected ? "bg-[#6B4D33] text-white" : "bg-gray-100 text-gray-700"
+              }`}
+            >
+              <span className="text-sm">{emoji}</span>
+              <span className="text-xs">{comment.reactions?.[emoji] || 0}</span>
+            </button>
+          );
+        })}
+      </div>
+    );
   };
+
   const bestComments = useMemo(() => {
     return comments
       .filter(c => !c.parentId && !c.isBlind)
@@ -339,36 +365,11 @@ const CommentSection = ({ postId, optionIndex, votePercent, myVote }) => {
           <div className="w-5 h-5 rounded-full bg-gray-300" />
         )}
         <span className="text-gray-700 font-semibold">{user?.name || "익명"}</span>
-        {isWriter && <span className="text-naver font-semibold text-xs ml-1">[작성자]</span>}
+        {isWriter && <span className="text-[#6B4D33] font-semibold text-xs ml-1">[작성자]</span>}
         <span className="ml-2 text-xs text-gray-400">{time}</span>
       </div>
     );
   };
-
-  const renderEmojiButtons = (comment) => {
-    if (!canInteractWith(comment) || comment.isBlind) return null;
-    const selected = reactionMap[comment.id];
-    return (
-      <div className="flex flex-wrap gap-2 mt-2">
-        {EMOJI_REACTIONS.map((emoji) => {
-          const isSelected = selected && selected === emoji;
-          return (
-            <button
-              key={emoji}
-              onClick={() => handleEmojiReact(comment.id, emoji)}
-              className={`flex items-center gap-1 px-2 py-1 rounded text-sm border ${
-                isSelected ? "bg-naver text-white" : "bg-gray-100 text-gray-700"
-              }`}
-            >
-              <span className="text-sm">{emoji}</span>
-              <span className="text-xs">{comment.reactions?.[emoji] || 0}</span>
-            </button>
-          );
-        })}
-      </div>
-    );
-  };
-
   const parentComments = comments.filter((c) => !c.parentId);
   const childMap = comments.reduce((m, c) => {
     if (c.parentId) {
@@ -381,7 +382,7 @@ const CommentSection = ({ postId, optionIndex, votePercent, myVote }) => {
   return (
     <div className="p-4 bg-white border shadow rounded">
       <div className="flex justify-between items-center mb-4">
-        <h3 className="font-bold text-lg text-naver">
+        <h3 className="font-bold text-lg text-[#6B4D33]">
           {post?.options[optionIndex]?.text} ({Math.round(votePercent)}%)
         </h3>
         <select
@@ -400,7 +401,7 @@ const CommentSection = ({ postId, optionIndex, votePercent, myVote }) => {
 
       {bestComments.length > 0 && (
         <div className="mb-6">
-          <h4 className="text-naver font-bold mb-2">🌟 베스트 댓글 TOP3</h4>
+          <h4 className="text-[#6B4D33] font-bold mb-2">🌟 베스트 댓글 TOP3</h4>
           <div className="space-y-3">
             {bestComments.map((c, i) => (
               <div key={c.id} className="p-2 border rounded bg-yellow-50">
@@ -436,7 +437,7 @@ const CommentSection = ({ postId, optionIndex, votePercent, myVote }) => {
               )}
               {canInteractWith(c) && !c.isBlind && (
                 <>
-                  <button onClick={() => setActiveReplyId(c.id)} className="hover:underline text-naver">💬 답글</button>
+                  <button onClick={() => setActiveReplyId(c.id)} className="hover:underline text-[#6B4D33]">💬 답글</button>
                   <button onClick={() => handleReport(c.id)} className="hover:underline text-red-400">🚩 신고</button>
                 </>
               )}
@@ -471,15 +472,14 @@ const CommentSection = ({ postId, optionIndex, votePercent, myVote }) => {
                   {canDelete(r) && (
                     <button onClick={() => handleDelete(r.id)} className="hover:underline text-gray-500">🗑 삭제</button>
                   )}
-                  {canInteractWith(r) && !r.isBlind && (
+                  {canInteractWith(r, true) && !r.isBlind && (
                     <button onClick={() => handleReport(r.id)} className="hover:underline text-red-400">🚩 신고</button>
                   )}
                 </div>
-                {!r.isBlind && renderEmojiButtons(r)}
+                {!r.isBlind && renderEmojiButtons(r, true)}
               </div>
             ))}
-
-            {activeReplyId === c.id && canInteractWith(c) && (
+            {activeReplyId === c.id && canInteractWith(c, true) && (
               <div className="mt-2 ml-4">
                 <input
                   value={replyText}
@@ -487,21 +487,20 @@ const CommentSection = ({ postId, optionIndex, votePercent, myVote }) => {
                   placeholder="답글 입력..."
                   className="w-full border p-1 rounded text-sm mb-1"
                 />
-                <button onClick={() => handleSubmit(optionIndex, c.id)} className="bg-naver text-white px-2 py-1 text-sm rounded">답글 작성</button>
+                <button onClick={() => handleSubmit(optionIndex, c.id)} className="bg-[#6B4D33] text-white px-2 py-1 text-sm rounded">답글 작성</button>
               </div>
             )}
           </div>
         ))}
-
         {loading && <div className="text-center text-sm text-gray-400">로딩 중...</div>}
         {hasMore && !loading && (
           <div className="text-center mt-4">
-            <button onClick={() => fetchComments(false)} className="text-naver text-sm hover:underline">더 보기 ▼</button>
+            <button onClick={() => fetchComments(false)} className="text-[#6B4D33] text-sm hover:underline">더 보기 ▼</button>
           </div>
         )}
       </div>
 
-      {(myVote === optionIndex || post?.authorUid === currentUser?.uid) && (
+      {(Number(myVote) === optionIndex || (currentUser?.uid && currentUser.uid === post?.authorUid)) && (
         <form
           onSubmit={e => {
             e.preventDefault();
@@ -526,7 +525,7 @@ const CommentSection = ({ postId, optionIndex, votePercent, myVote }) => {
           <button
             type="button"
             onClick={() => setShowImageUpload(s => !s)}
-            className="mb-2 text-sm text-naver hover:underline"
+            className="mb-2 text-sm text-[#6B4D33] hover:underline"
           >
             📷 이미지 첨부 {showImageUpload ? "닫기 ▲" : "열기 ▼"}
           </button>
@@ -554,7 +553,7 @@ const CommentSection = ({ postId, optionIndex, votePercent, myVote }) => {
               )}
             </>
           )}
-          <button type="submit" className="w-full bg-naver hover:bg-naverDark text-white text-sm p-2 rounded">작성</button>
+          <button type="submit" className="w-full bg-[#6B4D33] hover:bg-[#533A26] text-white text-sm p-2 rounded">작성</button>
         </form>
       )}
     </div>

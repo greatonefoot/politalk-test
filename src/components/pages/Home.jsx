@@ -93,6 +93,7 @@ const Home = () => {
     setVotePercents((prev) => ({ ...prev, ...percents }));
     setAuthorData((prev) => ({ ...prev, ...authors }));
   };
+
   const filterPopularPosts = (days) => {
     const cutoff = new Date(Date.now() - days * 86400000);
     return posts
@@ -175,121 +176,90 @@ const Home = () => {
         ))}
       </div>
     );
-    return (
-      <div className="min-h-screen bg-gray-100">
-        <Header
-          categories={[]}
-          selectedCategory={selectedCategory}
-          setSelectedCategory={setSelectedCategory}
-          searchTerm={searchTerm}
-          setSearchTerm={setSearchTerm}
-        />
-  
-        <div className="w-full flex justify-start px-4 pt-4">
-          <div className="flex flex-col lg:flex-row gap-4 w-full max-w-6xl">
-            
-            {/* 사이드바 */}
-            <div className="w-full lg:w-1/4 space-y-4">
-              <div className="bg-white p-3 rounded shadow-sm">
-                <h3 className="text-sm font-bold mb-2 text-blue-500 flex items-center gap-1">
-                  📅 주간 인기글
-                </h3>
-                <ul className="text-xs space-y-1">
-                  {weeklyPopularPosts.map((p) => (
-                    <li key={p.id}>
-                      {p.thumbnail ? (
-                        <img
-                          src={p.thumbnail}
-                          alt=""
-                          className="w-full h-20 object-cover rounded mb-1"
-                        />
-                      ) : renderMainImages(p)}
-                      <Link to={`/post/${p.id}`} className="truncate block">
-                        {p.title} [{commentCounts[p.id] || 0}]
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              <div className="bg-white p-3 rounded shadow-sm">
-                <h3 className="text-sm font-bold mb-2 text-purple-500 flex items-center gap-1">
-                  🗓 월간 인기글
-                </h3>
-                <ul className="text-xs space-y-1">
-                  {monthlyPopularPosts.map((p) => (
-                    <li key={p.id}>
-                      {p.thumbnail ? (
-                        <img
-                          src={p.thumbnail}
-                          alt=""
-                          className="w-full h-20 object-cover rounded mb-1"
-                        />
-                      ) : renderMainImages(p)}
-                      <Link to={`/post/${p.id}`} className="truncate block">
-                        {p.title} [{commentCounts[p.id] || 0}]
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
+
+  return (
+    <div className="min-h-screen bg-gray-100">
+      <Header
+        categories={[]}
+        selectedCategory={selectedCategory}
+        setSelectedCategory={setSelectedCategory}
+        searchTerm={searchTerm}
+        setSearchTerm={setSearchTerm}
+      />
+      <div className="w-full flex justify-start px-4 pt-4">
+        <div className="flex flex-col lg:flex-row gap-4 w-full max-w-6xl">
+
+          {/* 사이드바 (모바일 숨김, 썸네일 제거됨) */}
+          <div className="w-full lg:w-1/4 space-y-4 hidden sm:block">
+            <div className="bg-white p-3 rounded shadow-sm">
+              <h3 className="text-sm font-bold mb-2 text-blue-500">📅 주간 인기글</h3>
+              <ul className="text-xs space-y-1">
+                {weeklyPopularPosts.map((p) => (
+                  <li key={p.id}>
+                    <Link to={`/post/${p.id}`} className="truncate block">
+                      {p.title} [{commentCounts[p.id] || 0}]
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div className="bg-white p-3 rounded shadow-sm">
+              <h3 className="text-sm font-bold mb-2 text-purple-500">🗓 월간 인기글</h3>
+              <ul className="text-xs space-y-1">
+                {monthlyPopularPosts.map((p) => (
+                  <li key={p.id}>
+                    <Link to={`/post/${p.id}`} className="truncate block">
+                      {p.title} [{commentCounts[p.id] || 0}]
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+
+          {/* 본문 영역 */}
+          <div className="w-full lg:w-3/4">
+            {/* 인기글 탭 */}
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-lg font-bold text-naver">🔥 인기글</h2>
+              <div className="flex gap-2">
+                {["일간", "주간", "월간"].map((tab) => (
+                  <button
+                    key={tab}
+                    onClick={() => setActiveHotTab(tab)}
+                    className={`px-2 py-1 rounded text-sm ${
+                      activeHotTab === tab
+                        ? "bg-naver text-white font-semibold"
+                        : "bg-white text-gray-600 border"
+                    }`}
+                  >
+                    {tab}
+                  </button>
+                ))}
               </div>
             </div>
-  
-            {/* 본문 */}
-            <div className="w-full lg:w-3/4">
-              {/* 인기글 섹션 */}
-              <div className="flex items-center justify-between mb-3">
-                <h2 className="text-lg font-bold text-naver flex items-center gap-1">
-                  🔥 인기글
-                </h2>
-                <div className="flex items-center gap-2">
-                  {["일간", "주간", "월간"].map((tab) => (
-                    <button
-                      key={tab}
-                      onClick={() => setActiveHotTab(tab)}
-                      className={`px-2 py-1 rounded text-sm ${
-                        activeHotTab === tab
-                          ? "bg-naver text-white font-semibold"
-                          : "bg-white text-gray-600 border"
-                      }`}
-                    >
-                      {tab}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+
+            {/* 인기글 카드 */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
               {filteredPopular.map((p) => (
                 <Link to={`/post/${p.id}`} key={p.id}>
-                  <div className="bg-green-50 p-3 rounded shadow hover:bg-green-100 transition flex flex-col justify-between min-h-[120px]">
+                  <div className="bg-green-50 p-3 rounded shadow hover:bg-green-100 transition">
                     {p.thumbnail ? (
-                      <img
-                        src={p.thumbnail}
-                        alt=""
-                        className="w-full h-20 object-cover rounded mb-1"
-                      />
+                      <img src={p.thumbnail} className="w-full h-20 object-cover rounded mb-1" />
                     ) : renderMainImages(p)}
-                    <div>
-                      <div className="text-sm font-bold truncate mb-1">
-                        {p.title}
-                      </div>
-                      <div className="text-xs text-gray-700 mb-1">
-                        {authorData[p.id] || "익명"} · 댓글 {commentCounts[p.id] || 0} · 조회 {p.views || 0}
-                      </div>
-                      {votePercents[p.id] &&
-                        Object.entries(votePercents[p.id]).map(([opt, per]) => (
-                          <div key={opt} className="mb-1">
-                            <div className="text-[10px] mb-1 truncate">
-                              {opt}: {per}%
-                            </div>
-                            <div className="w-full h-1 bg-gray-300 rounded">
-                              <div
-                                className="h-full bg-green-500 transition-all"
-                                style={{ width: `${per}%` }}
-                              />
-                            </div>
-                          </div>
-                        ))}
+                    <div className="text-sm font-bold truncate">{p.title}</div>
+                    <div className="text-xs text-gray-600 mb-1">
+                      {authorData[p.id] || "익명"} · 댓글 {commentCounts[p.id] || 0} · 조회 {p.views || 0}
                     </div>
+                    {votePercents[p.id] &&
+                      Object.entries(votePercents[p.id]).map(([opt, per]) => (
+                        <div key={opt} className="mb-1">
+                          <div className="text-[10px]">{opt}: {per}%</div>
+                          <div className="w-full h-1 bg-gray-300 rounded">
+                            <div className="h-full bg-green-500" style={{ width: `${per}%` }} />
+                          </div>
+                        </div>
+                      ))}
                   </div>
                 </Link>
               ))}
@@ -298,10 +268,10 @@ const Home = () => {
             {/* 전체 게시물 */}
             <div className="flex items-center justify-between mb-3">
               <h2 className="text-sm font-bold text-gray-700">📋 전체 게시물</h2>
-              <div className="flex items-center gap-2">
+              <div className="flex gap-2">
                 <button
                   onClick={() => navigate("/create")}
-                  className="bg-naver hover:bg-naverDark text-white px-3 py-1 rounded text-sm"
+                  className="bg-naver text-white px-3 py-1 rounded text-sm"
                 >
                   ✏️ 주제 만들기
                 </button>
@@ -315,39 +285,27 @@ const Home = () => {
                 </select>
               </div>
             </div>
+
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {sortedPosts.map((p) => (
                 <Link to={`/post/${p.id}`} key={p.id}>
-                  <div className="bg-white p-3 rounded shadow-sm hover:bg-gray-50 transition flex flex-col justify-between min-h-[120px]">
+                  <div className="bg-white p-3 rounded shadow-sm hover:bg-gray-50 transition">
                     {p.thumbnail ? (
-                      <img
-                        src={p.thumbnail}
-                        alt=""
-                        className="w-full h-20 object-cover rounded mb-1"
-                      />
+                      <img src={p.thumbnail} className="w-full h-20 object-cover rounded mb-1" />
                     ) : renderMainImages(p)}
-                    <div>
-                      <div className="font-medium text-sm truncate mb-1">
-                        {p.title}
-                      </div>
-                      <div className="text-xs text-gray-600 mb-1">
-                        {authorData[p.id] || "익명"} · 댓글 {commentCounts[p.id] || 0} · 조회 {p.views || 0}
-                      </div>
-                      {votePercents[p.id] &&
-                        Object.entries(votePercents[p.id]).map(([opt, per]) => (
-                          <div key={opt} className="mb-1">
-                            <div className="text-[10px] mb-1 truncate">
-                              {opt}: {per}%
-                            </div>
-                            <div className="w-full h-1 bg-gray-300 rounded">
-                              <div
-                                className="h-full bg-green-500 transition-all"
-                                style={{ width: `${per}%` }}
-                              />
-                            </div>
-                          </div>
-                        ))}
+                    <div className="font-medium text-sm truncate">{p.title}</div>
+                    <div className="text-xs text-gray-600 mb-1">
+                      {authorData[p.id] || "익명"} · 댓글 {commentCounts[p.id] || 0} · 조회 {p.views || 0}
                     </div>
+                    {votePercents[p.id] &&
+                      Object.entries(votePercents[p.id]).map(([opt, per]) => (
+                        <div key={opt} className="mb-1">
+                          <div className="text-[10px]">{opt}: {per}%</div>
+                          <div className="w-full h-1 bg-gray-300 rounded">
+                            <div className="h-full bg-green-500" style={{ width: `${per}%` }} />
+                          </div>
+                        </div>
+                      ))}
                   </div>
                 </Link>
               ))}
@@ -362,4 +320,3 @@ const Home = () => {
 };
 
 export default Home;
-  

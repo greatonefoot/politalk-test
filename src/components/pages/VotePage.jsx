@@ -1,3 +1,5 @@
+// src/components/pages/VotePage.jsx
+
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import Header from "../Header";
@@ -12,7 +14,6 @@ import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
 
-// ✅ 댓글 작성 여부 확인
 async function hasWrittenCommentForOption(uid, postId, optionIndex) {
   if (!uid) return false;
   const q = query(
@@ -174,6 +175,7 @@ const VotePage = () => {
     }
     setLoading(false);
   };
+
   const getVotePercents = () => {
     if (!voteData || !Array.isArray(voteData.options)) return [];
     const total = voteData.options.reduce((sum, opt) => sum + opt.votes, 0) || 1;
@@ -203,7 +205,6 @@ const VotePage = () => {
       </div>
     );
   }
-
   return (
     <div className="bg-gray-100 min-h-screen">
       <Header categories={[]} selectedCategory="전체" setSelectedCategory={() => {}} searchTerm="" setSearchTerm={() => {}} />
@@ -267,13 +268,22 @@ const VotePage = () => {
         )}
 
         {voted && Array.isArray(voteData.options) ? (
-          <div className="w-full px-4 mt-10 flex gap-2 justify-center items-start">
+          <div className="w-full px-4 mt-10 flex flex-col lg:flex-row gap-2 justify-center items-start">
             {voteData.options.map((opt, idx) => {
               const percent = votePercents[idx];
               const isVisible = visibleSections[idx] ?? true;
               const bgColor = getBackgroundColor(percent);
               return (
-                <div key={idx} style={{ width: rendered ? `${percent}%` : "0%", minWidth: "300px", transition: "width 0.7s ease" }} className={`${bgColor} p-3 rounded relative group ${isVisible ? "block" : "hidden"}`}>
+                <div
+                  key={idx}
+                  style={{
+                    width: rendered ? `${percent}%` : "0%",
+                    minWidth: "280px",
+                    maxWidth: "100%",
+                    transition: "width 0.7s ease",
+                  }}
+                  className={`${bgColor} p-3 rounded relative group ${isVisible ? "block" : "hidden"}`}
+                >
                   <div className="absolute top-2 right-2 bg-white text-gray-800 text-xs font-bold px-2 py-1 rounded shadow cursor-default group-hover:opacity-100 opacity-80 transition">
                     {Math.round(percent)}%
                     <div className="absolute top-full mt-1 left-1/2 -translate-x-1/2 whitespace-nowrap bg-black text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition pointer-events-none z-50">

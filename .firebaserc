@@ -1,5 +1,8 @@
 {
   "projects": {
-    "default": "politalk-4e0dd"
-  }
+    "default": "politalk-4e0dd",
+    "firebase functions:list": "politalk-4e0dd"
+  },
+  "targets": {},
+  "etags": {}
 }

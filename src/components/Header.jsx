@@ -1,4 +1,3 @@
-// ✅ src/components/Header.jsx
 import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate, Link } from "react-router-dom";
 import { useAuthState } from "react-firebase-hooks/auth";
@@ -17,18 +16,21 @@ function Header({
   const navigate = useNavigate();
   const [user] = useAuthState(auth);
   const [role, setRole] = useState(null);
+  const [profilePic, setProfilePic] = useState("");
 
   useEffect(() => {
-    const fetchUserRole = async () => {
-      if (user?.emailVerified) {
+    const fetchUserInfo = async () => {
+      if (user?.uid && user.emailVerified) {
         const docRef = doc(db, "users", user.uid);
         const docSnap = await getDoc(docRef);
         if (docSnap.exists()) {
-          setRole(docSnap.data().role);
+          const data = docSnap.data();
+          setRole(data.role);
+          setProfilePic(data.profilePic || "");
         }
       }
     };
-    fetchUserRole();
+    fetchUserInfo();
   }, [user]);
 
   const handleLogoClick = (e) => {
@@ -48,34 +50,46 @@ function Header({
   return (
     <header className="bg-naver text-white">
       <div className="flex justify-between items-center px-4 py-3 max-w-7xl mx-auto">
-        {/* ✅ 로고 */}
+        {/* ✅ 로고 - 하얀색 박스 안 PoliTalk */}
         <Link
           to="/"
           onClick={handleLogoClick}
-          className="text-2xl font-bold text-white"
+          className="bg-white text-naver text-2xl font-bold px-3 py-1 rounded"
         >
           PoliTalk
         </Link>
 
-        {/* 검색창 */}
-        <input
-          type="text"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          placeholder="검색어를 입력하세요"
-          className="w-1/2 px-3 py-2 rounded text-black"
-        />
+        {/* 🔍 검색창 */}
+        <div className="flex w-full max-w-lg items-center mx-4">
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="검색어를 입력하세요"
+            className="w-full px-3 py-2 rounded text-black sm:w-3/4"
+          />
+        </div>
 
-        {/* 로그인 / 로그아웃 상태 구분 */}
-        <div className="ml-4">
+        {/* 👤 유저 메뉴 */}
+        <div className="ml-4 flex items-center gap-3">
           {user && user.emailVerified ? (
-            <div className="flex items-center gap-3">
+            <>
+              {/* ✅ 프로필 이미지 */}
+              <Link to="/profile">
+                <img
+                  src={profilePic || "https://via.placeholder.com/32"}
+                  alt="프로필"
+                  className="w-8 h-8 rounded-full object-cover border border-white"
+                />
+              </Link>
               <Link
                 to="/profile"
-                className="text-white font-medium underline text-sm"
+                className="text-white font-medium underline text-sm hidden sm:block"
               >
                 마이페이지
               </Link>
+
+              {/* 🔧 관리자 메뉴 */}
               {role === "admin" && (
                 <>
                   <Link
@@ -98,16 +112,23 @@ function Header({
                   </Link>
                 </>
               )}
+
+              {/* 📧 이메일 & 관리자 여부 표시 */}
               <span className="text-sm">
-                {user.email} {role === "admin" && <span className="text-red-300 font-bold ml-1">[관리자]</span>}
+                {user.email}
+                {role === "admin" && (
+                  <span className="text-red-300 font-bold ml-1">[관리자]</span>
+                )}
               </span>
+
+              {/* 🔓 로그아웃 버튼 */}
               <button
                 onClick={handleLogout}
                 className="bg-white text-naver font-bold px-3 py-1 rounded text-sm"
               >
                 로그아웃
               </button>
-            </div>
+            </>
           ) : (
             <Link to="/login">
               <div className="bg-white text-naver font-bold px-4 py-2 rounded text-sm">
@@ -118,7 +139,7 @@ function Header({
         </div>
       </div>
 
-      {/* 카테고리 바 */}
+      {/* 🏷 카테고리 바 */}
       <div className="flex flex-wrap gap-2 px-4 pb-3 max-w-7xl mx-auto text-sm">
         {Array.isArray(categories) &&
           categories.map((cat) => (

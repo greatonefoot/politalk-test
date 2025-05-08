@@ -1,4 +1,3 @@
-// src/App.jsx
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
@@ -26,40 +25,58 @@ function App() {
           <Route path="/post/:postId" element={<VotePage />} />
 
           {/* ✅ 글 작성: 로그인 필요 */}
-          <Route path="/create" element={
-            <ProtectedRoute>
-              <CreateTopic />
-            </ProtectedRoute>
-          } />
+          <Route
+            path="/create"
+            element={
+              <ProtectedRoute>
+                <CreateTopic />
+              </ProtectedRoute>
+            }
+          />
 
           {/* ✅ 관리자 전용 */}
-          <Route path="/admin" element={
-            <AdminRoute>
-              <AdminPage />
-            </AdminRoute>
-          } />
-          <Route path="/admin/comments" element={
-            <AdminRoute>
-              <AdminCommentsPage />
-            </AdminRoute>
-          } />
-          <Route path="/admin/users" element={
-            <AdminRoute>
-              <AdminUserPage />
-            </AdminRoute>
-          } />
+          <Route
+            path="/admin"
+            element={
+              <AdminRoute>
+                <AdminPage />
+              </AdminRoute>
+            }
+          />
+          <Route
+            path="/admin/comments"
+            element={
+              <AdminRoute>
+                <AdminCommentsPage />
+              </AdminRoute>
+            }
+          />
+          <Route
+            path="/admin/users"
+            element={
+              <AdminRoute>
+                <AdminUserPage />
+              </AdminRoute>
+            }
+          />
 
           {/* ✅ 마이페이지: 로그인 필요 */}
-          <Route path="/profile" element={
-            <ProtectedRoute>
-              <MyProfilePage />
-            </ProtectedRoute>
-          } />
-          <Route path="/myhistory" element={
-            <ProtectedRoute>
-              <MyHistoryPage />
-            </ProtectedRoute>
-          } />
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <MyProfilePage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/myhistory"
+            element={
+              <ProtectedRoute>
+                <MyHistoryPage />
+              </ProtectedRoute>
+            }
+          />
 
           {/* ✅ 로그인 */}
           <Route path="/login" element={<LoginPage />} />

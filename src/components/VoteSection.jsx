@@ -2,11 +2,10 @@ import React, { useState, useEffect } from "react";
 import { db } from "../firebase";
 import { doc, getDoc, updateDoc, increment } from "firebase/firestore";
 
-const VoteSection = ({ postId, setDeadlineState }) => {
+const VoteSection = ({ postId }) => {
   const [post, setPost] = useState(null);
   const [selected, setSelected] = useState(null);
   const [voted, setVoted] = useState(false);
-  const [remainingTime, setRemainingTime] = useState("");
   const [reportCount, setReportCount] = useState(0);
 
   useEffect(() => {
@@ -16,7 +15,6 @@ const VoteSection = ({ postId, setDeadlineState }) => {
       if (postSnap.exists()) {
         const data = postSnap.data();
         setPost(data);
-        setupDeadlineTimer(data.deadline);
         setReportCount(data.reports || 0);
       }
     };
@@ -28,24 +26,6 @@ const VoteSection = ({ postId, setDeadlineState }) => {
       setVoted(true);
     }
   }, [postId]);
-
-  const setupDeadlineTimer = (deadline) => {
-    if (!deadline) return;
-    const deadlineDate = new Date(deadline.seconds * 1000);
-    const interval = setInterval(() => {
-      const now = new Date();
-      const diff = deadlineDate - now;
-      if (diff <= 0) {
-        setRemainingTime("마감됨");
-        setDeadlineState?.(true);
-        clearInterval(interval);
-      } else {
-        const min = Math.floor(diff / 60000);
-        const sec = Math.floor((diff % 60000) / 1000);
-        setRemainingTime(`${min}분 ${sec}초 남음`);
-      }
-    }, 1000);
-  };
 
   const handleVote = async (index) => {
     if (voted || !post) return;
@@ -104,7 +84,6 @@ const VoteSection = ({ postId, setDeadlineState }) => {
   return (
     <div className="max-w-3xl mx-auto p-4 space-y-6">
       <h2 className="text-xl font-bold mb-2 text-center">{post.title}</h2>
-      <p className="text-center text-sm text-gray-500">투표 마감: {remainingTime}</p>
 
       {post.options.map((opt, idx) => {
         const percentage = totalVotes ? Math.round((opt.votes / totalVotes) * 100) : 0;

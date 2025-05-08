@@ -189,10 +189,10 @@ const Home = () => {
       <div className="w-full flex justify-start px-4 pt-4">
         <div className="flex flex-col lg:flex-row gap-4 w-full max-w-6xl">
 
-          {/* 사이드바 (모바일 숨김, 썸네일 제거됨) */}
+          {/* 사이드바 */}
           <div className="w-full lg:w-1/4 space-y-4 hidden sm:block">
             <div className="bg-white p-3 rounded shadow-sm">
-              <h3 className="text-sm font-bold mb-2 text-blue-500">📅 주간 인기글</h3>
+              <h3 className="text-sm font-bold mb-2 text-[#0B3D2E]">📅 주간 인기글</h3>
               <ul className="text-xs space-y-1">
                 {weeklyPopularPosts.map((p) => (
                   <li key={p.id}>
@@ -204,7 +204,7 @@ const Home = () => {
               </ul>
             </div>
             <div className="bg-white p-3 rounded shadow-sm">
-              <h3 className="text-sm font-bold mb-2 text-purple-500">🗓 월간 인기글</h3>
+              <h3 className="text-sm font-bold mb-2 text-[#0B3D2E]">🗓 월간 인기글</h3>
               <ul className="text-xs space-y-1">
                 {monthlyPopularPosts.map((p) => (
                   <li key={p.id}>
@@ -216,12 +216,13 @@ const Home = () => {
               </ul>
             </div>
           </div>
-
           {/* 본문 영역 */}
           <div className="w-full lg:w-3/4">
             {/* 인기글 탭 */}
             <div className="flex items-center justify-between mb-3">
-              <h2 className="text-lg font-bold text-naver">🔥 인기글</h2>
+              <h2 className="text-lg font-bold text-[#0B3D2E] flex items-center gap-1">
+                🔥 인기글
+              </h2>
               <div className="flex gap-2">
                 {["일간", "주간", "월간"].map((tab) => (
                   <button
@@ -229,7 +230,7 @@ const Home = () => {
                     onClick={() => setActiveHotTab(tab)}
                     className={`px-2 py-1 rounded text-sm ${
                       activeHotTab === tab
-                        ? "bg-naver text-white font-semibold"
+                        ? "bg-[#0B3D2E] text-white font-semibold"
                         : "bg-white text-gray-600 border"
                     }`}
                   >
@@ -245,7 +246,11 @@ const Home = () => {
                 <Link to={`/post/${p.id}`} key={p.id}>
                   <div className="bg-green-50 p-3 rounded shadow hover:bg-green-100 transition">
                     {p.thumbnail ? (
-                      <img src={p.thumbnail} className="w-full h-20 object-cover rounded mb-1" />
+                      <img
+                        src={p.thumbnail}
+                        alt=""
+                        className="w-full h-20 object-cover rounded mb-1"
+                      />
                     ) : renderMainImages(p)}
                     <div className="text-sm font-bold truncate">{p.title}</div>
                     <div className="text-xs text-gray-600 mb-1">
@@ -271,7 +276,7 @@ const Home = () => {
               <div className="flex gap-2">
                 <button
                   onClick={() => navigate("/create")}
-                  className="bg-naver text-white px-3 py-1 rounded text-sm"
+                  className="bg-[#0B3D2E] hover:bg-[#093025] text-white px-3 py-1 rounded text-sm"
                 >
                   ✏️ 주제 만들기
                 </button>
@@ -291,7 +296,11 @@ const Home = () => {
                 <Link to={`/post/${p.id}`} key={p.id}>
                   <div className="bg-white p-3 rounded shadow-sm hover:bg-gray-50 transition">
                     {p.thumbnail ? (
-                      <img src={p.thumbnail} className="w-full h-20 object-cover rounded mb-1" />
+                      <img
+                        src={p.thumbnail}
+                        alt=""
+                        className="w-full h-20 object-cover rounded mb-1"
+                      />
                     ) : renderMainImages(p)}
                     <div className="font-medium text-sm truncate">{p.title}</div>
                     <div className="text-xs text-gray-600 mb-1">

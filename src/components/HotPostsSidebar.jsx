@@ -67,11 +67,15 @@ const HotPostsSidebar = () => {
   return (
     <div className="absolute top-24 left-4 w-56 z-10 hidden lg:block pointer-events-auto">
       <div
-        className="bg-white shadow rounded border border-naver p-3"
-        style={{ height: "300px", overflowY: "auto" }}
+        className="bg-white shadow rounded border p-3"
+        style={{
+          height: "300px",
+          overflowY: "auto",
+          borderColor: "#4B3621", // 갈색 테두리
+        }}
       >
         <div className="flex justify-between items-center mb-2">
-          <h3 className="text-naver font-bold text-sm">🔥 인기글</h3>
+          <h3 className="text-[#4B3621] font-bold text-sm">🔥 인기글</h3>
           <div className="flex gap-1 text-xs">
             {["일간", "주간", "월간"].map(tab => (
               <button
@@ -79,9 +83,12 @@ const HotPostsSidebar = () => {
                 onClick={() => setActiveTab(tab)}
                 className={`px-2 py-0.5 rounded-full border text-xs ${
                   activeTab === tab
-                    ? "bg-naver text-white"
-                    : "border-naver text-naver"
+                    ? "text-white"
+                    : "border-[#4B3621] text-[#4B3621]"
                 }`}
+                style={{
+                  backgroundColor: activeTab === tab ? "#4B3621" : "white",
+                }}
               >
                 {tab}
               </button>

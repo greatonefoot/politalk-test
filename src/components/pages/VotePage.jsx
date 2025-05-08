@@ -6,7 +6,16 @@ import Header from "../Header";
 import CommentSection from "./CommentSection";
 import HotPostsSidebar from "../HotPostsSidebar";
 import { db, auth } from "../../firebase";
-import { doc, updateDoc, increment, getDoc, collection, query, where, getDocs } from "firebase/firestore";
+import {
+  doc,
+  updateDoc,
+  increment,
+  getDoc,
+  collection,
+  query,
+  where,
+  getDocs,
+} from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Pagination } from "swiper/modules";
@@ -75,6 +84,7 @@ const VotePage = () => {
     }, 1000);
     return () => clearInterval(interval);
   }, [postId]);
+
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
@@ -119,7 +129,6 @@ const VotePage = () => {
     }, 8000);
     return () => clearTimeout(warnTimeout);
   }, [loading]);
-
   const handleVote = async (index) => {
     if (voted || loading) return;
     setLoading(true);
@@ -184,10 +193,10 @@ const VotePage = () => {
   const votePercents = getVotePercents();
 
   const getBackgroundColor = (percent) => {
-    if (percent >= 60) return "bg-green-100";
-    if (percent >= 40) return "bg-yellow-100";
-    if (percent >= 20) return "bg-orange-100";
-    return "bg-red-100";
+    if (percent >= 60) return "bg-[#EED9C4]";
+    if (percent >= 40) return "bg-[#F2D2B3]";
+    if (percent >= 20) return "bg-[#F8E0CE]";
+    return "bg-[#F9EBE0]";
   };
 
   const toggleSection = (index) => {
@@ -200,14 +209,21 @@ const VotePage = () => {
   if (loading || !voteData || !voteData.options) {
     return (
       <div className="flex flex-col justify-center items-center h-screen bg-gray-100">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-green-500 border-t-transparent"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-[#C8A97E] border-t-transparent"></div>
         <p className="mt-4 text-gray-600 text-lg">투표 정보를 불러오는 중입니다...</p>
       </div>
     );
   }
+
   return (
     <div className="bg-gray-100 min-h-screen">
-      <Header categories={[]} selectedCategory="전체" setSelectedCategory={() => {}} searchTerm="" setSearchTerm={() => {}} />
+      <Header
+        categories={[]}
+        selectedCategory="전체"
+        setSelectedCategory={() => {}}
+        searchTerm=""
+        setSearchTerm={() => {}}
+      />
       <HotPostsSidebar />
       <main className="pt-10 px-4 flex flex-col items-center max-w-screen-xl mx-auto">
         <div className="w-full">
@@ -215,19 +231,28 @@ const VotePage = () => {
 
           {voteData.imageUrls?.length > 0 && (
             <div className="mb-6 relative max-w-2xl mx-auto">
-              <Swiper modules={[Navigation, Pagination]} spaceBetween={10} slidesPerView={1} navigation pagination={{ clickable: true }}>
+              <Swiper
+                modules={[Navigation, Pagination]}
+                spaceBetween={10}
+                slidesPerView={1}
+                navigation
+                pagination={{ clickable: true }}
+              >
                 {voteData.imageUrls.map((url, idx) => (
                   <SwiperSlide key={idx}>
-                    <img src={url} alt={`본문 이미지 ${idx + 1}`} className="w-full max-h-[400px] object-contain rounded" />
+                    <img
+                      src={url}
+                      alt={`본문 이미지 ${idx + 1}`}
+                      className="w-full max-h-[400px] object-contain rounded"
+                    />
                   </SwiperSlide>
                 ))}
               </Swiper>
             </div>
           )}
-
           {voteData.content && (
             <div className="bg-white p-6 rounded-xl shadow mb-6 border border-gray-200 mx-auto max-w-2xl">
-              <h3 className="text-lg font-semibold text-gray-800 mb-2">📄 본문 내용</h3>
+              <h3 className="text-lg font-semibold text-[#4B3621] mb-2">📄 본문 내용</h3>
               <div className="text-gray-700 leading-relaxed whitespace-pre-wrap text-[15px] tracking-wide break-words">
                 {voteData.content}
               </div>
@@ -236,13 +261,31 @@ const VotePage = () => {
 
           <div className="flex flex-col md:flex-row justify-center items-center gap-4 my-6">
             {voteData.options.map((opt, idx) => (
-              <div key={idx} className={`bg-white rounded-xl shadow-md overflow-hidden w-full max-w-xs transition transform hover:scale-105 ${votedOption === idx ? "ring-2 ring-green-400" : ""}`}>
+              <div
+                key={idx}
+                className={`bg-white rounded-xl shadow-md overflow-hidden w-full max-w-xs transition transform hover:scale-105 ${
+                  votedOption === idx ? "ring-2 ring-[#C8A97E]" : ""
+                }`}
+              >
                 {opt.imageUrl && (
-                  <img src={opt.imageUrl} alt={opt.label || opt.text} className="w-full h-48 object-cover cursor-pointer" onClick={() => handleVote(idx)} />
+                  <img
+                    src={opt.imageUrl}
+                    alt={opt.label || opt.text}
+                    className="w-full h-48 object-cover cursor-pointer"
+                    onClick={() => handleVote(idx)}
+                  />
                 )}
                 <div className="p-4 text-center">
                   <p className="font-semibold text-lg mb-2">{opt.label || opt.text || `선택지 ${idx + 1}`}</p>
-                  <button onClick={() => handleVote(idx)} disabled={voted || loading} className={`w-full py-2 rounded font-semibold ${votedOption === idx ? "bg-gray-400 text-white cursor-default" : "bg-green-500 hover:bg-green-600 text-white"}`}>
+                  <button
+                    onClick={() => handleVote(idx)}
+                    disabled={voted || loading}
+                    className={`w-full py-2 rounded font-semibold ${
+                      votedOption === idx
+                        ? "bg-gray-400 text-white cursor-default"
+                        : "bg-[#4B3621] hover:bg-[#3A2A1A] text-white"
+                    }`}
+                  >
                     {votedOption === idx ? "투표 완료" : "선택"}
                   </button>
                 </div>
@@ -252,18 +295,30 @@ const VotePage = () => {
 
           {voted && (
             <div className="text-center">
-              <button onClick={handleCancelVote} className="text-sm text-red-600 underline mt-2">⛔ 투표 취소하기</button>
+              <button
+                onClick={handleCancelVote}
+                className="text-sm text-red-600 underline mt-2"
+              >
+                ⛔ 투표 취소하기
+              </button>
             </div>
           )}
         </div>
 
         {voted && voteData.options.length > 0 && (
           <div className="mt-6 text-sm text-gray-600 text-center">
-            {voteData.options.map((opt, idx) => !visibleSections[idx] && (
-              <button key={idx} onClick={() => toggleSection(idx)} className="inline-block bg-gray-200 hover:bg-gray-300 text-gray-800 px-3 py-1 rounded-full mx-1 mb-2 transition">
-                {opt.label || `진영 ${idx + 1}`} 댓글 다시 보기
-              </button>
-            ))}
+            {voteData.options.map(
+              (opt, idx) =>
+                !visibleSections[idx] && (
+                  <button
+                    key={idx}
+                    onClick={() => toggleSection(idx)}
+                    className="inline-block bg-gray-200 hover:bg-gray-300 text-gray-800 px-3 py-1 rounded-full mx-1 mb-2 transition"
+                  >
+                    {opt.label || `진영 ${idx + 1}`} 댓글 다시 보기
+                  </button>
+                )
+            )}
           </div>
         )}
 
@@ -282,22 +337,38 @@ const VotePage = () => {
                     maxWidth: "100%",
                     transition: "width 0.7s ease",
                   }}
-                  className={`${bgColor} p-3 rounded relative group ${isVisible ? "block" : "hidden"}`}
+                  className={`${bgColor} p-3 rounded relative group ${
+                    isVisible ? "block" : "hidden"
+                  }`}
                 >
-                  <div className="absolute top-2 right-2 bg-white text-gray-800 text-xs font-bold px-2 py-1 rounded shadow cursor-default group-hover:opacity-100 opacity-80 transition">
+                  <div className="absolute top-2 right-2 bg-white text-[#4B3621] text-xs font-bold px-2 py-1 rounded shadow cursor-default group-hover:opacity-100 opacity-80 transition">
                     {Math.round(percent)}%
                     <div className="absolute top-full mt-1 left-1/2 -translate-x-1/2 whitespace-nowrap bg-black text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition pointer-events-none z-50">
                       전체 투표 중 {Math.round(percent)}%
                     </div>
                   </div>
-                  <button onClick={() => toggleSection(idx)} className="text-sm text-gray-600 underline mb-2">{isVisible ? "댓글 숨기기" : "댓글 보기"}</button>
-                  {isVisible && <CommentSection postId={postId} optionIndex={idx} votePercent={percent} myVote={votedOption} />}
+                  <button
+                    onClick={() => toggleSection(idx)}
+                    className="text-sm text-gray-600 underline mb-2"
+                  >
+                    {isVisible ? "댓글 숨기기" : "댓글 보기"}
+                  </button>
+                  {isVisible && (
+                    <CommentSection
+                      postId={postId}
+                      optionIndex={idx}
+                      votePercent={percent}
+                      myVote={votedOption}
+                    />
+                  )}
                 </div>
               );
             })}
           </div>
         ) : (
-          <div className="text-center text-gray-500 mt-12">투표 완료 후 댓글을 확인할 수 있습니다.</div>
+          <div className="text-center text-gray-500 mt-12">
+            투표 완료 후 댓글을 확인할 수 있습니다.
+          </div>
         )}
       </main>
     </div>

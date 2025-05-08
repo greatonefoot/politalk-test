@@ -48,13 +48,13 @@ function Header({
   };
 
   return (
-    <header className="bg-naver text-white">
+    <header className="bg-[#4B3621] text-white">
       <div className="flex justify-between items-center px-4 py-3 max-w-7xl mx-auto">
         {/* ✅ 로고 - 하얀색 박스 안 PoliTalk */}
         <Link
           to="/"
           onClick={handleLogoClick}
-          className="bg-white text-naver text-2xl font-bold px-3 py-1 rounded"
+          className="bg-white text-[#4B3621] text-2xl font-bold px-3 py-1 rounded"
         >
           PoliTalk
         </Link>
@@ -94,19 +94,19 @@ function Header({
                 <>
                   <Link
                     to="/admin"
-                    className="text-xs bg-white text-naver px-2 py-1 rounded font-bold hover:bg-gray-100"
+                    className="text-xs bg-white text-[#4B3621] px-2 py-1 rounded font-bold hover:bg-[#EDE4DC]"
                   >
                     게시물 관리
                   </Link>
                   <Link
                     to="/admin/comments"
-                    className="text-xs bg-white text-naver px-2 py-1 rounded font-bold hover:bg-gray-100"
+                    className="text-xs bg-white text-[#4B3621] px-2 py-1 rounded font-bold hover:bg-[#EDE4DC]"
                   >
                     댓글 관리
                   </Link>
                   <Link
                     to="/admin/users"
-                    className="text-xs bg-white text-naver px-2 py-1 rounded font-bold hover:bg-gray-100"
+                    className="text-xs bg-white text-[#4B3621] px-2 py-1 rounded font-bold hover:bg-[#EDE4DC]"
                   >
                     유저 관리
                   </Link>
@@ -117,21 +117,21 @@ function Header({
               <span className="text-sm">
                 {user.email}
                 {role === "admin" && (
-                  <span className="text-red-300 font-bold ml-1">[관리자]</span>
+                  <span className="text-orange-300 font-bold ml-1">[관리자]</span>
                 )}
               </span>
 
               {/* 🔓 로그아웃 버튼 */}
               <button
                 onClick={handleLogout}
-                className="bg-white text-naver font-bold px-3 py-1 rounded text-sm"
+                className="bg-white text-[#4B3621] font-bold px-3 py-1 rounded text-sm hover:bg-[#EDE4DC]"
               >
                 로그아웃
               </button>
             </>
           ) : (
             <Link to="/login">
-              <div className="bg-white text-naver font-bold px-4 py-2 rounded text-sm">
+              <div className="bg-white text-[#4B3621] font-bold px-4 py-2 rounded text-sm hover:bg-[#EDE4DC]">
                 로그인
               </div>
             </Link>
@@ -148,7 +148,7 @@ function Header({
               onClick={() => setSelectedCategory(cat)}
               className={`px-3 py-1 rounded-full border ${
                 selectedCategory === cat
-                  ? "bg-white text-naver font-bold"
+                  ? "bg-white text-[#4B3621] font-bold"
                   : "border-white text-white"
               }`}
             >

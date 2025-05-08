@@ -192,7 +192,7 @@ const Home = () => {
           {/* 사이드바 */}
           <div className="w-full lg:w-1/4 space-y-4 hidden sm:block">
             <div className="bg-white p-3 rounded shadow-sm">
-              <h3 className="text-sm font-bold mb-2 text-[#0B3D2E]">📅 주간 인기글</h3>
+              <h3 className="text-sm font-bold mb-2 text-[#4B3621]">📅 주간 인기글</h3>
               <ul className="text-xs space-y-1">
                 {weeklyPopularPosts.map((p) => (
                   <li key={p.id}>
@@ -204,7 +204,7 @@ const Home = () => {
               </ul>
             </div>
             <div className="bg-white p-3 rounded shadow-sm">
-              <h3 className="text-sm font-bold mb-2 text-[#0B3D2E]">🗓 월간 인기글</h3>
+              <h3 className="text-sm font-bold mb-2 text-[#4B3621]">🗓 월간 인기글</h3>
               <ul className="text-xs space-y-1">
                 {monthlyPopularPosts.map((p) => (
                   <li key={p.id}>
@@ -220,7 +220,7 @@ const Home = () => {
           <div className="w-full lg:w-3/4">
             {/* 인기글 탭 */}
             <div className="flex items-center justify-between mb-3">
-              <h2 className="text-lg font-bold text-[#0B3D2E] flex items-center gap-1">
+              <h2 className="text-lg font-bold text-[#4B3621] flex items-center gap-1">
                 🔥 인기글
               </h2>
               <div className="flex gap-2">
@@ -230,7 +230,7 @@ const Home = () => {
                     onClick={() => setActiveHotTab(tab)}
                     className={`px-2 py-1 rounded text-sm ${
                       activeHotTab === tab
-                        ? "bg-[#0B3D2E] text-white font-semibold"
+                        ? "bg-[#4B3621] text-white font-semibold"
                         : "bg-white text-gray-600 border"
                     }`}
                   >
@@ -244,7 +244,11 @@ const Home = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
               {filteredPopular.map((p) => (
                 <Link to={`/post/${p.id}`} key={p.id}>
-                  <div className="bg-green-50 p-3 rounded shadow hover:bg-green-100 transition">
+             <div
+  className="p-3 rounded shadow transition hover:opacity-90"
+  style={{ backgroundColor: '#FFF5EE' }}
+>
+
                     {p.thumbnail ? (
                       <img
                         src={p.thumbnail}
@@ -261,7 +265,7 @@ const Home = () => {
                         <div key={opt} className="mb-1">
                           <div className="text-[10px]">{opt}: {per}%</div>
                           <div className="w-full h-1 bg-gray-300 rounded">
-                            <div className="h-full bg-green-500" style={{ width: `${per}%` }} />
+                            <div className="h-full bg-[#DEB887]" style={{ width: `${per}%` }} />
                           </div>
                         </div>
                       ))}
@@ -276,7 +280,7 @@ const Home = () => {
               <div className="flex gap-2">
                 <button
                   onClick={() => navigate("/create")}
-                  className="bg-[#0B3D2E] hover:bg-[#093025] text-white px-3 py-1 rounded text-sm"
+                  className="bg-[#4B3621] hover:bg-[#3A2A1A] text-white px-3 py-1 rounded text-sm"
                 >
                   ✏️ 주제 만들기
                 </button>
@@ -311,7 +315,7 @@ const Home = () => {
                         <div key={opt} className="mb-1">
                           <div className="text-[10px]">{opt}: {per}%</div>
                           <div className="w-full h-1 bg-gray-300 rounded">
-                            <div className="h-full bg-green-500" style={{ width: `${per}%` }} />
+                            <div className="h-full bg-[#DEB887]" style={{ width: `${per}%` }} />
                           </div>
                         </div>
                       ))}

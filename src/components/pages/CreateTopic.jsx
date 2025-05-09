@@ -197,7 +197,7 @@ const handleSubmit = async (e) => {
       isFixed: false,
       authorUid,
       thumbnail: uploadedThumbnail,
-      imageUrls: uploadedMainImages,
+      mainImages: uploadedMainImages, // ✅ 필드명 변경
       imagePositions: imagePositions.slice(0, uploadedMainImages.length),
       options: filteredOptionData
     });

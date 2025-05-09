@@ -10,6 +10,12 @@ import {
 } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
 
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Navigation, Pagination } from "swiper/modules";
+import "swiper/css";
+import "swiper/css/navigation";
+import "swiper/css/pagination";
+
 async function hasWrittenCommentForOption(uid, postId, optionIndex) {
   if (!uid) return false;
   const q = query(
@@ -194,26 +200,35 @@ const VotePage = () => {
       <HotPostsSidebar />
       <main className="mt-20 px-4 flex flex-col items-center max-w-screen-xl mx-auto">
         <div className="w-full">
-          <h1 className="text-xl font-bold text-center text-[#4B3621] mb-4">
+          <h1 className="text-3xl font-extrabold text-center text-[#4B3621] mb-2">
             {voteData?.title || "제목 없음"}
           </h1>
 
           {voteData.content && (
-            <p className="text-center text-sm text-gray-700 mb-4 whitespace-pre-line">
+            <p className="text-lg text-center text-[#333] leading-relaxed mb-6 whitespace-pre-line">
               {voteData.content}
             </p>
           )}
 
           {voteData.mainImages?.length > 0 && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-              {voteData.mainImages.map((url, idx) => (
-                <img
-                  key={idx}
-                  src={url}
-                  alt={`본문 이미지 ${idx + 1}`}
-                  className="w-full h-60 object-cover rounded-lg"
-                />
-              ))}
+            <div className="w-full max-w-2xl mx-auto mb-6">
+              <Swiper
+                modules={[Navigation, Pagination]}
+                navigation
+                pagination={{ clickable: true }}
+                spaceBetween={10}
+                slidesPerView={1}
+              >
+                {voteData.mainImages.map((url, idx) => (
+                  <SwiperSlide key={idx}>
+                    <img
+                      src={url}
+                      alt={`본문 이미지 ${idx + 1}`}
+                      className="w-full h-64 object-cover rounded-lg"
+                    />
+                  </SwiperSlide>
+                ))}
+              </Swiper>
             </div>
           )}
 

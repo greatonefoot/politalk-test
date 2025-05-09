@@ -265,7 +265,7 @@ const Home = () => {
                         <div key={opt} className="mb-1">
                           <div className="text-[10px]">{opt}: {per}%</div>
                           <div className="w-full h-1 bg-gray-300 rounded">
-  <div className="h-full" style={{ width: `${per}%`, backgroundColor: '#FFD700' }} />
+  <div className="h-full" style={{ width: `${per}%`, backgroundColor: '#D2B48C' }} />
 </div>
 
 
@@ -317,7 +317,7 @@ const Home = () => {
                         <div key={opt} className="mb-1">
                           <div className="text-[10px]">{opt}: {per}%</div>
                           <div className="w-full h-1 bg-gray-300 rounded">
-                            <div className="h-full bg-[#FFD700]" style={{ width: `${per}%` }} />
+                            <div className="h-full bg-[#D2B48C]" style={{ width: `${per}%` }} />
                           </div>
                         </div>
                       ))}

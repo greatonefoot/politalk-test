@@ -132,6 +132,11 @@ const LoginPage = () => {
 
   const handleKakaoLogin = async () => {
     try {
+      if (!window.Kakao || !window.Kakao.isInitialized()) {
+        alert("카카오 SDK가 아직 초기화되지 않았습니다. 잠시 후 다시 시도해주세요.");
+        return;
+      }
+  
       window.Kakao.Auth.login({
         scope: "profile_nickname, account_email",
         persistAccessToken: true,

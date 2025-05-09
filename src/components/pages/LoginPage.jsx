@@ -19,12 +19,20 @@ const LoginPage = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // ✅ Kakao SDK 초기화
-    const kakaoKey = "여기에_카카오_REST_API_키_입력";
-    if (window.Kakao && !window.Kakao.isInitialized()) {
-      window.Kakao.init(kakaoKey);
-    }
+    const kakaoKey = "efee2a0af2ad649dea067b07b6f48b10"; // 실제 키로 교체
+  
+    const script = document.createElement("script");
+    script.src = "https://developers.kakao.com/sdk/js/kakao.js";
+    script.async = true;
+    script.onload = () => {
+      if (window.Kakao && !window.Kakao.isInitialized()) {
+        window.Kakao.init(kakaoKey);
+        console.log("✅ Kakao SDK 초기화 완료");
+      }
+    };
+    document.head.appendChild(script);
   }, []);
+  
 
   const handleSubmit = async (e) => {
     e.preventDefault();

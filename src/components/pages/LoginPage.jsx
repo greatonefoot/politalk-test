@@ -44,7 +44,7 @@ const LoginPage = () => {
       const naverLogin = new window.naver.LoginWithNaverId({
         clientId: "KzNqOG3o5fJpv3t2qJ4k", // 네이버 콘솔에서 받은 Client ID
         callbackUrl: "https://politalk-test.vercel.app/login",
-        isPopup: true,
+        isPopup: truth,
         loginButton: { color: "green", type: 3, height: 40 },
       });
       naverLogin.init();
@@ -184,11 +184,12 @@ const LoginPage = () => {
         scope: "profile_nickname, account_email",
         persistAccessToken: true,
         success: async (authObj) => {
-          const res = await fetch("https://asia-northeast3-politalk-4e0dd.cloudfunctions.net/kakaoLogin", {
+          const res = await fetch("https://naverlogin-wbm25judka-du.a.run.app", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ accessToken: authObj.access_token }),
+            body: JSON.stringify({ accessToken }),
           });
+          
           const data = await res.json();
           await signInWithCustomToken(auth, data.firebaseToken);
           alert("카카오 로그인 성공!");

@@ -70,3 +70,41 @@ export const kakaoLogin = onRequest({ region: "asia-northeast3" }, async (req, r
     res.status(500).json({ error: "카카오 로그인 실패" });
   }
 });
+// ✅ 네이버 로그인 함수 추가
+export const naverLogin = onRequest({ region: "asia-northeast3" }, async (req, res) => {
+  res.set("Access-Control-Allow-Origin", "*");
+  res.set("Access-Control-Allow-Methods", "POST, OPTIONS");
+  res.set("Access-Control-Allow-Headers", "Content-Type");
+
+  if (req.method === "OPTIONS") {
+    res.status(204).send("");
+    return;
+  }
+
+  try {
+    const { accessToken } = req.body;
+    if (!accessToken) {
+      res.status(400).json({ error: "accessToken 누락됨" });
+      return;
+    }
+
+    const profileRes = await fetch("https://openapi.naver.com/v1/nid/me", {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+
+    const profileData = await profileRes.json();
+    if (!profileData.response || !profileData.response.id) {
+      res.status(400).json({ error: "네이버 사용자 정보 조회 실패" });
+      return;
+    }
+
+    const naverId = `naver:${profileData.response.id}`;
+
+    // 🔐 Firebase Custom Token 발급
+    const customToken = await admin.auth().createCustomToken(naverId);
+    res.status(200).json({ firebaseToken: customToken });
+  } catch (error) {
+    console.error("❌ 네이버 로그인 실패:", error);
+    res.status(500).json({ error: "네이버 로그인 실패" });
+  }
+});

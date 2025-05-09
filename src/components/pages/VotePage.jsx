@@ -96,7 +96,6 @@ const VotePage = () => {
     fetchData();
     incrementViews();
   }, [postId]);
-
   useEffect(() => {
     const checkCommented = async () => {
       if (!currentUid || votedOption === null) return;
@@ -160,6 +159,7 @@ const VotePage = () => {
     }
     setLoading(false);
   };
+
   const toggleSection = (index) => {
     setVisibleSections((prev) => ({
       ...prev,
@@ -188,24 +188,55 @@ const VotePage = () => {
     if (percent >= 20) return "bg-[#F8E0CE]";
     return "bg-[#F9EBE0]";
   };
-
   return (
     <div className="bg-gray-100 min-h-screen">
       <Header categories={[]} selectedCategory="전체" setSelectedCategory={() => {}} searchTerm="" setSearchTerm={() => {}} />
       <HotPostsSidebar />
-      <main className="mt-20 px-10 px-4 flex flex-col items-center max-w-screen-xl mx-auto">
+      <main className="mt-20 px-4 flex flex-col items-center max-w-screen-xl mx-auto">
         <div className="w-full">
-          <h1 className="text-xl font-bold text-center text-[#4B3621] mb-4">{voteData?.title || "제목 없음"}</h1>
+          <h1 className="text-xl font-bold text-center text-[#4B3621] mb-4">
+            {voteData?.title || "제목 없음"}
+          </h1>
+
+          {voteData.content && (
+            <p className="text-center text-sm text-gray-700 mb-4 whitespace-pre-line">
+              {voteData.content}
+            </p>
+          )}
+
+          {voteData.mainImages?.length > 0 && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+              {voteData.mainImages.map((url, idx) => (
+                <img
+                  key={idx}
+                  src={url}
+                  alt={`본문 이미지 ${idx + 1}`}
+                  className="w-full h-60 object-cover rounded-lg"
+                />
+              ))}
+            </div>
+          )}
 
           <div className="flex flex-col md:flex-row justify-center items-center gap-4 my-6">
             {voteData.options.map((opt, idx) => (
               <div key={idx} className={`bg-white rounded-xl shadow-md overflow-hidden w-full max-w-xs transition transform hover:scale-105 ${votedOption === idx ? "ring-2 ring-[#C8A97E]" : ""}`}>
                 {opt.imageUrl && (
-                  <img src={opt.imageUrl} alt={opt.label || opt.text} className="w-full h-48 object-cover cursor-pointer" onClick={() => handleVote(idx)} />
+                  <img
+                    src={opt.imageUrl}
+                    alt={opt.label || opt.text}
+                    className="w-full h-48 object-cover cursor-pointer"
+                    onClick={() => handleVote(idx)}
+                  />
                 )}
                 <div className="p-4 text-center">
-                  <p className="font-semibold text-lg mb-2">{opt.label || opt.text || `선택지 ${idx + 1}`}</p>
-                  <button onClick={() => handleVote(idx)} disabled={voted || loading} className={`w-full py-2 rounded font-semibold ${votedOption === idx ? "bg-gray-400 text-white cursor-default" : "bg-[#4B3621] hover:bg-[#3A2A1A] text-white"}`}>
+                  <p className="font-semibold text-lg mb-2">
+                    {opt.label || opt.text || `선택지 ${idx + 1}`}
+                  </p>
+                  <button
+                    onClick={() => handleVote(idx)}
+                    disabled={voted || loading}
+                    className={`w-full py-2 rounded font-semibold ${votedOption === idx ? "bg-gray-400 text-white cursor-default" : "bg-[#4B3621] hover:bg-[#3A2A1A] text-white"}`}
+                  >
                     {votedOption === idx ? "투표 완료" : "선택"}
                   </button>
                 </div>
@@ -241,13 +272,10 @@ const VotePage = () => {
                 0
               );
 
-              const MIN_RATIO = 0.2; // 최소 20% 비율
-
-              let tempRatios = voteData.options.map((opt, i) => {
-                if (visibleSections[i] === false) return 0;
-                if (visibleVotes === 0) return 1;
-                return opt.votes / visibleVotes;
-              });
+              const MIN_RATIO = 0.2;
+              let tempRatios = voteData.options.map((opt, i) =>
+                visibleSections[i] === false ? 0 : visibleVotes === 0 ? 1 : opt.votes / visibleVotes
+              );
 
               tempRatios = tempRatios.map((r, i) =>
                 visibleSections[i] === false ? 0 : Math.max(r, MIN_RATIO)

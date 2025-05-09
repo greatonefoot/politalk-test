@@ -127,7 +127,7 @@ const LoginPage = () => {
     try {
       window.Kakao.Auth.login({
         scope: "profile_nickname, account_email",
-        success: async function (authObj) {
+        success: async (authObj) => {
           const res = await fetch("https://asia-northeast3-politalk-4e0dd.cloudfunctions.net/kakaoLogin", {
             method: "POST",
             headers: { "Content-Type": "application/json" },

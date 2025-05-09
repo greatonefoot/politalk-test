@@ -15,7 +15,10 @@ const HotPostsSidebar = () => {
           id: doc.id,
           ...doc.data(),
         }));
-
+    
+        // 🔥 삭제된 게시물 제외
+        const nonDeletedPosts = posts.filter(post => !post.isDeleted);
+    
         const now = new Date();
         const dateLimit = new Date(
           activeTab === "일간"
@@ -24,12 +27,12 @@ const HotPostsSidebar = () => {
             ? now.setDate(now.getDate() - 7)
             : now.setDate(now.getDate() - 30)
         );
-
-        const recentPosts = posts.filter(post => {
+    
+        const recentPosts = nonDeletedPosts.filter(post => {
           const createdAt = post.createdAt?.toDate?.();
           return createdAt && createdAt >= dateLimit;
         });
-
+    
         const postsWithCommentCounts = await Promise.all(
           recentPosts.map(async post => {
             const commentsSnapshot = await getDocs(
@@ -41,25 +44,26 @@ const HotPostsSidebar = () => {
             };
           })
         );
-
+    
         const fixedPosts = postsWithCommentCounts.filter(p => p.isFixed);
         const nonFixedPosts = postsWithCommentCounts.filter(p => !p.isFixed);
-
+    
         const maxCount = 10;
         const remainingCount = Math.max(0, maxCount - fixedPosts.length);
-
+    
         const sorted = nonFixedPosts
           .sort((a, b) =>
             ((b.views || 0) + (b.realCommentCount || 0) * 3) -
             ((a.views || 0) + (a.realCommentCount || 0) * 3)
           )
           .slice(0, remainingCount);
-
+    
         setHotPosts([...fixedPosts, ...sorted]);
       } catch (error) {
         console.error("🔥 인기글 불러오기 실패:", error);
       }
     };
+    
 
     fetchHotPosts();
   }, [activeTab]);

@@ -19,11 +19,12 @@ const LoginPage = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const kakaoKey = "efee2a0af2ad649dea067b07b6f48b10"; // 실제 키로 교체
-  
+    const kakaoKey = "efee2a0af2ad649dea067b07b6f48b10";
+
     const script = document.createElement("script");
     script.src = "https://developers.kakao.com/sdk/js/kakao.js";
     script.async = true;
+    script.defer = true; // ✅ defer 추가
     script.onload = () => {
       if (window.Kakao && !window.Kakao.isInitialized()) {
         window.Kakao.init(kakaoKey);
@@ -32,7 +33,6 @@ const LoginPage = () => {
     };
     document.head.appendChild(script);
   }, []);
-  
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -130,11 +130,11 @@ const LoginPage = () => {
     }
   };
 
-  // ✅ 카카오 로그인 처리
   const handleKakaoLogin = async () => {
     try {
       window.Kakao.Auth.login({
         scope: "profile_nickname, account_email",
+        persistAccessToken: true,
         success: async (authObj) => {
           const res = await fetch("https://asia-northeast3-politalk-4e0dd.cloudfunctions.net/kakaoLogin", {
             method: "POST",
@@ -146,7 +146,7 @@ const LoginPage = () => {
           alert("카카오 로그인 성공!");
           navigate("/");
         },
-        fail: function (err) {
+        fail: (err) => {
           console.error("카카오 로그인 실패", err);
           alert("카카오 로그인 실패");
         },
@@ -186,7 +186,6 @@ const LoginPage = () => {
         <button onClick={handleGoogleLogin} className="bg-red-500 text-white w-full py-2 rounded mb-2">
           구글로 로그인
         </button>
-        {/* ✅ 카카오 로그인 버튼 추가 */}
         <button onClick={handleKakaoLogin} className="bg-yellow-400 text-black w-full py-2 rounded">
           카카오로 로그인
         </button>

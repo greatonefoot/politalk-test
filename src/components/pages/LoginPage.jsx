@@ -43,7 +43,7 @@ const LoginPage = () => {
     naverScript.onload = () => {
       const naverLogin = new window.naver.LoginWithNaverId({
         clientId: "KzNqOG3o5fJpv3t2qJ4k", // 네이버 콘솔에서 받은 Client ID
-        callbackUrl: "https://politalk-test.vercel.app/login/naver/callback",
+        callbackUrl: "https://politalk-test.vercel.app/login",
         isPopup: true,
         loginButton: { color: "green", type: 3, height: 40 },
       });

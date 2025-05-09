@@ -59,11 +59,13 @@ const LoginPage = () => {
 
       const handleNaverLogin = async () => {
         try {
-          const res = await fetch("https://asia-northeast3-politalk-4e0dd.cloudfunctions.net/naverLogin", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ accessToken }),
-          });
+          // 네이버 로그인
+const res = await fetch("/api/naver-login", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ accessToken }),
+});
+
 
           const data = await res.json();
           await signInWithCustomToken(auth, data.firebaseToken);
@@ -184,11 +186,13 @@ const LoginPage = () => {
         scope: "profile_nickname, account_email",
         persistAccessToken: true,
         success: async (authObj) => {
-          const res = await fetch("https://naverlogin-wbm25judka-du.a.run.app", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ accessToken }),
-          });
+         // 카카오 로그인
+const res = await fetch("/api/kakao-login", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ accessToken }),
+});
+
           
           const data = await res.json();
           await signInWithCustomToken(auth, data.firebaseToken);

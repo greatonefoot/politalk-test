@@ -1,0 +1,13 @@
+{
+    "rewrites": [
+      {
+        "source": "/api/naver-login",
+        "destination": "https://naverlogin-wbm25judka-du.a.run.app"
+      },
+      {
+        "source": "/api/kakao-login",
+        "destination": "https://kakaologin-wbm25judka-du.a.run.app"
+      }
+    ]
+  }
+  

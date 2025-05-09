@@ -31,7 +31,6 @@ function timeAgo(date) {
   const days = Math.floor(hours / 24);
   const weeks = Math.floor(days / 7);
   const months = Math.floor(days / 30);
-
   if (seconds < 60) return "방금 전";
   if (minutes < 60) return `${minutes}분 전`;
   if (hours < 24) return `${hours}시간 전`;
@@ -43,6 +42,7 @@ function timeAgo(date) {
 
 const CommentSection = ({ postId, optionIndex, votePercent, myVote }) => {
   const [comments, setComments] = useState([]);
+  const [bestComments, setBestComments] = useState([]);
   const [post, setPost] = useState(null);
   const [newComment, setNewComment] = useState("");
   const [sortType, setSortType] = useState(localStorage.getItem("sortType") || "최신순");
@@ -79,11 +79,48 @@ const CommentSection = ({ postId, optionIndex, votePercent, myVote }) => {
   useEffect(() => {
     fetchPost();
     fetchComments(true);
+    fetchBestComments();
   }, [postId, optionIndex, sortType]);
 
   const fetchPost = async () => {
     const postSnap = await getDoc(doc(db, "posts", postId));
     if (postSnap.exists()) setPost(postSnap.data());
+  };
+
+  const fetchBestComments = async () => {
+    const q = query(
+      collection(db, "comments"),
+      where("postId", "==", postId),
+      where("optionIndex", "==", optionIndex),
+      where("parentId", "==", null),
+      where("isBlind", "==", false),
+      orderBy("score", "desc"),
+      limit(3)
+    );
+    const snap = await getDocs(q);
+    const best = snap.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data(),
+      createdAt: doc.data().createdAt?.toDate?.() || new Date(),
+      score: doc.data().score ?? 0,
+      reactions: doc.data().reactions ?? {}
+    }));
+    setBestComments(best);
+
+    const uniqueUids = [...new Set(best.map(c => c.authorUid).filter(Boolean))];
+    const newUserMap = {};
+    for (const uid of uniqueUids) {
+      const snap = await getDoc(doc(db, "users", uid));
+      if (snap.exists()) newUserMap[uid] = snap.data();
+    }
+    setUserMap(prev => ({ ...prev, ...newUserMap }));
+
+    const newReactionMap = {};
+    best.forEach(c => {
+      const saved = localStorage.getItem(`reaction-${c.id}`);
+      newReactionMap[c.id] = saved && saved !== "none" ? saved : null;
+    });
+    setReactionMap(prev => ({ ...prev, ...newReactionMap }));
   };
 
   const fetchUserMap = async (commentsList) => {
@@ -93,9 +130,8 @@ const CommentSection = ({ postId, optionIndex, votePercent, myVote }) => {
       const snap = await getDoc(doc(db, "users", uid));
       if (snap.exists()) usersData[uid] = snap.data();
     }
-    setUserMap(usersData);
+    setUserMap(prev => ({ ...prev, ...usersData }));
   };
-
   const calculateScore = (reactions) => {
     const { "👍": up = 0, "👎": down = 0, "😢": sad = 0, "😡": angry = 0, "💪": strong = 0 } = reactions || {};
     return up * 3 + strong * 2 + sad - down * 2;
@@ -106,6 +142,8 @@ const CommentSection = ({ postId, optionIndex, votePercent, myVote }) => {
     const q = query(
       collection(db, "comments"),
       where("postId", "==", postId),
+      // ✅ parentId 조건 제거하여 답글 포함
+      where("optionIndex", "==", optionIndex),
       sortType === "공감순" ? orderBy("score", "desc") : orderBy("createdAt", "desc"),
       ...(lastVisible && !isInitial ? [startAfter(lastVisible)] : []),
       limit(COMMENTS_PER_PAGE)
@@ -135,12 +173,38 @@ const CommentSection = ({ postId, optionIndex, votePercent, myVote }) => {
         const saved = localStorage.getItem(`reaction-${c.id}`);
         newReactionMap[c.id] = saved && saved !== "none" ? saved : null;
       });
-      setReactionMap(newReactionMap);
+      setReactionMap(prev => ({ ...prev, ...newReactionMap }));
     }
 
     setLoading(false);
   };
 
+  const handleDelete = async (commentId) => {
+    if (!window.confirm("정말 삭제하시겠습니까?")) return;
+    await deleteDoc(doc(db, "comments", commentId));
+    setLastVisible(null);
+    fetchComments(true);
+    fetchBestComments();
+  };
+
+  const handleReport = async (commentId) => {
+    if (!window.confirm("해당 댓글을 신고하시겠습니까?")) return;
+    const ref = doc(db, "comments", commentId);
+    const snap = await getDoc(ref);
+    if (!snap.exists()) return;
+    const data = snap.data();
+    const newCount = (data.reportCount || 0) + 1;
+    const isBlind = newCount >= 5;
+
+    await updateDoc(ref, {
+      reportCount: newCount,
+      isBlind,
+    });
+
+    alert(isBlind ? "블라인드 처리되었습니다." : "신고가 접수되었습니다.");
+    fetchComments(true);
+    fetchBestComments();
+  };
   const canDelete = (comment) => {
     if (currentUser?.uid && comment.authorUid === currentUser.uid) return true;
     const anonId = localStorage.getItem("anon-id");
@@ -149,11 +213,12 @@ const CommentSection = ({ postId, optionIndex, votePercent, myVote }) => {
   };
 
   const canInteractWith = (comment, isReply = false) => {
-    if (post?.authorUid && currentUser?.uid === post.authorUid) return true;
-    if (!isReply && Number(myVote) === comment.optionIndex) return true;
     if (isReply) return true;
+    if (post?.authorUid && currentUser?.uid === post.authorUid) return true;
+    if (Number(myVote) === comment.optionIndex) return true;
     return false;
   };
+
   const handleEmojiReact = async (commentId, emoji) => {
     const reactionKey = `reaction-${commentId}`;
     const prev = localStorage.getItem(reactionKey);
@@ -169,6 +234,16 @@ const CommentSection = ({ postId, optionIndex, votePercent, myVote }) => {
       prevComments.map(c => {
         if (c.id !== commentId) return c;
         updatedReactions = { ...c.reactions };
+        if (prev && prev !== "none") updatedReactions[prev] = Math.max((updatedReactions[prev] || 1) - 1, 0);
+        if (prev !== emoji) updatedReactions[emoji] = (updatedReactions[emoji] || 0) + 1;
+        return { ...c, reactions: updatedReactions, score: calculateScore(updatedReactions) };
+      })
+    );
+
+    setBestComments(prevBest =>
+      prevBest.map(c => {
+        if (c.id !== commentId) return c;
+        const updatedReactions = { ...c.reactions };
         if (prev && prev !== "none") updatedReactions[prev] = Math.max((updatedReactions[prev] || 1) - 1, 0);
         if (prev !== emoji) updatedReactions[emoji] = (updatedReactions[emoji] || 0) + 1;
         return { ...c, reactions: updatedReactions, score: calculateScore(updatedReactions) };
@@ -192,6 +267,28 @@ const CommentSection = ({ postId, optionIndex, votePercent, myVote }) => {
     }
   };
 
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (file.size > MAX_IMAGE_SIZE) return alert("5MB 이하만 가능");
+    if (!ALLOWED_EXTENSIONS.includes(file.type)) return alert("지원되지 않는 포맷");
+    setImageFile(file);
+    setPreviewUrl(URL.createObjectURL(file));
+    e.target.value = null;
+  };
+
+  const handleDragOver = (e) => e.preventDefault();
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    if (e.dataTransfer.files[0]) handleImageChange({ target: { files: [e.dataTransfer.files[0]] } });
+  };
+
+  const handleRemoveImage = () => {
+    setImageFile(null);
+    setPreviewUrl("");
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
   const handleSubmit = async (optIndex, parentId = null) => {
     const text = parentId ? replyText.trim() : newComment.trim();
     if (!text) return;
@@ -218,107 +315,23 @@ const CommentSection = ({ postId, optionIndex, votePercent, myVote }) => {
       isBlind: false,
     });
 
-    try {
-      if (parentId) {
-        const parentSnap = await getDoc(doc(db, "comments", parentId));
-        if (parentSnap.exists()) {
-          const parent = parentSnap.data();
-          const toUid = parent.authorUid;
-          if (toUid && toUid !== currentUser?.uid) {
-            await addDoc(collection(db, "notifications"), {
-              toUid,
-              fromUid: currentUser?.uid || null,
-              type: "reply",
-              postId,
-              commentId: parentSnap.id,
-              message: "누군가 당신의 댓글에 답글을 남겼습니다.",
-              isRead: false,
-              createdAt: new Date()
-            });
-          }
-        }
-      } else {
-        const postSnap = await getDoc(doc(db, "posts", postId));
-        if (postSnap.exists()) {
-          const post = postSnap.data();
-          const toUid = post.authorUid;
-          if (toUid && toUid !== currentUser?.uid) {
-            await addDoc(collection(db, "notifications"), {
-              toUid,
-              fromUid: currentUser?.uid || null,
-              type: "comment",
-              postId,
-              commentId: null,
-              message: "누군가 당신의 게시물에 댓글을 남겼습니다.",
-              isRead: false,
-              createdAt: new Date()
-            });
-          }
-        }
-      }
-    } catch (err) {
-      console.error("알림 생성 실패:", err);
-    }
-
     setLastCommentTime(Date.now());
     if (parentId) {
       setReplyText("");
       setActiveReplyId(null);
-      setOpenReplyMap(prev => ({ ...prev, [parentId]: true }));
+      setTimeout(() => {
+        setOpenReplyMap(prev => ({ ...prev, [parentId]: true }));
+      }, 300);
     } else {
       setNewComment("");
       setImageFile(null);
       setPreviewUrl("");
       if (fileInputRef.current) fileInputRef.current.value = "";
     }
+
     setLastVisible(null);
     fetchComments(true);
-  };
-  const handleDelete = async (commentId) => {
-    if (!window.confirm("정말 삭제하시겠습니까?")) return;
-    await deleteDoc(doc(db, "comments", commentId));
-    setLastVisible(null);
-    fetchComments(true);
-  };
-
-  const handleReport = async (commentId) => {
-    if (!window.confirm("해당 댓글을 신고하시겠습니까?")) return;
-    const ref = doc(db, "comments", commentId);
-    const snap = await getDoc(ref);
-    if (!snap.exists()) return;
-    const data = snap.data();
-    const newCount = (data.reportCount || 0) + 1;
-    const isBlind = newCount >= 5;
-
-    await updateDoc(ref, {
-      reportCount: newCount,
-      isBlind,
-    });
-
-    alert(isBlind ? "블라인드 처리되었습니다." : "신고가 접수되었습니다.");
-    fetchComments(true);
-  };
-
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    if (file.size > MAX_IMAGE_SIZE) return alert("5MB 이하만 가능");
-    if (!ALLOWED_EXTENSIONS.includes(file.type)) return alert("지원되지 않는 포맷");
-    setImageFile(file);
-    setPreviewUrl(URL.createObjectURL(file));
-    e.target.value = null;
-  };
-
-  const handleDragOver = (e) => e.preventDefault();
-  const handleDrop = (e) => {
-    e.preventDefault();
-    if (e.dataTransfer.files[0]) handleImageChange({ target: { files: [e.dataTransfer.files[0]] } });
-  };
-
-  const handleRemoveImage = () => {
-    setImageFile(null);
-    setPreviewUrl("");
-    if (fileInputRef.current) fileInputRef.current.value = "";
+    fetchBestComments();
   };
 
   const renderEmojiButtons = (comment, isReply = false) => {
@@ -345,13 +358,6 @@ const CommentSection = ({ postId, optionIndex, votePercent, myVote }) => {
     );
   };
 
-  const bestComments = useMemo(() => {
-    return comments
-      .filter(c => !c.parentId && !c.isBlind)
-      .sort((a, b) => b.score - a.score || (b.authorUid ? 1 : -1))
-      .slice(0, 3);
-  }, [comments]);
-
   const renderAuthorLabel = (c) => {
     const isWriter = c.authorUid === post?.authorUid;
     const user = c.authorUid ? userMap[c.authorUid] : null;
@@ -370,7 +376,14 @@ const CommentSection = ({ postId, optionIndex, votePercent, myVote }) => {
       </div>
     );
   };
-  const parentComments = comments.filter((c) => !c.parentId);
+
+  const bestCommentIds = useMemo(() => bestComments.map(c => c.id), [bestComments]);
+
+  // ✅ 댓글은 부모만 필터링, 답글은 childMap에서 자동 연결
+  const parentComments = comments.filter(
+    (c) => !c.parentId && !bestCommentIds.includes(c.id)
+  );
+
   const childMap = comments.reduce((m, c) => {
     if (c.parentId) {
       m[c.parentId] = m[c.parentId] || [];
@@ -398,7 +411,6 @@ const CommentSection = ({ postId, optionIndex, votePercent, myVote }) => {
           <option>공감순</option>
         </select>
       </div>
-
       {bestComments.length > 0 && (
         <div className="mb-6">
           <h4 className="text-[#6B4D33] font-bold mb-2">🌟 베스트 댓글 TOP3</h4>
@@ -411,12 +423,72 @@ const CommentSection = ({ postId, optionIndex, votePercent, myVote }) => {
                   <img key={i} src={url} alt="첨부" className="mt-2 max-h-40 rounded" />
                 ))}
                 {renderAuthorLabel(c)}
+                <div className="flex gap-2 text-xs mt-1">
+                  {canDelete(c) && (
+                    <button onClick={() => handleDelete(c.id)} className="hover:underline text-gray-500">🗑 삭제</button>
+                  )}
+                  {!c.isBlind && (
+                    <>
+                      <button onClick={() => setActiveReplyId(c.id)} className="hover:underline text-[#6B4D33]">💬 답글</button>
+                      {canInteractWith(c, false) && (
+                        <button onClick={() => handleReport(c.id)} className="hover:underline text-red-400">🚩 신고</button>
+                      )}
+                    </>
+                  )}
+                </div>
+                {!c.isBlind && renderEmojiButtons(c)}
+                {activeReplyId === c.id && canInteractWith(c, true) && (
+                  <div className="mt-2 ml-4">
+                    <input
+                      value={replyText}
+                      onChange={e => setReplyText(e.target.value)}
+                      placeholder="답글 입력..."
+                      className="w-full border p-1 rounded text-sm mb-1"
+                    />
+                    <button onClick={() => handleSubmit(optionIndex, c.id)} className="bg-[#6B4D33] text-white px-2 py-1 text-sm rounded">답글 작성</button>
+                  </div>
+                )}
+                {childMap[c.id] && (
+                  <>
+                    <button
+                      onClick={() => setOpenReplyMap(prev => ({ ...prev, [c.id]: !prev[c.id] }))}
+                      className="text-xs text-blue-500 hover:underline"
+                    >
+                      {openReplyMap[c.id]
+                        ? `🔽 답글 숨기기`
+                        : `💬 답글 ${childMap[c.id].length}개 보기`}
+                    </button>
+                    {openReplyMap[c.id] && childMap[c.id].map((r) => (
+                      <div key={r.id} className="ml-4 mt-2 p-2 border rounded bg-white">
+                        {r.isBlind ? (
+                          <p className="italic text-gray-400">🚫 블라인드된 댓글입니다.</p>
+                        ) : (
+                          <>
+                            <p>{r.text}</p>
+                            {r.imageUrls?.map((url, i) => (
+                              <img key={i} src={url} alt="첨부" className="mt-2 max-h-40 rounded" />
+                            ))}
+                          </>
+                        )}
+                        {renderAuthorLabel(r)}
+                        <div className="flex gap-2 text-xs mt-1">
+                          {canDelete(r) && (
+                            <button onClick={() => handleDelete(r.id)} className="hover:underline text-gray-500">🗑 삭제</button>
+                          )}
+                          {canInteractWith(r, true) && !r.isBlind && (
+                            <button onClick={() => handleReport(r.id)} className="hover:underline text-red-400">🚩 신고</button>
+                          )}
+                        </div>
+                        {!r.isBlind && renderEmojiButtons(r, true)}
+                      </div>
+                    ))}
+                  </>
+                )}
               </div>
             ))}
           </div>
         </div>
       )}
-
       <div className="space-y-4">
         {parentComments.map((c) => (
           <div key={c.id} className="p-2 border rounded bg-gray-50">
@@ -435,17 +507,17 @@ const CommentSection = ({ postId, optionIndex, votePercent, myVote }) => {
               {canDelete(c) && (
                 <button onClick={() => handleDelete(c.id)} className="hover:underline text-gray-500">🗑 삭제</button>
               )}
-              {canInteractWith(c) && !c.isBlind && (
+              {!c.isBlind && (
                 <>
                   <button onClick={() => setActiveReplyId(c.id)} className="hover:underline text-[#6B4D33]">💬 답글</button>
-                  <button onClick={() => handleReport(c.id)} className="hover:underline text-red-400">🚩 신고</button>
+                  {canInteractWith(c, false) && (
+                    <button onClick={() => handleReport(c.id)} className="hover:underline text-red-400">🚩 신고</button>
+                  )}
                 </>
               )}
               {childMap[c.id] && (
                 <button
-                  onClick={() =>
-                    setOpenReplyMap((prev) => ({ ...prev, [c.id]: !prev[c.id] }))
-                  }
+                  onClick={() => setOpenReplyMap((prev) => ({ ...prev, [c.id]: !prev[c.id] }))}
                   className="text-xs text-blue-500 hover:underline"
                 >
                   {openReplyMap[c.id]

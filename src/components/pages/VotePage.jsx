@@ -1,5 +1,3 @@
-// src/components/pages/VotePage.jsx
-
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import Header from "../Header";
@@ -7,21 +5,10 @@ import CommentSection from "./CommentSection";
 import HotPostsSidebar from "../HotPostsSidebar";
 import { db, auth } from "../../firebase";
 import {
-  doc,
-  updateDoc,
-  increment,
-  getDoc,
-  collection,
-  query,
-  where,
-  getDocs,
+  doc, updateDoc, increment, getDoc,
+  collection, query, where, getDocs,
 } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
-import { Swiper, SwiperSlide } from "swiper/react";
-import { Navigation, Pagination } from "swiper/modules";
-import "swiper/css";
-import "swiper/css/navigation";
-import "swiper/css/pagination";
 
 async function hasWrittenCommentForOption(uid, postId, optionIndex) {
   if (!uid) return false;
@@ -42,31 +29,21 @@ const VotePage = () => {
   const [voteData, setVoteData] = useState(null);
   const [authorName, setAuthorName] = useState("로딩 중...");
   const [visibleSections, setVisibleSections] = useState({});
-  const [rendered, setRendered] = useState(false);
   const [loading, setLoading] = useState(true);
   const [currentUid, setCurrentUid] = useState(null);
+  const [hasCommented, setHasCommented] = useState(false);
 
   useEffect(() => {
-    const timeout = setTimeout(() => setRendered(true), 100);
-    return () => clearTimeout(timeout);
-  }, []);
-
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    const unsub = onAuthStateChanged(auth, (user) => {
       if (user) {
         setCurrentUid(user.uid);
       } else {
-        const anonId = localStorage.getItem("anon-id");
-        if (anonId) {
-          setCurrentUid(anonId);
-        } else {
-          const newId = crypto.randomUUID();
-          localStorage.setItem("anon-id", newId);
-          setCurrentUid(newId);
-        }
+        const anon = localStorage.getItem("anon-id") || crypto.randomUUID();
+        localStorage.setItem("anon-id", anon);
+        setCurrentUid(anon);
       }
     });
-    return () => unsubscribe();
+    return () => unsub();
   }, []);
 
   useEffect(() => {
@@ -101,34 +78,34 @@ const VotePage = () => {
             setAuthorName("익명");
           }
         }
-      } catch (err) {
-        console.error("투표 데이터 불러오기 실패:", err);
+      } catch (e) {
+        console.error("투표 데이터 불러오기 실패:", e);
       } finally {
         setLoading(false);
       }
     };
 
-    const incrementViewCount = async () => {
+    const incrementViews = async () => {
       try {
-        const postRef = doc(db, "posts", postId);
-        await updateDoc(postRef, { views: increment(1) });
-      } catch (error) {
-        console.error("조회수 증가 실패:", error);
+        await updateDoc(doc(db, "posts", postId), { views: increment(1) });
+      } catch (e) {
+        console.error("조회수 증가 실패:", e);
       }
     };
 
     fetchData();
-    incrementViewCount();
+    incrementViews();
   }, [postId]);
 
   useEffect(() => {
-    const warnTimeout = setTimeout(() => {
-      if (loading) {
-        alert("불러오는 데 시간이 오래 걸립니다. 인터넷 상태를 확인해주세요.");
-      }
-    }, 8000);
-    return () => clearTimeout(warnTimeout);
-  }, [loading]);
+    const checkCommented = async () => {
+      if (!currentUid || votedOption === null) return;
+      const result = await hasWrittenCommentForOption(currentUid, postId, votedOption);
+      setHasCommented(result);
+    };
+    checkCommented();
+  }, [currentUid, postId, votedOption]);
+
   const handleVote = async (index) => {
     if (voted || loading) return;
     setLoading(true);
@@ -146,7 +123,6 @@ const VotePage = () => {
       setVoted(true);
       setVotedOption(index);
       setVoteData({ ...data, options: updatedOptions });
-      window.dispatchEvent(new Event("voted"));
     } catch (e) {
       console.error("투표 실패:", e);
     }
@@ -156,8 +132,8 @@ const VotePage = () => {
   const handleCancelVote = async () => {
     if (!voted || loading || votedOption === null || !currentUid) return;
 
-    const hasCommented = await hasWrittenCommentForOption(currentUid, postId, votedOption);
-    if (hasCommented) {
+    const commented = await hasWrittenCommentForOption(currentUid, postId, votedOption);
+    if (commented) {
       alert("댓글을 작성한 경우 투표를 취소할 수 없습니다.");
       return;
     }
@@ -184,12 +160,26 @@ const VotePage = () => {
     }
     setLoading(false);
   };
+  const toggleSection = (index) => {
+    setVisibleSections((prev) => ({
+      ...prev,
+      [index]: !(prev[index] ?? true),
+    }));
+  };
+
+  if (loading || !voteData || !Array.isArray(voteData.options)) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <p className="text-gray-600 text-lg">불러오는 중...</p>
+      </div>
+    );
+  }
 
   const getVotePercents = () => {
-    if (!voteData || !Array.isArray(voteData.options)) return [];
     const total = voteData.options.reduce((sum, opt) => sum + opt.votes, 0) || 1;
-    return voteData.options.map(opt => (opt.votes / total) * 100);
+    return voteData.options.map((opt) => (opt.votes / total) * 100);
   };
+
   const votePercents = getVotePercents();
 
   const getBackgroundColor = (percent) => {
@@ -199,93 +189,23 @@ const VotePage = () => {
     return "bg-[#F9EBE0]";
   };
 
-  const toggleSection = (index) => {
-    setVisibleSections(prev => ({
-      ...prev,
-      [index]: !(prev[index] ?? true),
-    }));
-  };
-
-  if (loading || !voteData || !voteData.options) {
-    return (
-      <div className="flex flex-col justify-center items-center h-screen bg-gray-100">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-[#C8A97E] border-t-transparent"></div>
-        <p className="mt-4 text-gray-600 text-lg">투표 정보를 불러오는 중입니다...</p>
-      </div>
-    );
-  }
-
   return (
     <div className="bg-gray-100 min-h-screen">
-      <Header
-        categories={[]}
-        selectedCategory="전체"
-        setSelectedCategory={() => {}}
-        searchTerm=""
-        setSearchTerm={() => {}}
-      />
+      <Header categories={[]} selectedCategory="전체" setSelectedCategory={() => {}} searchTerm="" setSearchTerm={() => {}} />
       <HotPostsSidebar />
-      <main className="pt-10 px-4 flex flex-col items-center max-w-screen-xl mx-auto">
+      <main className="mt-20 px-10 px-4 flex flex-col items-center max-w-screen-xl mx-auto">
         <div className="w-full">
-          <p className="text-sm text-gray-600 mb-2 ml-1">작성자: {authorName}</p>
-
-          {voteData.imageUrls?.length > 0 && (
-            <div className="mb-6 relative max-w-2xl mx-auto">
-              <Swiper
-                modules={[Navigation, Pagination]}
-                spaceBetween={10}
-                slidesPerView={1}
-                navigation
-                pagination={{ clickable: true }}
-              >
-                {voteData.imageUrls.map((url, idx) => (
-                  <SwiperSlide key={idx}>
-                    <img
-                      src={url}
-                      alt={`본문 이미지 ${idx + 1}`}
-                      className="w-full max-h-[400px] object-contain rounded"
-                    />
-                  </SwiperSlide>
-                ))}
-              </Swiper>
-            </div>
-          )}
-          {voteData.content && (
-            <div className="bg-white p-6 rounded-xl shadow mb-6 border border-gray-200 mx-auto max-w-2xl">
-              <h3 className="text-lg font-semibold text-[#4B3621] mb-2">📄 본문 내용</h3>
-              <div className="text-gray-700 leading-relaxed whitespace-pre-wrap text-[15px] tracking-wide break-words">
-                {voteData.content}
-              </div>
-            </div>
-          )}
+          <h1 className="text-xl font-bold text-center text-[#4B3621] mb-4">{voteData?.title || "제목 없음"}</h1>
 
           <div className="flex flex-col md:flex-row justify-center items-center gap-4 my-6">
             {voteData.options.map((opt, idx) => (
-              <div
-                key={idx}
-                className={`bg-white rounded-xl shadow-md overflow-hidden w-full max-w-xs transition transform hover:scale-105 ${
-                  votedOption === idx ? "ring-2 ring-[#C8A97E]" : ""
-                }`}
-              >
+              <div key={idx} className={`bg-white rounded-xl shadow-md overflow-hidden w-full max-w-xs transition transform hover:scale-105 ${votedOption === idx ? "ring-2 ring-[#C8A97E]" : ""}`}>
                 {opt.imageUrl && (
-                  <img
-                    src={opt.imageUrl}
-                    alt={opt.label || opt.text}
-                    className="w-full h-48 object-cover cursor-pointer"
-                    onClick={() => handleVote(idx)}
-                  />
+                  <img src={opt.imageUrl} alt={opt.label || opt.text} className="w-full h-48 object-cover cursor-pointer" onClick={() => handleVote(idx)} />
                 )}
                 <div className="p-4 text-center">
                   <p className="font-semibold text-lg mb-2">{opt.label || opt.text || `선택지 ${idx + 1}`}</p>
-                  <button
-                    onClick={() => handleVote(idx)}
-                    disabled={voted || loading}
-                    className={`w-full py-2 rounded font-semibold ${
-                      votedOption === idx
-                        ? "bg-gray-400 text-white cursor-default"
-                        : "bg-[#4B3621] hover:bg-[#3A2A1A] text-white"
-                    }`}
-                  >
+                  <button onClick={() => handleVote(idx)} disabled={voted || loading} className={`w-full py-2 rounded font-semibold ${votedOption === idx ? "bg-gray-400 text-white cursor-default" : "bg-[#4B3621] hover:bg-[#3A2A1A] text-white"}`}>
                     {votedOption === idx ? "투표 완료" : "선택"}
                   </button>
                 </div>
@@ -297,77 +217,116 @@ const VotePage = () => {
             <div className="text-center">
               <button
                 onClick={handleCancelVote}
-                className="text-sm text-red-600 underline mt-2"
+                disabled={hasCommented}
+                className={`text-sm underline mt-2 ${
+                  hasCommented ? "text-gray-400 cursor-not-allowed" : "text-red-600 hover:text-red-800"
+                }`}
               >
                 ⛔ 투표 취소하기
               </button>
+              {hasCommented && (
+                <p className="text-xs text-gray-500 mt-1">
+                  이미 댓글을 작성해서 투표를 취소할 수 없습니다.
+                </p>
+              )}
             </div>
           )}
         </div>
 
-        {voted && voteData.options.length > 0 && (
-          <div className="mt-6 text-sm text-gray-600 text-center">
-            {voteData.options.map(
-              (opt, idx) =>
-                !visibleSections[idx] && (
-                  <button
-                    key={idx}
-                    onClick={() => toggleSection(idx)}
-                    className="inline-block bg-gray-200 hover:bg-gray-300 text-gray-800 px-3 py-1 rounded-full mx-1 mb-2 transition"
-                  >
-                    {opt.label || `진영 ${idx + 1}`} 댓글 다시 보기
-                  </button>
-                )
-            )}
-          </div>
-        )}
-
-        {voted && Array.isArray(voteData.options) ? (
-          <div className="w-full px-4 mt-10 flex flex-col lg:flex-row gap-2 justify-center items-start">
-            {voteData.options.map((opt, idx) => {
-              const percent = votePercents[idx];
-              const isVisible = visibleSections[idx] ?? true;
-              const bgColor = getBackgroundColor(percent);
-              return (
-                <div
-                  key={idx}
-                  style={{
-                    width: rendered ? `${percent}%` : "0%",
-                    minWidth: "280px",
-                    maxWidth: "100%",
-                    transition: "width 0.7s ease",
-                  }}
-                  className={`${bgColor} p-3 rounded relative group ${
-                    isVisible ? "block" : "hidden"
-                  }`}
-                >
-                  <div className="absolute top-2 right-2 bg-white text-[#4B3621] text-xs font-bold px-2 py-1 rounded shadow cursor-default group-hover:opacity-100 opacity-80 transition">
-                    {Math.round(percent)}%
-                    <div className="absolute top-full mt-1 left-1/2 -translate-x-1/2 whitespace-nowrap bg-black text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition pointer-events-none z-50">
-                      전체 투표 중 {Math.round(percent)}%
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => toggleSection(idx)}
-                    className="text-sm text-gray-600 underline mb-2"
-                  >
-                    {isVisible ? "댓글 숨기기" : "댓글 보기"}
-                  </button>
-                  {isVisible && (
-                    <CommentSection
-                      postId={postId}
-                      optionIndex={idx}
-                      votePercent={percent}
-                      myVote={votedOption}
-                    />
-                  )}
-                </div>
+        {voted && (
+          <div className="flex flex-col md:flex-row w-full gap-2 mt-10 items-stretch">
+            {(() => {
+              const visibleVotes = voteData.options.reduce(
+                (sum, opt, i) => visibleSections[i] !== false ? sum + opt.votes : sum,
+                0
               );
-            })}
-          </div>
-        ) : (
-          <div className="text-center text-gray-500 mt-12">
-            투표 완료 후 댓글을 확인할 수 있습니다.
+
+              const MIN_RATIO = 0.2; // 최소 20% 비율
+
+              let tempRatios = voteData.options.map((opt, i) => {
+                if (visibleSections[i] === false) return 0;
+                if (visibleVotes === 0) return 1;
+                return opt.votes / visibleVotes;
+              });
+
+              tempRatios = tempRatios.map((r, i) =>
+                visibleSections[i] === false ? 0 : Math.max(r, MIN_RATIO)
+              );
+
+              const ratioSum = tempRatios.reduce((sum, r) => sum + r, 0);
+              const finalPercents = tempRatios.map((r, i) =>
+                visibleSections[i] === false ? 0 : (r / ratioSum) * 100
+              );
+
+              return voteData.options.map((opt, idx) => {
+                const isVisible = visibleSections[idx] !== false;
+                const rawPercent = votePercents[idx];
+                const adjustedPercent = finalPercents[idx];
+                const bgColor = getBackgroundColor(rawPercent);
+
+                return (
+                  <div
+                    key={idx}
+                    style={
+                      isVisible
+                        ? {
+                            flexGrow: 1,
+                            flexBasis: `${adjustedPercent}%`,
+                            maxWidth: `${adjustedPercent}%`,
+                            transition: "all 0.5s ease",
+                            overflow: "hidden",
+                          }
+                        : {
+                            flex: "0 0 100px",
+                            maxWidth: "100px",
+                            minWidth: "100px",
+                            backgroundColor: "#F3F3F3",
+                            borderRadius: "0.5rem",
+                            display: "flex",
+                            justifyContent: "center",
+                            alignItems: "center",
+                          }
+                    }
+                    className={isVisible ? `${bgColor} p-3 rounded relative group` : ""}
+                  >
+                    {isVisible ? (
+                      <>
+                        <div className="sticky top-0 z-10 bg-opacity-70 bg-inherit flex justify-between items-center mb-2 py-1 px-1 backdrop-blur">
+                          <button
+                            onClick={() => toggleSection(idx)}
+                            className="text-sm font-semibold text-[#4B3621] underline flex items-center gap-1 hover:text-[#3A2A1A]"
+                          >
+                            🔽 댓글 숨기기
+                          </button>
+                          <span className="text-xs text-gray-500">{Math.round(rawPercent)}%</span>
+                        </div>
+
+                        <div className="w-full h-2 bg-white rounded overflow-hidden mb-3">
+                          <div
+                            className="h-full bg-[#4B3621] transition-all duration-500"
+                            style={{ width: `${rawPercent}%` }}
+                          />
+                        </div>
+
+                        <CommentSection
+                          postId={postId}
+                          optionIndex={idx}
+                          votePercent={rawPercent}
+                          myVote={votedOption}
+                        />
+                      </>
+                    ) : (
+                      <button
+                        onClick={() => toggleSection(idx)}
+                        className="text-sm font-semibold text-[#4B3621] underline hover:text-[#3A2A1A]"
+                      >
+                        🔼 댓글 보기
+                      </button>
+                    )}
+                  </div>
+                );
+              });
+            })()}
           </div>
         )}
       </main>

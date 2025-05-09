@@ -1,5 +1,4 @@
-// src/pages/LoginPage.jsx
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { auth, db } from "../../firebase";
 import {
@@ -9,6 +8,7 @@ import {
   sendPasswordResetEmail,
   signInWithPopup,
   GoogleAuthProvider,
+  signInWithCustomToken,
 } from "firebase/auth";
 import { doc, setDoc, addDoc, collection, getDoc } from "firebase/firestore";
 
@@ -18,20 +18,25 @@ const LoginPage = () => {
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
 
+  useEffect(() => {
+    // ✅ Kakao SDK 초기화
+    const kakaoKey = "여기에_카카오_REST_API_키_입력";
+    if (window.Kakao && !window.Kakao.isInitialized()) {
+      window.Kakao.init(kakaoKey);
+    }
+  }, []);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     try {
       if (isSignup) {
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
-
         await sendEmailVerification(user);
         alert("가입 완료! 이메일 인증 메일이 전송되었습니다.");
       } else {
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
-
         if (!user.emailVerified) {
           alert("이메일 인증이 필요합니다. 받은 편지함을 확인해주세요.");
           return;
@@ -39,7 +44,6 @@ const LoginPage = () => {
 
         const userRef = doc(db, "users", user.uid);
         const docSnap = await getDoc(userRef);
-
         if (!docSnap.exists()) {
           await setDoc(userRef, {
             name: "새 사용자",
@@ -85,7 +89,6 @@ const LoginPage = () => {
       const provider = new GoogleAuthProvider();
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
-
       if (!user.emailVerified) {
         alert("이메일 인증이 필요합니다. 받은 편지함을 확인해주세요.");
         return;
@@ -93,7 +96,6 @@ const LoginPage = () => {
 
       const userRef = doc(db, "users", user.uid);
       const docSnap = await getDoc(userRef);
-
       if (!docSnap.exists()) {
         await setDoc(userRef, {
           name: "새 사용자",
@@ -120,13 +122,35 @@ const LoginPage = () => {
     }
   };
 
+  // ✅ 카카오 로그인 처리
+  const handleKakaoLogin = async () => {
+    try {
+      window.Kakao.Auth.login({
+        scope: "profile_nickname, account_email",
+        success: async function (authObj) {
+          const res = await fetch("https://asia-northeast3-politalk-4e0dd.cloudfunctions.net/kakaoLogin", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ accessToken: authObj.access_token }),
+          });
+          const data = await res.json();
+          await signInWithCustomToken(auth, data.firebaseToken);
+          alert("카카오 로그인 성공!");
+          navigate("/");
+        },
+        fail: function (err) {
+          console.error("카카오 로그인 실패", err);
+          alert("카카오 로그인 실패");
+        },
+      });
+    } catch (error) {
+      alert("오류: " + error.message);
+    }
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 relative">
-      {/* ✅ 홈으로 가기 버튼 */}
-      <Link
-        to="/"
-        className="absolute top-4 left-4 text-naver underline text-sm hover:text-naverDark"
-      >
+      <Link to="/" className="absolute top-4 left-4 text-naver underline text-sm hover:text-naverDark">
         ← 홈으로
       </Link>
 
@@ -135,20 +159,8 @@ const LoginPage = () => {
           {isSignup ? "회원가입" : "로그인"}
         </h2>
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          <input
-            type="email"
-            placeholder="이메일"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="border px-3 py-2 rounded"
-          />
-          <input
-            type="password"
-            placeholder="비밀번호"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="border px-3 py-2 rounded"
-          />
+          <input type="email" placeholder="이메일" value={email} onChange={(e) => setEmail(e.target.value)} className="border px-3 py-2 rounded" />
+          <input type="password" placeholder="비밀번호" value={password} onChange={(e) => setPassword(e.target.value)} className="border px-3 py-2 rounded" />
           <button type="submit" className="bg-naver text-white py-2 rounded">
             {isSignup ? "회원가입" : "로그인"}
           </button>
@@ -161,9 +173,14 @@ const LoginPage = () => {
             비밀번호 재설정
           </button>
         </div>
+
         <hr className="my-4" />
-        <button onClick={handleGoogleLogin} className="bg-red-500 text-white w-full py-2 rounded">
+        <button onClick={handleGoogleLogin} className="bg-red-500 text-white w-full py-2 rounded mb-2">
           구글로 로그인
+        </button>
+        {/* ✅ 카카오 로그인 버튼 추가 */}
+        <button onClick={handleKakaoLogin} className="bg-yellow-400 text-black w-full py-2 rounded">
+          카카오로 로그인
         </button>
       </div>
     </div>

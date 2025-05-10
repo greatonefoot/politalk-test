@@ -24,6 +24,7 @@ const VotePageMobile = () => {
   const [votedOption, setVotedOption] = useState(null);
   const [selectedOption, setSelectedOption] = useState(null);
   const [hasCommented, setHasCommented] = useState(false);
+  const [viewMode, setViewMode] = useState("my"); // 'my' or 'opponent'
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (user) => {
@@ -144,6 +145,13 @@ const VotePageMobile = () => {
     }
   };
 
+  const getVotePercents = () => {
+    const total = voteData.options.reduce((sum, opt) => sum + opt.votes, 0) || 1;
+    return voteData.options.map((opt) => Math.round((opt.votes / total) * 100));
+  };
+
+  const votePercents = voteData ? getVotePercents() : [];
+
   if (loading || !voteData) {
     return (
       <div className="flex justify-center items-center h-screen">
@@ -178,6 +186,7 @@ const VotePageMobile = () => {
                 ${selectedOption === idx ? "border-[#4B3621] bg-[#f1e9e1] scale-105" : "border-gray-300 bg-white"}`}
             >
               <p className="font-semibold text-sm">{opt.label || opt.text || `선택지 ${idx + 1}`}</p>
+              {voted && <p className="text-xs text-gray-500 mt-1">{votePercents[idx]}%</p>}
             </div>
           ))}
         </div>
@@ -230,13 +239,33 @@ const VotePageMobile = () => {
               />
             </div>
 
-            <div className="mt-8">
+            {/* 진영 선택 버튼 */}
+            <div className="flex justify-center gap-2 my-4">
+              <button
+                onClick={() => setViewMode("my")}
+                className={`px-3 py-1 rounded ${
+                  viewMode === "my" ? "bg-[#4B3621] text-white" : "bg-gray-200"
+                }`}
+              >
+                내 진영 댓글
+              </button>
+              <button
+                onClick={() => setViewMode("opponent")}
+                className={`px-3 py-1 rounded ${
+                  viewMode === "opponent" ? "bg-[#4B3621] text-white" : "bg-gray-200"
+                }`}
+              >
+                상대 진영 댓글
+              </button>
+            </div>
+
+            <div className="mt-4">
               <h2 className="text-base font-bold text-[#4B3621] mb-2">
-                💬 내가 선택한 진영 댓글
+                💬 {viewMode === "my" ? "내 진영 댓글" : "상대 진영 댓글"}
               </h2>
               <CommentSection
                 postId={postId}
-                optionIndex={votedOption}
+                optionIndex={viewMode === "my" ? votedOption : 1 - votedOption}
                 myVote={votedOption}
               />
             </div>

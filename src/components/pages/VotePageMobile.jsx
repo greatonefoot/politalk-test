@@ -14,11 +14,6 @@ import {
   getDocs,
 } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
-import { Swiper, SwiperSlide } from "swiper/react";
-import { Navigation, Pagination } from "swiper/modules";
-import "swiper/css";
-import "swiper/css/navigation";
-import "swiper/css/pagination";
 
 const VotePageMobile = () => {
   const { postId } = useParams();
@@ -27,7 +22,7 @@ const VotePageMobile = () => {
   const [currentUid, setCurrentUid] = useState(null);
   const [voted, setVoted] = useState(false);
   const [votedOption, setVotedOption] = useState(null);
-  const [selectedTab, setSelectedTab] = useState(0);
+  const [selectedOption, setSelectedOption] = useState(null);
   const [hasCommented, setHasCommented] = useState(false);
 
   useEffect(() => {
@@ -50,8 +45,7 @@ const VotePageMobile = () => {
         const postRef = doc(db, "posts", postId);
         const snap = await getDoc(postRef);
         if (snap.exists()) {
-          const data = snap.data();
-          setVoteData(data);
+          setVoteData(snap.data());
         }
       } catch (e) {
         console.error("투표 데이터 로딩 실패:", e);
@@ -93,8 +87,8 @@ const VotePageMobile = () => {
     checkCommented();
   }, [currentUid, postId, votedOption]);
 
-  const handleVote = async (index) => {
-    if (voted || loading) return;
+  const handleVote = async () => {
+    if (voted || loading || selectedOption === null) return;
     setLoading(true);
     try {
       const postRef = doc(db, "posts", postId);
@@ -103,12 +97,12 @@ const VotePageMobile = () => {
 
       const data = snap.data();
       const updatedOptions = [...data.options];
-      updatedOptions[index].votes += 1;
+      updatedOptions[selectedOption].votes += 1;
 
       await updateDoc(postRef, { options: updatedOptions });
-      localStorage.setItem(`voted-${postId}`, index);
+      localStorage.setItem(`voted-${postId}`, selectedOption);
       setVoted(true);
-      setVotedOption(index);
+      setVotedOption(selectedOption);
       setVoteData({ ...data, options: updatedOptions });
     } catch (e) {
       console.error("투표 실패:", e);
@@ -162,23 +156,6 @@ const VotePageMobile = () => {
     <div className="bg-[#fdfaf6] min-h-screen pb-10">
       <Header />
       <div className="w-full max-w-[480px] mx-auto p-4">
-        {voteData?.options && (
-          <div className="flex gap-2 mb-4">
-            {voteData.options.map((opt, idx) => (
-              <button
-                key={idx}
-                onClick={() => setSelectedTab(idx)}
-                className={`flex-1 py-2 rounded-md text-sm font-semibold ${
-                  selectedTab === idx
-                    ? "bg-[#4B3621] text-white"
-                    : "bg-gray-200 text-gray-700"
-                }`}
-              >
-                {opt.label || `선택지 ${idx + 1}`}
-              </button>
-            ))}
-          </div>
-        )}
         {voteData?.title && (
           <h1 className="text-xl font-bold text-center text-[#4B3621] mb-2">
             {voteData.title}
@@ -191,58 +168,34 @@ const VotePageMobile = () => {
           </p>
         )}
 
-        {voteData?.mainImages?.length > 0 && (
-          <div className="mb-6">
-            <Swiper
-              modules={[Navigation, Pagination]}
-              navigation
-              pagination={{ clickable: true }}
-              spaceBetween={8}
-              slidesPerView={1}
+        {/* 선택지 2개 동시에 표시 */}
+        <div className="flex gap-2 mb-4">
+          {voteData.options.map((opt, idx) => (
+            <div
+              key={idx}
+              onClick={() => setSelectedOption(idx)}
+              className={`flex-1 p-4 rounded-lg border-2 text-center cursor-pointer transition-all duration-300
+                ${selectedOption === idx ? "border-[#4B3621] bg-[#f1e9e1] scale-105" : "border-gray-300 bg-white"}`}
             >
-              {voteData.mainImages.map((url, idx) => (
-                <SwiperSlide key={idx}>
-                  <img
-                    src={url}
-                    alt={`본문 이미지 ${idx + 1}`}
-                    className="w-full h-48 object-cover rounded-lg"
-                  />
-                </SwiperSlide>
-              ))}
-            </Swiper>
-          </div>
-        )}
-
-        {voteData?.options?.map((opt, idx) => (
-          <div key={idx} className={`mb-4 ${selectedTab === idx ? "" : "hidden"}`}>
-            <div className="bg-white rounded-xl shadow-md overflow-hidden">
-              {opt.imageUrl && (
-                <img
-                  src={opt.imageUrl}
-                  alt={opt.label || opt.text}
-                  className="w-full h-48 object-cover"
-                  onClick={() => handleVote(idx)}
-                />
-              )}
-              <div className="p-4 text-center">
-                <p className="font-semibold text-base mb-2">
-                  {opt.label || opt.text || `선택지 ${idx + 1}`}
-                </p>
-                <button
-                  onClick={() => handleVote(idx)}
-                  disabled={voted || loading}
-                  className={`w-full py-2 rounded font-semibold ${
-                    votedOption === idx
-                      ? "bg-gray-400 text-white cursor-default"
-                      : "bg-[#4B3621] hover:bg-[#3A2A1A] text-white"
-                  }`}
-                >
-                  {votedOption === idx ? "투표 완료" : "선택"}
-                </button>
-              </div>
+              <p className="font-semibold text-sm">{opt.label || opt.text || `선택지 ${idx + 1}`}</p>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
+
+        {/* 선택 버튼 */}
+        {!voted && (
+          <button
+            onClick={handleVote}
+            disabled={selectedOption === null}
+            className={`w-full py-2 rounded font-semibold text-white transition ${
+              selectedOption === null
+                ? "bg-gray-300 cursor-not-allowed"
+                : "bg-[#4B3621] hover:bg-[#3A2A1A]"
+            }`}
+          >
+            선택
+          </button>
+        )}
 
         {voted && (
           <div className="text-center mt-2">
@@ -264,29 +217,26 @@ const VotePageMobile = () => {
             )}
           </div>
         )}
-        {voted && (
+
+        {voted && votedOption !== null && (
           <>
-            {/* ✅ 베스트 댓글 섹션 */}
             <div className="mt-8">
               <h2 className="text-base font-bold text-[#4B3621] mb-2">🔥 베스트 댓글 TOP 3</h2>
               <CommentSection
                 postId={postId}
-                optionIndex={selectedTab}
-                votePercent={0}
+                optionIndex={votedOption}
                 myVote={votedOption}
                 mode="best"
               />
             </div>
 
-            {/* ✅ 일반 댓글 섹션 */}
             <div className="mt-8">
               <h2 className="text-base font-bold text-[#4B3621] mb-2">
-                💬 선택지 {selectedTab + 1} 댓글
+                💬 내가 선택한 진영 댓글
               </h2>
               <CommentSection
                 postId={postId}
-                optionIndex={selectedTab}
-                votePercent={0}
+                optionIndex={votedOption}
                 myVote={votedOption}
               />
             </div>

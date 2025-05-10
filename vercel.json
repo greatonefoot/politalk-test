@@ -1,13 +1,12 @@
 {
-    "rewrites": [
-      {
-        "source": "/api/naver-login",
-        "destination": "https://naverlogin-wbm25judka-du.a.run.app"
-      },
-      {
-        "source": "/api/kakao-login",
-        "destination": "https://kakaologin-wbm25judka-du.a.run.app"
-      }
-    ]
-  }
-  
+  "rewrites": [
+    {
+      "source": "/api/naver-login",
+      "destination": "https://asia-northeast3-politalk-4e0dd.cloudfunctions.net/naverLogin"
+    },
+    {
+      "source": "/api/kakao-login",
+      "destination": "https://asia-northeast3-politalk-4e0dd.cloudfunctions.net/kakaoLogin"
+    }
+  ]
+}

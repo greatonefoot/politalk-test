@@ -42,7 +42,7 @@ const LoginPage = () => {
 
       const handleNaverLogin = async () => {
         try {
-          const res = await fetch("https://asia-northeast3-politalk-4e0dd.cloudfunctions.net/naverLogin", {
+          const res = await fetch("https://us-central1-politalk-4e0dd.cloudfunctions.net/naverLogin", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ accessToken }),
@@ -193,7 +193,7 @@ const LoginPage = () => {
         success: async (authObj) => {
           const accessToken = authObj.access_token;
 
-          const res = await fetch("https://asia-northeast3-politalk-4e0dd.cloudfunctions.net/kakaoLogin", {
+          const res = await fetch("https://us-central1-politalk-4e0dd.cloudfunctions.net/kakaoLogin", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ accessToken }),

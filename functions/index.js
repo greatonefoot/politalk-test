@@ -7,7 +7,7 @@ import fetch from "node-fetch"; // 🔥 반드시 설치: npm install node-fetch
 initializeApp();
 
 const storage = new Storage();
-const bucket = storage.bucket("politalk-4e0dd.firebasestorage.app");
+const bucket = storage.bucket("politalk-4e0dd.appspot.com");
 
 // ✅ 이미지 업로드 함수 (기존 코드)
 export const uploadImage = onRequest({ region: "us-central1", memory: "128MiB" }, async (req, res) => {

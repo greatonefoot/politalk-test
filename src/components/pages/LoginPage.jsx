@@ -20,8 +20,6 @@ const LoginPage = () => {
 
   useEffect(() => {
     const kakaoKey = "efee2a0af2ad649dea067b07b6f48b10";
-
-    // Kakao SDK
     const kakaoScript = document.createElement("script");
     kakaoScript.src = "https://developers.kakao.com/sdk/js/kakao.js";
     kakaoScript.async = true;
@@ -33,24 +31,9 @@ const LoginPage = () => {
       }
     };
     document.head.appendChild(kakaoScript);
-
-    // Naver SDK
-    const naverScript = document.createElement("script");
-    naverScript.src = "https://static.nid.naver.com/js/naveridlogin_js_sdk_2.0.2.js";
-    naverScript.async = true;
-    document.head.appendChild(naverScript);
-
-    naverScript.onload = () => {
-      const naverLogin = new window.naver.LoginWithNaverId({
-        clientId: "KzNqOG3o5fJpv3t2qJ4k", // 네이버 콘솔에서 받은 Client ID
-        callbackUrl: "https://politalk-test.vercel.app/login",
-        isPopup: truth,
-        loginButton: { color: "green", type: 3, height: 40 },
-      });
-      naverLogin.init();
-    };
   }, []);
 
+  // ✅ 네이버 access_token 처리 로직 (기존 유지)
   useEffect(() => {
     const hash = window.location.href.split("#")[1];
     if (hash && hash.includes("access_token")) {
@@ -59,16 +42,37 @@ const LoginPage = () => {
 
       const handleNaverLogin = async () => {
         try {
-          // 네이버 로그인
-const res = await fetch("/api/naver-login", {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({ accessToken }),
-});
-
+          const res = await fetch("https://asia-northeast3-politalk-4e0dd.cloudfunctions.net/naverLogin", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ accessToken }),
+          });
 
           const data = await res.json();
           await signInWithCustomToken(auth, data.firebaseToken);
+
+          const user = auth.currentUser;
+          const userRef = doc(db, "users", user.uid);
+          const docSnap = await getDoc(userRef);
+          if (!docSnap.exists()) {
+            await setDoc(userRef, {
+              name: "새 사용자",
+              profilePic: "",
+              email: user.email || "",
+              role: "user",
+              createdAt: new Date(),
+            });
+          }
+
+          const ipRes = await fetch("https://api.ipify.org?format=json");
+          const ipData = await ipRes.json();
+          await addDoc(collection(db, "loginLogs"), {
+            uid: user.uid,
+            email: user.email || "",
+            timestamp: new Date(),
+            ip: ipData.ip,
+          });
+
           alert("네이버 로그인 성공!");
           navigate("/");
         } catch (error) {
@@ -79,6 +83,7 @@ const res = await fetch("/api/naver-login", {
       handleNaverLogin();
     }
   }, [navigate]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -186,16 +191,39 @@ const res = await fetch("/api/naver-login", {
         scope: "profile_nickname, account_email",
         persistAccessToken: true,
         success: async (authObj) => {
-         // 카카오 로그인
-const res = await fetch("/api/kakao-login", {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({ accessToken }),
-});
+          const accessToken = authObj.access_token;
 
-          
+          const res = await fetch("https://asia-northeast3-politalk-4e0dd.cloudfunctions.net/kakaoLogin", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ accessToken }),
+          });
+
           const data = await res.json();
           await signInWithCustomToken(auth, data.firebaseToken);
+
+          const user = auth.currentUser;
+          const userRef = doc(db, "users", user.uid);
+          const docSnap = await getDoc(userRef);
+          if (!docSnap.exists()) {
+            await setDoc(userRef, {
+              name: "새 사용자",
+              profilePic: "",
+              email: user.email || "",
+              role: "user",
+              createdAt: new Date(),
+            });
+          }
+
+          const ipRes = await fetch("https://api.ipify.org?format=json");
+          const ipData = await ipRes.json();
+          await addDoc(collection(db, "loginLogs"), {
+            uid: user.uid,
+            email: user.email || "",
+            timestamp: new Date(),
+            ip: ipData.ip,
+          });
+
           alert("카카오 로그인 성공!");
           navigate("/");
         },
@@ -208,6 +236,15 @@ const res = await fetch("/api/kakao-login", {
       alert("오류: " + error.message);
     }
   };
+
+  // ✅ 네이버 리디렉션 로그인
+  const handleNaverRedirect = () => {
+    const clientId = "KzNqOG3o5fJpv3t2qJ4k";
+    const redirectUri = "https://politalk-test.vercel.app/login";
+    const state = Math.random().toString(36).substring(2, 15);
+    window.location.href = `https://nid.naver.com/oauth2.0/authorize?response_type=token&client_id=${clientId}&redirect_uri=${redirectUri}&state=${state}`;
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 relative">
       <Link to="/" className="absolute top-4 left-4 text-naver underline text-sm hover:text-naverDark">
@@ -255,9 +292,9 @@ const res = await fetch("/api/kakao-login", {
         <button onClick={handleKakaoLogin} className="bg-yellow-400 text-black w-full py-2 rounded mb-2">
           카카오로 로그인
         </button>
-
-        {/* ✅ 네이버 로그인 버튼 영역 */}
-        <div id="naverIdLogin" className="w-full flex justify-center my-2" />
+        <button onClick={handleNaverRedirect} className="bg-green-600 text-white w-full py-2 rounded">
+          네이버 아이디로 로그인
+        </button>
       </div>
     </div>
   );

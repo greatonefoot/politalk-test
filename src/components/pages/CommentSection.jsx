@@ -59,6 +59,7 @@ const CommentSection = ({ postId, optionIndex, votePercent, myVote }) => {
   const [reactionMap, setReactionMap] = useState({});
   const [userMap, setUserMap] = useState({});
   const [loading, setLoading] = useState(false);
+  const [anonMap, setAnonMap] = useState({});
 
   const inputRef = useRef();
   const fileInputRef = useRef();
@@ -168,6 +169,12 @@ const CommentSection = ({ postId, optionIndex, votePercent, myVote }) => {
 
     if (isInitial) {
       await fetchUserMap(fetched);
+        const anonIds = Array.from(new Set(fetched.filter(c => !c.authorUid).map(c => c.authorId)));
+  const map = {};
+  anonIds.forEach((id, idx) => {
+    map[id] = `익명${idx + 1}`;
+  });
+  setAnonMap(map);
       const newReactionMap = {};
       fetched.forEach(c => {
         const saved = localStorage.getItem(`reaction-${c.id}`);
@@ -370,7 +377,7 @@ const CommentSection = ({ postId, optionIndex, votePercent, myVote }) => {
         ) : (
           <div className="w-5 h-5 rounded-full bg-gray-300" />
         )}
-        <span className="text-gray-700 font-semibold">{user?.name || "익명"}</span>
+        <span className="text-gray-700 font-semibold">{user?.name || anonMap[c.authorId] || "익명"}</span>
         {isWriter && <span className="text-[#6B4D33] font-semibold text-xs ml-1">[작성자]</span>}
         <span className="ml-2 text-xs text-gray-400">{time}</span>
       </div>

@@ -10,6 +10,8 @@ import AdminUserPage from "./components/pages/AdminUserPage";
 import MyProfilePage from "./components/pages/MyProfilePage";
 import MyHistoryPage from "./components/pages/MyHistoryPage";
 import LoginPage from "./components/pages/LoginPage";
+import TermsPage from "./components/pages/TermsPage";
+import PrivacyPolicy from "./components/pages/PrivacyPolicy";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AdminRoute from "./components/AdminRoute";
 
@@ -23,6 +25,13 @@ function App() {
           {/* ✅ 홈, 게시글 보기: 공개 */}
           <Route path="/" element={<Home />} />
           <Route path="/post/:postId" element={<VotePage />} />
+
+          {/* ✅ 로그인 */}
+          <Route path="/login" element={<LoginPage />} />
+
+          {/* ✅ 약관 페이지 */}
+          <Route path="/terms" element={<TermsPage />} />
+          <Route path="/privacy" element={<PrivacyPolicy />} />
 
           {/* ✅ 글 작성: 로그인 필요 */}
           <Route
@@ -77,9 +86,6 @@ function App() {
               </ProtectedRoute>
             }
           />
-
-          {/* ✅ 로그인 */}
-          <Route path="/login" element={<LoginPage />} />
         </Routes>
 
         <Toaster position="top-center" />

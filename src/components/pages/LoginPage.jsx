@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { auth, db } from "../../firebase";
 import {
@@ -8,89 +8,59 @@ import {
   sendPasswordResetEmail,
   signInWithPopup,
   GoogleAuthProvider,
-  signInWithCustomToken,
 } from "firebase/auth";
-import { doc, setDoc, addDoc, collection, getDoc } from "firebase/firestore";
+import {
+  doc,
+  setDoc,
+  addDoc,
+  collection,
+  getDoc,
+  query,
+  where,
+  getDocs
+} from "firebase/firestore";
 
 const LoginPage = () => {
   const [isSignup, setIsSignup] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [nickname, setNickname] = useState("");
+  const [agreeTerms, setAgreeTerms] = useState(false);
   const navigate = useNavigate();
-
-  useEffect(() => {
-    const kakaoKey = "efee2a0af2ad649dea067b07b6f48b10";
-    const kakaoScript = document.createElement("script");
-    kakaoScript.src = "https://developers.kakao.com/sdk/js/kakao.js";
-    kakaoScript.async = true;
-    kakaoScript.defer = true;
-    kakaoScript.onload = () => {
-      if (window.Kakao && !window.Kakao.isInitialized()) {
-        window.Kakao.init(kakaoKey);
-        console.log("✅ Kakao SDK 초기화 완료");
-      }
-    };
-    document.head.appendChild(kakaoScript);
-  }, []);
-
-  // ✅ 네이버 access_token 처리 로직 (기존 유지)
-  useEffect(() => {
-    const hash = window.location.href.split("#")[1];
-    if (hash && hash.includes("access_token")) {
-      const params = new URLSearchParams(hash);
-      const accessToken = params.get("access_token");
-
-      const handleNaverLogin = async () => {
-        try {
-          const res = await fetch("https://us-central1-politalk-4e0dd.cloudfunctions.net/naverLogin", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ accessToken }),
-          });
-
-          const data = await res.json();
-          await signInWithCustomToken(auth, data.firebaseToken);
-
-          const user = auth.currentUser;
-          const userRef = doc(db, "users", user.uid);
-          const docSnap = await getDoc(userRef);
-          if (!docSnap.exists()) {
-            await setDoc(userRef, {
-              name: "새 사용자",
-              profilePic: "",
-              email: user.email || "",
-              role: "user",
-              createdAt: new Date(),
-            });
-          }
-
-          const ipRes = await fetch("https://api.ipify.org?format=json");
-          const ipData = await ipRes.json();
-          await addDoc(collection(db, "loginLogs"), {
-            uid: user.uid,
-            email: user.email || "",
-            timestamp: new Date(),
-            ip: ipData.ip,
-          });
-
-          alert("네이버 로그인 성공!");
-          navigate("/");
-        } catch (error) {
-          alert("네이버 로그인 실패: " + error.message);
-        }
-      };
-
-      handleNaverLogin();
-    }
-  }, [navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       if (isSignup) {
+        if (!nickname.trim()) {
+          alert("닉네임을 입력해주세요.");
+          return;
+        }
+        if (!agreeTerms) {
+          alert("약관에 동의해야 가입할 수 있습니다.");
+          return;
+        }
+
+        // 닉네임 중복 검사
+        const q = query(collection(db, "users"), where("name", "==", nickname));
+        const snapshot = await getDocs(q);
+        if (!snapshot.empty) {
+          alert("이미 사용 중인 닉네임입니다.");
+          return;
+        }
+
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
         await sendEmailVerification(user);
+
+        await setDoc(doc(db, "users", user.uid), {
+          name: nickname,
+          profilePic: "",
+          email: email,
+          role: "user",
+          createdAt: new Date(),
+        });
+
         alert("가입 완료! 이메일 인증 메일이 전송되었습니다.");
       } else {
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
@@ -180,71 +150,6 @@ const LoginPage = () => {
     }
   };
 
-  const handleKakaoLogin = async () => {
-    try {
-      if (!window.Kakao || !window.Kakao.isInitialized()) {
-        alert("카카오 SDK가 아직 초기화되지 않았습니다. 잠시 후 다시 시도해주세요.");
-        return;
-      }
-
-      window.Kakao.Auth.login({
-        scope: "profile_nickname, account_email",
-        persistAccessToken: true,
-        success: async (authObj) => {
-          const accessToken = authObj.access_token;
-
-          const res = await fetch("https://us-central1-politalk-4e0dd.cloudfunctions.net/kakaoLogin", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ accessToken }),
-          });
-
-          const data = await res.json();
-          await signInWithCustomToken(auth, data.firebaseToken);
-
-          const user = auth.currentUser;
-          const userRef = doc(db, "users", user.uid);
-          const docSnap = await getDoc(userRef);
-          if (!docSnap.exists()) {
-            await setDoc(userRef, {
-              name: "새 사용자",
-              profilePic: "",
-              email: user.email || "",
-              role: "user",
-              createdAt: new Date(),
-            });
-          }
-
-          const ipRes = await fetch("https://api.ipify.org?format=json");
-          const ipData = await ipRes.json();
-          await addDoc(collection(db, "loginLogs"), {
-            uid: user.uid,
-            email: user.email || "",
-            timestamp: new Date(),
-            ip: ipData.ip,
-          });
-
-          alert("카카오 로그인 성공!");
-          navigate("/");
-        },
-        fail: (err) => {
-          console.error("카카오 로그인 실패", err);
-          alert("카카오 로그인 실패");
-        },
-      });
-    } catch (error) {
-      alert("오류: " + error.message);
-    }
-  };
-
-  // ✅ 네이버 리디렉션 로그인
-  const handleNaverRedirect = () => {
-    const clientId = "KzNqOG3o5fJpv3t2qJ4k";
-    const redirectUri = "https://politalk-test.vercel.app/login";
-    const state = Math.random().toString(36).substring(2, 15);
-    window.location.href = `https://nid.naver.com/oauth2.0/authorize?response_type=token&client_id=${clientId}&redirect_uri=${redirectUri}&state=${state}`;
-  };
-
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 relative">
       <Link to="/" className="absolute top-4 left-4 text-naver underline text-sm hover:text-naverDark">
@@ -262,6 +167,7 @@ const LoginPage = () => {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             className="border px-3 py-2 rounded"
+            required
           />
           <input
             type="password"
@@ -269,7 +175,31 @@ const LoginPage = () => {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             className="border px-3 py-2 rounded"
+            required
           />
+          {isSignup && (
+            <>
+              <input
+                type="text"
+                placeholder="닉네임"
+                value={nickname}
+                onChange={(e) => setNickname(e.target.value)}
+                className="border px-3 py-2 rounded"
+                required
+              />
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={agreeTerms}
+                  onChange={(e) => setAgreeTerms(e.target.checked)}
+                />
+                <span>
+                  <a href="/terms" className="underline text-blue-600" target="_blank">이용약관</a> 및
+                  <a href="/privacy" className="underline text-blue-600" target="_blank"> 개인정보 처리방침</a>에 동의합니다
+                </span>
+              </label>
+            </>
+          )}
           <button type="submit" className="bg-naver text-white py-2 rounded">
             {isSignup ? "회원가입" : "로그인"}
           </button>
@@ -288,12 +218,6 @@ const LoginPage = () => {
 
         <button onClick={handleGoogleLogin} className="bg-red-500 text-white w-full py-2 rounded mb-2">
           구글로 로그인
-        </button>
-        <button onClick={handleKakaoLogin} className="bg-yellow-400 text-black w-full py-2 rounded mb-2">
-          카카오로 로그인
-        </button>
-        <button onClick={handleNaverRedirect} className="bg-green-600 text-white w-full py-2 rounded">
-          네이버 아이디로 로그인
         </button>
       </div>
     </div>

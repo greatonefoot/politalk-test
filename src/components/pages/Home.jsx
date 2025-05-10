@@ -85,7 +85,7 @@ const Home = () => {
 
       if (post.authorUid) {
         const userSnap = await getDoc(doc(db, "users", post.authorUid));
-        authors[post.id] = userSnap.exists() ? userSnap.data().nickname || "익명" : "익명";
+        authors[post.id] = userSnap.exists() ? userSnap.data().name || "익명" : "익명";
       }
     }
 

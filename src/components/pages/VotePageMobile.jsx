@@ -24,7 +24,7 @@ const VotePageMobile = () => {
   const [votedOption, setVotedOption] = useState(null);
   const [selectedOption, setSelectedOption] = useState(null);
   const [hasCommented, setHasCommented] = useState(false);
-  const [viewMode, setViewMode] = useState("my"); // 'my' or 'opponent'
+  const [viewMode, setViewMode] = useState("my");
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (user) => {
@@ -88,63 +88,6 @@ const VotePageMobile = () => {
     checkCommented();
   }, [currentUid, postId, votedOption]);
 
-  const handleVote = async () => {
-    if (voted || loading || selectedOption === null) return;
-    setLoading(true);
-    try {
-      const postRef = doc(db, "posts", postId);
-      const snap = await getDoc(postRef);
-      if (!snap.exists()) return;
-
-      const data = snap.data();
-      const updatedOptions = [...data.options];
-      updatedOptions[selectedOption].votes += 1;
-
-      await updateDoc(postRef, { options: updatedOptions });
-      localStorage.setItem(`voted-${postId}`, selectedOption);
-      setVoted(true);
-      setVotedOption(selectedOption);
-      setVoteData({ ...data, options: updatedOptions });
-    } catch (e) {
-      console.error("투표 실패:", e);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleCancelVote = async () => {
-    if (!voted || loading || votedOption === null || !currentUid) return;
-
-    const commented = await hasWrittenCommentForOption(currentUid, postId, votedOption);
-    if (commented) {
-      alert("댓글을 작성한 경우 투표를 취소할 수 없습니다.");
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const postRef = doc(db, "posts", postId);
-      const snap = await getDoc(postRef);
-      if (!snap.exists()) return;
-
-      const data = snap.data();
-      const updatedOptions = [...data.options];
-      if (updatedOptions[votedOption].votes > 0) {
-        updatedOptions[votedOption].votes -= 1;
-      }
-
-      await updateDoc(postRef, { options: updatedOptions });
-      localStorage.removeItem(`voted-${postId}`);
-      setVoted(false);
-      setVotedOption(null);
-      setVoteData({ ...data, options: updatedOptions });
-    } catch (e) {
-      console.error("투표 취소 실패:", e);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const getVotePercents = () => {
     const total = voteData.options.reduce((sum, opt) => sum + opt.votes, 0) || 1;
     return voteData.options.map((opt) => Math.round((opt.votes / total) * 100));
@@ -191,10 +134,29 @@ const VotePageMobile = () => {
           ))}
         </div>
 
-        {/* 선택 버튼 */}
         {!voted && (
           <button
-            onClick={handleVote}
+            onClick={async () => {
+              if (voted || loading || selectedOption === null) return;
+              setLoading(true);
+              try {
+                const postRef = doc(db, "posts", postId);
+                const snap = await getDoc(postRef);
+                if (!snap.exists()) return;
+                const data = snap.data();
+                const updatedOptions = [...data.options];
+                updatedOptions[selectedOption].votes += 1;
+                await updateDoc(postRef, { options: updatedOptions });
+                localStorage.setItem(`voted-${postId}`, selectedOption);
+                setVoted(true);
+                setVotedOption(selectedOption);
+                setVoteData({ ...data, options: updatedOptions });
+              } catch (e) {
+                console.error("투표 실패:", e);
+              } finally {
+                setLoading(false);
+              }
+            }}
             disabled={selectedOption === null}
             className={`w-full py-2 rounded font-semibold text-white transition ${
               selectedOption === null
@@ -209,7 +171,34 @@ const VotePageMobile = () => {
         {voted && (
           <div className="text-center mt-2">
             <button
-              onClick={handleCancelVote}
+              onClick={async () => {
+                if (!voted || loading || votedOption === null || !currentUid) return;
+                const commented = await hasWrittenCommentForOption(currentUid, postId, votedOption);
+                if (commented) {
+                  alert("댓글을 작성한 경우 투표를 취소할 수 없습니다.");
+                  return;
+                }
+                setLoading(true);
+                try {
+                  const postRef = doc(db, "posts", postId);
+                  const snap = await getDoc(postRef);
+                  if (!snap.exists()) return;
+                  const data = snap.data();
+                  const updatedOptions = [...data.options];
+                  if (updatedOptions[votedOption].votes > 0) {
+                    updatedOptions[votedOption].votes -= 1;
+                  }
+                  await updateDoc(postRef, { options: updatedOptions });
+                  localStorage.removeItem(`voted-${postId}`);
+                  setVoted(false);
+                  setVotedOption(null);
+                  setVoteData({ ...data, options: updatedOptions });
+                } catch (e) {
+                  console.error("투표 취소 실패:", e);
+                } finally {
+                  setLoading(false);
+                }
+              }}
               disabled={hasCommented}
               className={`text-xs underline ${
                 hasCommented
@@ -234,12 +223,12 @@ const VotePageMobile = () => {
               <CommentSection
                 postId={postId}
                 optionIndex={votedOption}
+                votePercent={votePercents[votedOption] || 0}
                 myVote={votedOption}
                 mode="best"
               />
             </div>
 
-            {/* 진영 선택 버튼 */}
             <div className="flex justify-center gap-2 my-4">
               <button
                 onClick={() => setViewMode("my")}
@@ -266,6 +255,7 @@ const VotePageMobile = () => {
               <CommentSection
                 postId={postId}
                 optionIndex={viewMode === "my" ? votedOption : 1 - votedOption}
+                votePercent={votePercents[viewMode === "my" ? votedOption : 1 - votedOption] || 0}
                 myVote={votedOption}
               />
             </div>

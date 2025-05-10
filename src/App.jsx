@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
 import Home from "./components/pages/Home";
 import VotePage from "./components/pages/VotePage";
+import VotePageMobile from "./components/pages/VotePageMobile"; // ✅ 모바일 전용 페이지
 import CreateTopic from "./components/pages/CreateTopic";
 import AdminPage from "./components/pages/AdminPage";
 import AdminCommentsPage from "./components/pages/AdminCommentsPage";
@@ -18,13 +19,19 @@ import AdminRoute from "./components/AdminRoute";
 import { Toaster } from "react-hot-toast";
 
 function App() {
+  // ✅ 모바일 분기
+  const isMobile = window.innerWidth <= 768;
+
   return (
     <Router>
       <div className="min-h-screen bg-gray-100">
         <Routes>
           {/* ✅ 홈, 게시글 보기: 공개 */}
           <Route path="/" element={<Home />} />
-          <Route path="/post/:postId" element={<VotePage />} />
+          <Route
+            path="/post/:postId"
+            element={isMobile ? <VotePageMobile /> : <VotePage />}
+          />
 
           {/* ✅ 로그인 */}
           <Route path="/login" element={<LoginPage />} />

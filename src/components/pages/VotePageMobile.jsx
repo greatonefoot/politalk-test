@@ -218,17 +218,6 @@ const VotePageMobile = () => {
 
         {voted && votedOption !== null && (
           <>
-            <div className="mt-8">
-              <h2 className="text-base font-bold text-[#4B3621] mb-2">🔥 베스트 댓글 TOP 3</h2>
-              <CommentSection
-                postId={postId}
-                optionIndex={votedOption}
-                votePercent={votePercents[votedOption] || 0}
-                myVote={votedOption}
-                mode="best"
-              />
-            </div>
-
             <div className="flex justify-center gap-2 my-4">
               <button
                 onClick={() => setViewMode("my")}

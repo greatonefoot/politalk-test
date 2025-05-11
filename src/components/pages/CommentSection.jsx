@@ -60,6 +60,7 @@ const CommentSection = ({ postId, optionIndex, votePercent, myVote }) => {
   const [userMap, setUserMap] = useState({});
   const [loading, setLoading] = useState(false);
   const [anonMap, setAnonMap] = useState({});
+  const [anonOrderMap, setAnonOrderMap] = useState({}); // ✅ 익명 고정 순서 저장
 
   const inputRef = useRef();
   const fileInputRef = useRef();
@@ -72,11 +73,11 @@ const CommentSection = ({ postId, optionIndex, votePercent, myVote }) => {
     }
     return id;
   }, []);
+
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => setCurrentUser(user));
     return () => unsubscribe();
   }, []);
-
   useEffect(() => {
     fetchPost();
     fetchComments(true);
@@ -104,7 +105,7 @@ const CommentSection = ({ postId, optionIndex, votePercent, myVote }) => {
       ...doc.data(),
       createdAt: doc.data().createdAt?.toDate?.() || new Date(),
       score: doc.data().score ?? 0,
-      reactions: doc.data().reactions ?? {}
+      reactions: doc.data().reactions ?? {},
     }));
     setBestComments(best);
 
@@ -125,7 +126,7 @@ const CommentSection = ({ postId, optionIndex, votePercent, myVote }) => {
   };
 
   const fetchUserMap = async (commentsList) => {
-    const uniqueUids = [...new Set(commentsList.map(c => c.authorUid).filter(uid => uid))];
+    const uniqueUids = [...new Set(commentsList.map(c => c.authorUid).filter(Boolean))];
     const usersData = {};
     for (const uid of uniqueUids) {
       const snap = await getDoc(doc(db, "users", uid));
@@ -133,17 +134,16 @@ const CommentSection = ({ postId, optionIndex, votePercent, myVote }) => {
     }
     setUserMap(prev => ({ ...prev, ...usersData }));
   };
+
   const calculateScore = (reactions) => {
     const { "👍": up = 0, "👎": down = 0, "😢": sad = 0, "😡": angry = 0, "💪": strong = 0 } = reactions || {};
     return up * 3 + strong * 2 + sad - down * 2;
   };
-
   const fetchComments = async (isInitial = false) => {
     setLoading(true);
     const q = query(
       collection(db, "comments"),
       where("postId", "==", postId),
-      // ✅ parentId 조건 제거하여 답글 포함
       where("optionIndex", "==", optionIndex),
       sortType === "공감순" ? orderBy("score", "desc") : orderBy("createdAt", "desc"),
       ...(lastVisible && !isInitial ? [startAfter(lastVisible)] : []),
@@ -170,18 +170,15 @@ const CommentSection = ({ postId, optionIndex, votePercent, myVote }) => {
     if (isInitial) {
       await fetchUserMap(fetched);
 
-const combined = [...fetched, ...comments, ...bestComments]
-  .filter(c => !c.authorUid && c.postId === postId)
-  .sort((a, b) => a.createdAt - b.createdAt); // ✅ 작성 시간 기준으로 정렬
-
-const uniqueAnonIds = Array.from(new Set(combined.map(c => c.authorId)));
-const map = {};
-uniqueAnonIds.forEach((id, idx) => {
-  map[id] = `익명${idx + 1}`;
-});
-setAnonMap(map);
-
-
+      // ✅ 익명 사용자 고정 순서로 부여
+      const all = [...fetched, ...bestComments];
+      const anonOnly = all.filter(c => !c.authorUid && c.postId === postId);
+      const uniqueIds = [...new Set(anonOnly.map(c => c.authorId))];
+      const map = {};
+      uniqueIds.forEach((id, idx) => {
+        map[id] = `익명${idx + 1}`;
+      });
+      setAnonMap(map);
 
       const newReactionMap = {};
       fetched.forEach(c => {
@@ -193,7 +190,6 @@ setAnonMap(map);
 
     setLoading(false);
   };
-
   const handleDelete = async (commentId) => {
     if (!window.confirm("정말 삭제하시겠습니까?")) return;
     await deleteDoc(doc(db, "comments", commentId));
@@ -220,6 +216,7 @@ setAnonMap(map);
     fetchComments(true);
     fetchBestComments();
   };
+
   const canDelete = (comment) => {
     if (currentUser?.uid && comment.authorUid === currentUser.uid) return true;
     const anonId = localStorage.getItem("anon-id");
@@ -281,7 +278,6 @@ setAnonMap(map);
       console.error("이모지 반영 오류:", e);
     }
   };
-
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -296,7 +292,9 @@ setAnonMap(map);
 
   const handleDrop = (e) => {
     e.preventDefault();
-    if (e.dataTransfer.files[0]) handleImageChange({ target: { files: [e.dataTransfer.files[0]] } });
+    if (e.dataTransfer.files[0]) {
+      handleImageChange({ target: { files: [e.dataTransfer.files[0]] } });
+    }
   };
 
   const handleRemoveImage = () => {
@@ -304,6 +302,7 @@ setAnonMap(map);
     setPreviewUrl("");
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
+
   const handleSubmit = async (optIndex, parentId = null) => {
     const text = parentId ? replyText.trim() : newComment.trim();
     if (!text) return;
@@ -372,7 +371,6 @@ setAnonMap(map);
       </div>
     );
   };
-
   const renderAuthorLabel = (c) => {
     const isWriter = c.authorUid === post?.authorUid;
     const user = c.authorUid ? userMap[c.authorUid] : null;
@@ -386,9 +384,8 @@ setAnonMap(map);
           <div className="w-5 h-5 rounded-full bg-gray-300" />
         )}
         <span className="text-gray-700 font-semibold">
-  {user?.name || anonMap[c.authorId] || "익명"}
-</span>
-
+          {user?.name || anonMap[c.authorId] || "익명"}
+        </span>
         {isWriter && <span className="text-[#6B4D33] font-semibold text-xs ml-1">[작성자]</span>}
         <span className="ml-2 text-xs text-gray-400">{time}</span>
       </div>
@@ -397,7 +394,6 @@ setAnonMap(map);
 
   const bestCommentIds = useMemo(() => bestComments.map(c => c.id), [bestComments]);
 
-  // ✅ 댓글은 부모만 필터링, 답글은 childMap에서 자동 연결
   const parentComments = comments.filter(
     (c) => !c.parentId && !bestCommentIds.includes(c.id)
   );
@@ -412,6 +408,7 @@ setAnonMap(map);
 
   return (
     <div className="p-4 bg-white border shadow rounded">
+      {/* 정렬 및 제목 */}
       <div className="flex justify-between items-center mb-4">
         <h3 className="font-bold text-lg text-[#6B4D33]">
           {post?.options[optionIndex]?.text} ({Math.round(votePercent)}%)
@@ -429,6 +426,8 @@ setAnonMap(map);
           <option>공감순</option>
         </select>
       </div>
+
+      {/* 베스트 댓글 */}
       {bestComments.length > 0 && (
         <div className="mb-6">
           <h4 className="text-[#6B4D33] font-bold mb-2">🌟 베스트 댓글 TOP3</h4>
@@ -455,58 +454,13 @@ setAnonMap(map);
                   )}
                 </div>
                 {!c.isBlind && renderEmojiButtons(c)}
-                {activeReplyId === c.id && canInteractWith(c, true) && (
-                  <div className="mt-2 ml-4">
-                    <input
-                      value={replyText}
-                      onChange={e => setReplyText(e.target.value)}
-                      placeholder="답글 입력..."
-                      className="w-full border p-1 rounded text-sm mb-1"
-                    />
-                    <button onClick={() => handleSubmit(optionIndex, c.id)} className="bg-[#6B4D33] text-white px-2 py-1 text-sm rounded">답글 작성</button>
-                  </div>
-                )}
-                {childMap[c.id] && (
-                  <>
-                    <button
-                      onClick={() => setOpenReplyMap(prev => ({ ...prev, [c.id]: !prev[c.id] }))}
-                      className="text-xs text-blue-500 hover:underline"
-                    >
-                      {openReplyMap[c.id]
-                        ? `🔽 답글 숨기기`
-                        : `💬 답글 ${childMap[c.id].length}개 보기`}
-                    </button>
-                    {openReplyMap[c.id] && childMap[c.id].map((r) => (
-                      <div key={r.id} className="ml-4 mt-2 p-2 border rounded bg-white">
-                        {r.isBlind ? (
-                          <p className="italic text-gray-400">🚫 블라인드된 댓글입니다.</p>
-                        ) : (
-                          <>
-                            <p>{r.text}</p>
-                            {r.imageUrls?.map((url, i) => (
-                              <img key={i} src={url} alt="첨부" className="mt-2 max-h-40 rounded" />
-                            ))}
-                          </>
-                        )}
-                        {renderAuthorLabel(r)}
-                        <div className="flex gap-2 text-xs mt-1">
-                          {canDelete(r) && (
-                            <button onClick={() => handleDelete(r.id)} className="hover:underline text-gray-500">🗑 삭제</button>
-                          )}
-                          {canInteractWith(r, true) && !r.isBlind && (
-                            <button onClick={() => handleReport(r.id)} className="hover:underline text-red-400">🚩 신고</button>
-                          )}
-                        </div>
-                        {!r.isBlind && renderEmojiButtons(r, true)}
-                      </div>
-                    ))}
-                  </>
-                )}
               </div>
             ))}
           </div>
         </div>
       )}
+
+      {/* 일반 댓글 */}
       <div className="space-y-4">
         {parentComments.map((c) => (
           <div key={c.id} className="p-2 border rounded bg-gray-50">
@@ -533,42 +487,9 @@ setAnonMap(map);
                   )}
                 </>
               )}
-              {childMap[c.id] && (
-                <button
-                  onClick={() => setOpenReplyMap((prev) => ({ ...prev, [c.id]: !prev[c.id] }))}
-                  className="text-xs text-blue-500 hover:underline"
-                >
-                  {openReplyMap[c.id]
-                    ? `🔽 답글 숨기기`
-                    : `💬 답글 ${childMap[c.id].length}개 보기`}
-                </button>
-              )}
             </div>
             {!c.isBlind && renderEmojiButtons(c)}
-            {openReplyMap[c.id] && childMap[c.id]?.map((r) => (
-              <div key={r.id} className="ml-4 mt-2 p-2 border rounded bg-white">
-                {r.isBlind ? (
-                  <p className="italic text-gray-400">🚫 블라인드된 댓글입니다.</p>
-                ) : (
-                  <>
-                    <p>{r.text}</p>
-                    {r.imageUrls?.map((url, i) => (
-                      <img key={i} src={url} alt="첨부" className="mt-2 max-h-40 rounded" />
-                    ))}
-                  </>
-                )}
-                {renderAuthorLabel(r)}
-                <div className="flex gap-2 text-xs mt-1">
-                  {canDelete(r) && (
-                    <button onClick={() => handleDelete(r.id)} className="hover:underline text-gray-500">🗑 삭제</button>
-                  )}
-                  {canInteractWith(r, true) && !r.isBlind && (
-                    <button onClick={() => handleReport(r.id)} className="hover:underline text-red-400">🚩 신고</button>
-                  )}
-                </div>
-                {!r.isBlind && renderEmojiButtons(r, true)}
-              </div>
-            ))}
+            {/* 답글 입력창 */}
             {activeReplyId === c.id && canInteractWith(c, true) && (
               <div className="mt-2 ml-4">
                 <input
@@ -580,6 +501,43 @@ setAnonMap(map);
                 <button onClick={() => handleSubmit(optionIndex, c.id)} className="bg-[#6B4D33] text-white px-2 py-1 text-sm rounded">답글 작성</button>
               </div>
             )}
+            {/* 답글 펼치기 */}
+            {childMap[c.id] && (
+              <>
+                <button
+                  onClick={() => setOpenReplyMap(prev => ({ ...prev, [c.id]: !prev[c.id] }))}
+                  className="text-xs text-blue-500 hover:underline"
+                >
+                  {openReplyMap[c.id]
+                    ? `🔽 답글 숨기기`
+                    : `💬 답글 ${childMap[c.id].length}개 보기`}
+                </button>
+                {openReplyMap[c.id] && childMap[c.id].map((r) => (
+                  <div key={r.id} className="ml-4 mt-2 p-2 border rounded bg-white">
+                    {r.isBlind ? (
+                      <p className="italic text-gray-400">🚫 블라인드된 댓글입니다.</p>
+                    ) : (
+                      <>
+                        <p>{r.text}</p>
+                        {r.imageUrls?.map((url, i) => (
+                          <img key={i} src={url} alt="첨부" className="mt-2 max-h-40 rounded" />
+                        ))}
+                      </>
+                    )}
+                    {renderAuthorLabel(r)}
+                    <div className="flex gap-2 text-xs mt-1">
+                      {canDelete(r) && (
+                        <button onClick={() => handleDelete(r.id)} className="hover:underline text-gray-500">🗑 삭제</button>
+                      )}
+                      {canInteractWith(r, true) && !r.isBlind && (
+                        <button onClick={() => handleReport(r.id)} className="hover:underline text-red-400">🚩 신고</button>
+                      )}
+                    </div>
+                    {!r.isBlind && renderEmojiButtons(r, true)}
+                  </div>
+                ))}
+              </>
+            )}
           </div>
         ))}
         {loading && <div className="text-center text-sm text-gray-400">로딩 중...</div>}
@@ -590,6 +548,7 @@ setAnonMap(map);
         )}
       </div>
 
+      {/* 댓글 작성 창 */}
       {(Number(myVote) === optionIndex || (currentUser?.uid && currentUser.uid === post?.authorUid)) && (
         <form
           onSubmit={e => {

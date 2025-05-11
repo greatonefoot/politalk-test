@@ -169,12 +169,27 @@ const CommentSection = ({ postId, optionIndex, votePercent, myVote }) => {
 
     if (isInitial) {
       await fetchUserMap(fetched);
-        const anonIds = Array.from(new Set(fetched.filter(c => !c.authorUid).map(c => c.authorId)));
+useEffect(() => {
+  if (!postId) return;
+  generateAnonMap(postId);
+}, [comments]);
+
+const generateAnonMap = (postId) => {
+  const allComments = [...comments, ...bestComments];
+  const anonIds = Array.from(
+    new Set(
+      allComments
+        .filter(c => !c.authorUid && c.postId === postId)
+        .map(c => c.authorId)
+    )
+  );
   const map = {};
   anonIds.forEach((id, idx) => {
     map[id] = `익명${idx + 1}`;
   });
   setAnonMap(map);
+};
+
       const newReactionMap = {};
       fetched.forEach(c => {
         const saved = localStorage.getItem(`reaction-${c.id}`);

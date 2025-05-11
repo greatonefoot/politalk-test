@@ -174,21 +174,19 @@ useEffect(() => {
   generateAnonMap(postId);
 }, [comments]);
 
-const generateAnonMap = (postId) => {
-  const allComments = [...comments, ...bestComments];
-  const anonIds = Array.from(
-    new Set(
-      allComments
-        .filter(c => !c.authorUid && c.postId === postId)
-        .map(c => c.authorId)
-    )
-  );
-  const map = {};
-  anonIds.forEach((id, idx) => {
-    map[id] = `익명${idx + 1}`;
-  });
-  setAnonMap(map);
-};
+// 댓글 쓴 사람들 중에서, 같은 사람은 한 번만 계산해서
+// 익명1, 익명2, 익명3 번호를 붙이는 코드야
+const allAnonComments = [...fetched, ...comments, ...bestComments]
+  .filter(c => !c.authorUid && c.postId === postId);  // 로그인 안 한 사람만
+
+const uniqueAnonIds = [...new Set(allAnonComments.map(c => c.authorId))]; // 중복 제거
+
+const map = {};
+uniqueAnonIds.forEach((id, idx) => {
+  map[id] = `익명${idx + 1}`;  // 순서대로 익명번호 붙이기
+});
+setAnonMap(map);
+
 
       const newReactionMap = {};
       fetched.forEach(c => {
@@ -392,7 +390,10 @@ const generateAnonMap = (postId) => {
         ) : (
           <div className="w-5 h-5 rounded-full bg-gray-300" />
         )}
-        <span className="text-gray-700 font-semibold">{user?.name || anonMap[c.authorId] || "익명"}</span>
+        <span className="text-gray-700 font-semibold">
+  {user?.name || anonMap[c.authorId] || "익명"}
+</span>
+
         {isWriter && <span className="text-[#6B4D33] font-semibold text-xs ml-1">[작성자]</span>}
         <span className="ml-2 text-xs text-gray-400">{time}</span>
       </div>

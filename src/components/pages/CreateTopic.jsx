@@ -122,7 +122,11 @@ const handleOptionTextChange = (i, value) => {
 };
 
 const handleOptionImageChange = (i, file) => {
-  if (!file) return;
+  if (!file || !(file instanceof Blob)) {
+    console.warn(`❌ 선택지 ${i + 1} 이미지가 유효하지 않음`, file);
+    return;
+  }
+
   const previewUrl = URL.createObjectURL(file);
   setOptions(prev => {
     const updated = [...prev];
@@ -130,6 +134,7 @@ const handleOptionImageChange = (i, file) => {
     return updated;
   });
 };
+
 
 const handleMainImageChange = (e) => {
   const files = Array.from(e.target.files);
@@ -142,11 +147,16 @@ const handleMainImageChange = (e) => {
 
 const handleThumbnailChange = (e) => {
   const file = e.target.files[0];
-  if (file) {
-    setThumbnail(file);
-    setThumbnailPreview(URL.createObjectURL(file));
+
+  if (!file || !(file instanceof Blob)) {
+    console.warn("❌ 썸네일 이미지가 유효하지 않음", file);
+    return;
   }
+
+  setThumbnail(file);
+  setThumbnailPreview(URL.createObjectURL(file));
 };
+
 
 const handleSubmit = async (e) => {
   e.preventDefault();

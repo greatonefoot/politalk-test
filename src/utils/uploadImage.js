@@ -1,17 +1,24 @@
 export const uploadImageAndGetURL = async (file, userId = "anonymous") => {
   try {
+    if (!file || !(file instanceof Blob)) {
+      throw new Error("유효하지 않은 파일입니다");
+    }
+
     const timestamp = Date.now();
-    const safeName = enCodeURIComponent(file.name.replace(/\s+/g, "_"));
+    const safeName = encodeURIComponent(file.name?.replace(/\s+/g, "_") || `image_${timestamp}`);
     const finalName = `${userId}_${timestamp}_${safeName}`;
 
     console.log("✅ 업로드 요청:", finalName);
 
+    // ✅ 모바일 대응: 기본 Content-Type 설정
+    const contentType = file.type || "image/jpeg";
+
     const response = await fetch("https://us-central1-politalk-4e0dd.cloudfunctions.net/uploadImage", {
       method: "POST",
       headers: {
-        "Content-Type": file.type,
+        "Content-Type": contentType,
         "x-filename": finalName,
-        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Origin": "*", // 실제 CORS 헤더는 서버에서 처리해야 함
       },
       body: file,
     });

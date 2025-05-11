@@ -4,6 +4,7 @@
     "node": "18"
   },
   "dependencies": {
+    "@google-cloud/storage": "^7.16.0",
     "firebase-admin": "^11.11.1",
     "firebase-functions": "^6.3.2",
     "node-fetch": "^2.6.7"

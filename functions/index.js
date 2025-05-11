@@ -1,4 +1,4 @@
-// ✅ 꼭 이 방식으로 유지할 것
+// ✅ functions/index.js
 import { onRequest } from "firebase-functions/v2/https";
 import { initializeApp } from "firebase-admin/app";
 import { Storage } from "@google-cloud/storage";
@@ -9,15 +9,17 @@ const bucket = storage.bucket("politalk-4e0dd.appspot.com");
 
 export const uploadImage = onRequest(
   {
-    cors: true,  // 💡 명시적으로 Gen2라고 CLI가 감지함
+    cors: true,
     region: "us-central1",
   },
   async (req, res) => {
+    // ✅ CORS 수동 처리 추가
+    res.set("Access-Control-Allow-Origin", "*");
+    res.set("Access-Control-Allow-Methods", "POST, OPTIONS");
+    res.set("Access-Control-Allow-Headers", "Content-Type, x-filename");
+
     if (req.method === "OPTIONS") {
-      res.set("Access-Control-Allow-Origin", "*");
-      res.set("Access-Control-Allow-Methods", "POST, OPTIONS");
-      res.set("Access-Control-Allow-Headers", "Content-Type, x-filename");
-      res.status(204).send("");
+      res.status(204).send(""); // Preflight 응답
       return;
     }
 
@@ -36,10 +38,10 @@ export const uploadImage = onRequest(
       await file.makePublic();
 
       const publicUrl = `https://storage.googleapis.com/${bucket.name}/images/${fileName}`;
-      console.log("✅ Upload success:", publicUrl);
+      console.log("✅ 업로드 성공:", publicUrl);
       res.status(200).json({ url: publicUrl });
     } catch (error) {
-      console.error("❌ Upload failed:", error);
+      console.error("❌ 업로드 실패:", error);
       res.status(500).send("Upload failed");
     }
   }

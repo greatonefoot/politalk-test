@@ -1,6 +1,14 @@
 {
   "functions": {
-    "source": "functions"
+    "source": "functions",
+    "runtime": "nodejs18",           // ✅ 명시적 지정
+    "deployment": {
+      "regions": ["us-central1"],    // ✅ 위치 명시
+      "availableMemoryMb": 256,      // (선택) 메모리
+      "timeoutSeconds": 60,          // (선택) 타임아웃
+      "ingressSettings": "ALLOW_ALL", 
+      "vpcConnectorEgressSettings": "PRIVATE_RANGES_ONLY"
+    }
   },
   "hosting": {
     "public": "build",

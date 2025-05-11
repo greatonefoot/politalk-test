@@ -166,16 +166,16 @@ const Home = () => {
     return () => observer.disconnect();
   }, [hasNextPage]);
 
-  const renderMainImages = (post) =>
-    post.imageUrls?.length > 0 && (
-      <div className="grid grid-cols-2 gap-1 mb-1">
-        {post.imageUrls.map((url, i) => (
-          <div key={i} className="relative w-full h-16 rounded overflow-hidden">
-            <img src={url} alt="" className="w-full h-full object-cover" />
-          </div>
-        ))}
-      </div>
-    );
+const renderMainImages = (post) =>
+  post.mainImages?.length > 0 && (
+    <div className="grid grid-cols-2 gap-1 mb-1">
+      {post.mainImages.map((url, i) => (
+        <div key={i} className="relative w-full h-16 rounded overflow-hidden">
+          <img src={url} alt="" className="w-full h-full object-cover" />
+        </div>
+      ))}
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-gray-100">

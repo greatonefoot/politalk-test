@@ -177,7 +177,7 @@ const handleSubmit = async (e) => {
       mainImages
         .filter(file => file) // ✅ null 제거
         .map(file => uploadAndTrack(file))
-    );dedOptionImages = await Promise.all(
+    ); const uploadedOptionImages = await Promise.all(
       options.map(opt => opt.file ? uploadAndTrack(opt.file) : Promise.resolve(""))
     );
 

@@ -1,11 +1,13 @@
 // ✅ src/utils/uploadImage.js
-export const uploadImageAndGetURL = async (file, userId) => {
+export const uploadImageAndGetURL = async (file, userId = "anonymous") => {
   try {
     const timestamp = Date.now();
-    const safeName = file.name.replace(/\s+/g, "_");
+    const safeName = (file.name || "unnamed").replace(/\s+/g, "_"); 
     const finalName = `${userId}_${timestamp}_${safeName}`;
 
-    const response = await fetch("https://uploadimage-wbm25judka-uc.a.run.app", {
+    console.log("✅ 업로드 요청:", finalName);
+
+    const response = await fetch("https://us-central1-politalk-4e0dd.cloudfunctions.net/uploadImage", {
       method: "POST",
       headers: {
         "Content-Type": file.type,
@@ -19,6 +21,8 @@ export const uploadImageAndGetURL = async (file, userId) => {
     }
 
     const data = await response.json();
+    console.log("✅ 업로드 응답:", data);
+
     if (!data.url || !data.url.startsWith("http")) {
       throw new Error("잘못된 업로드 응답");
     }

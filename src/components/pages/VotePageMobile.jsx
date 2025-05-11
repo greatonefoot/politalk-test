@@ -134,6 +134,26 @@ const VotePageMobile = () => {
           ))}
         </div>
 
+        {voted && (
+  <div className="mb-6 space-y-2">
+    {voteData.options.map((opt, idx) => (
+      <div key={idx}>
+        <div className="flex justify-between text-sm text-[#4B3621] font-semibold">
+          <span>{opt.label || opt.text || `선택지 ${idx + 1}`}</span>
+          <span>{votePercents[idx]}%</span>
+        </div>
+        <div className="w-full h-2 bg-gray-200 rounded overflow-hidden">
+          <div
+            className="h-2 bg-[#4B3621] transition-all duration-500"
+            style={{ width: `${votePercents[idx]}%` }}
+          />
+        </div>
+      </div>
+    ))}
+  </div>
+)}
+
+
         {!voted && (
           <button
             onClick={async () => {

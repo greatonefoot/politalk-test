@@ -169,21 +169,14 @@ const CommentSection = ({ postId, optionIndex, votePercent, myVote }) => {
 
     if (isInitial) {
       await fetchUserMap(fetched);
-useEffect(() => {
-  if (!postId) return;
-  generateAnonMap(postId);
-}, [comments]);
 
-// 댓글 쓴 사람들 중에서, 같은 사람은 한 번만 계산해서
-// 익명1, 익명2, 익명3 번호를 붙이는 코드야
-const allAnonComments = [...fetched, ...comments, ...bestComments]
-  .filter(c => !c.authorUid && c.postId === postId);  // 로그인 안 한 사람만
-
-const uniqueAnonIds = [...new Set(allAnonComments.map(c => c.authorId))]; // 중복 제거
-
+// 👉 익명 번호 생성: postId 전체 기준으로 한 번만 부여
+const combined = [...fetched, ...comments, ...bestComments];
+const anonOnly = combined.filter(c => !c.authorUid && c.postId === postId);
+const uniqueAnonIds = Array.from(new Set(anonOnly.map(c => c.authorId)));
 const map = {};
 uniqueAnonIds.forEach((id, idx) => {
-  map[id] = `익명${idx + 1}`;  // 순서대로 익명번호 붙이기
+  map[id] = `익명${idx + 1}`;
 });
 setAnonMap(map);
 

@@ -172,14 +172,25 @@ const handleSubmit = async (e) => {
       return url;
     };
 
-    const uploadedThumbnail = thumbnail ? await uploadAndTrack(thumbnail) : "";
-    const uploadedMainImages = await Promise.all(
-      mainImages
-        .filter(file => file) // ✅ null 제거
-        .map(file => uploadAndTrack(file))
-    ); const uploadedOptionImages = await Promise.all(
-      options.map(opt => opt.file ? uploadAndTrack(opt.file) : Promise.resolve(""))
-    );
+const uploadedThumbnail = thumbnail ? await uploadAndTrack(thumbnail) : "";
+
+const uploadedMainImages = [];
+
+for (const file of mainImages) {
+  if (!file) continue;
+  try {
+    const url = await uploadImageAndGetURL(file, authorUid); // 이 함수가 실패하면 throw
+    if (url) uploadedMainImages.push(url);
+  } catch (e) {
+    console.warn("❌ 본문 이미지 업로드 실패, 건너뜀", file.name, e);
+  }
+}
+
+
+const uploadedOptionImages = await Promise.all(
+  options.map(opt => opt.file ? uploadAndTrack(opt.file) : Promise.resolve(""))
+);
+
 
     const filteredOptionData = options.map((opt, idx) => ({
       text: opt.text,

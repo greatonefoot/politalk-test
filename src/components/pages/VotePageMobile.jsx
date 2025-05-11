@@ -59,6 +59,7 @@ const VotePageMobile = () => {
     if (stored !== null) {
       setVoted(true);
       setVotedOption(Number(stored));
+      setViewMode(Number(stored));
     }
 
     fetchData();
@@ -66,7 +67,6 @@ const VotePageMobile = () => {
       console.error("조회수 증가 실패")
     );
   }, [postId]);
-
   const hasWrittenCommentForOption = async (uid, postId, optionIndex) => {
     if (!uid) return false;
     const q = query(
@@ -119,40 +119,61 @@ const VotePageMobile = () => {
           </p>
         )}
 
-        {/* 선택지 2개 동시에 표시 */}
-        <div className="flex gap-2 mb-4">
+        {voteData.mainImages?.length > 0 && (
+          <div className="grid grid-cols-2 gap-2 mb-4">
+            {voteData.mainImages.map((url, idx) => (
+              <img
+                key={idx}
+                src={url}
+                alt={`본문 이미지 ${idx + 1}`}
+                className="w-full rounded"
+              />
+            ))}
+          </div>
+        )}
+        <div className="grid grid-cols-2 gap-2 mb-4">
           {voteData.options.map((opt, idx) => (
             <div
               key={idx}
               onClick={() => setSelectedOption(idx)}
-              className={`flex-1 p-4 rounded-lg border-2 text-center cursor-pointer transition-all duration-300
+              className={`p-4 rounded-lg border-2 text-center cursor-pointer transition-all duration-300
                 ${selectedOption === idx ? "border-[#4B3621] bg-[#f1e9e1] scale-105" : "border-gray-300 bg-white"}`}
             >
-              <p className="font-semibold text-sm">{opt.label || opt.text || `선택지 ${idx + 1}`}</p>
-              {voted && <p className="text-xs text-gray-500 mt-1">{votePercents[idx]}%</p>}
+              <p className="font-semibold text-sm">
+                {opt.label || opt.text || `선택지 ${idx + 1}`}
+              </p>
+              {opt.imageUrl && (
+                <img
+                  src={opt.imageUrl}
+                  alt={`선택지 ${idx + 1} 이미지`}
+                  className="h-20 w-full object-cover rounded mt-2"
+                />
+              )}
+              {voted && (
+                <p className="text-xs text-gray-500 mt-1">{votePercents[idx]}%</p>
+              )}
             </div>
           ))}
         </div>
 
         {voted && (
-  <div className="mb-6 space-y-2">
-    {voteData.options.map((opt, idx) => (
-      <div key={idx}>
-        <div className="flex justify-between text-sm text-[#4B3621] font-semibold">
-          <span>{opt.label || opt.text || `선택지 ${idx + 1}`}</span>
-          <span>{votePercents[idx]}%</span>
-        </div>
-        <div className="w-full h-2 bg-gray-200 rounded overflow-hidden">
-          <div
-            className="h-2 bg-[#4B3621] transition-all duration-500"
-            style={{ width: `${votePercents[idx]}%` }}
-          />
-        </div>
-      </div>
-    ))}
-  </div>
-)}
-
+          <div className="mb-6 space-y-2">
+            {voteData.options.map((opt, idx) => (
+              <div key={idx}>
+                <div className="flex justify-between text-sm text-[#4B3621] font-semibold">
+                  <span>{opt.label || opt.text || `선택지 ${idx + 1}`}</span>
+                  <span>{votePercents[idx]}%</span>
+                </div>
+                <div className="w-full h-2 bg-gray-200 rounded overflow-hidden">
+                  <div
+                    className="h-2 bg-[#4B3621] transition-all duration-500"
+                    style={{ width: `${votePercents[idx]}%` }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
 
         {!voted && (
           <button
@@ -171,6 +192,7 @@ const VotePageMobile = () => {
                 setVoted(true);
                 setVotedOption(selectedOption);
                 setVoteData({ ...data, options: updatedOptions });
+                setViewMode(selectedOption);
               } catch (e) {
                 console.error("투표 실패:", e);
               } finally {
@@ -213,6 +235,7 @@ const VotePageMobile = () => {
                   setVoted(false);
                   setVotedOption(null);
                   setVoteData({ ...data, options: updatedOptions });
+                  setViewMode("my");
                 } catch (e) {
                   console.error("투표 취소 실패:", e);
                 } finally {
@@ -226,7 +249,7 @@ const VotePageMobile = () => {
                   : "text-red-600 hover:text-red-800"
               }`}
             >
-              ⛔ 투표 취소하기
+              ? 투표 취소하기
             </button>
             {hasCommented && (
               <p className="text-xs text-gray-500 mt-1">
@@ -238,33 +261,28 @@ const VotePageMobile = () => {
 
         {voted && votedOption !== null && (
           <>
-            <div className="flex justify-center gap-2 my-4">
-              <button
-                onClick={() => setViewMode("my")}
-                className={`px-3 py-1 rounded ${
-                  viewMode === "my" ? "bg-[#4B3621] text-white" : "bg-gray-200"
-                }`}
-              >
-                내 진영 댓글
-              </button>
-              <button
-                onClick={() => setViewMode("opponent")}
-                className={`px-3 py-1 rounded ${
-                  viewMode === "opponent" ? "bg-[#4B3621] text-white" : "bg-gray-200"
-                }`}
-              >
-                상대 진영 댓글
-              </button>
+            <div className="flex flex-wrap justify-center gap-2 my-4">
+              {voteData.options.map((opt, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => setViewMode(idx)}
+                  className={`px-3 py-1 rounded text-sm ${
+                    viewMode === idx ? "bg-[#4B3621] text-white" : "bg-gray-200"
+                  }`}
+                >
+                  {opt.label || opt.text || `선택지 ${idx + 1}`}
+                </button>
+              ))}
             </div>
 
             <div className="mt-4">
               <h2 className="text-base font-bold text-[#4B3621] mb-2">
-                💬 {viewMode === "my" ? "내 진영 댓글" : "상대 진영 댓글"}
+                {voteData.options[viewMode]?.label || `선택지 ${viewMode + 1}`} 댓글
               </h2>
               <CommentSection
                 postId={postId}
-                optionIndex={viewMode === "my" ? votedOption : 1 - votedOption}
-                votePercent={votePercents[viewMode === "my" ? votedOption : 1 - votedOption] || 0}
+                optionIndex={viewMode}
+                votePercent={votePercents[viewMode] || 0}
                 myVote={votedOption}
               />
             </div>

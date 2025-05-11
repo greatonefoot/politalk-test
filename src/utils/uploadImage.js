@@ -1,8 +1,7 @@
-// ✅ src/utils/uploadImage.js
 export const uploadImageAndGetURL = async (file, userId = "anonymous") => {
   try {
     const timestamp = Date.now();
-    const safeName = (file.name || "unnamed").replace(/\s+/g, "_"); 
+    const safeName = file.name.replace(/\s+/g, "_");
     const finalName = `${userId}_${timestamp}_${safeName}`;
 
     console.log("✅ 업로드 요청:", finalName);
@@ -12,6 +11,7 @@ export const uploadImageAndGetURL = async (file, userId = "anonymous") => {
       headers: {
         "Content-Type": file.type,
         "x-filename": finalName,
+        "Access-Control-Allow-Origin": "*",
       },
       body: file,
     });
@@ -30,6 +30,6 @@ export const uploadImageAndGetURL = async (file, userId = "anonymous") => {
     return data.url;
   } catch (error) {
     console.error("❌ 이미지 업로드 실패:", error);
-    return null;
+    throw error;
   }
 };

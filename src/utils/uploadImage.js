@@ -1,7 +1,7 @@
 export const uploadImageAndGetURL = async (file, userId = "anonymous") => {
   try {
     const timestamp = Date.now();
-    const safeName = encodeURIComponent(file.name.replace(/\s+/g, "_"));
+    const safeName = enCodeURIComponent(file.name.replace(/\s+/g, "_"));
     const finalName = `${userId}_${timestamp}_${safeName}`;
 
     console.log("✅ 업로드 요청:", finalName);

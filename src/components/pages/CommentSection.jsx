@@ -170,15 +170,17 @@ const CommentSection = ({ postId, optionIndex, votePercent, myVote }) => {
     if (isInitial) {
       await fetchUserMap(fetched);
 
-// 👉 익명 번호 생성: postId 전체 기준으로 한 번만 부여
-const combined = [...fetched, ...comments, ...bestComments];
-const anonOnly = combined.filter(c => !c.authorUid && c.postId === postId);
-const uniqueAnonIds = Array.from(new Set(anonOnly.map(c => c.authorId)));
+const combined = [...fetched, ...comments, ...bestComments]
+  .filter(c => !c.authorUid && c.postId === postId)
+  .sort((a, b) => a.createdAt - b.createdAt); // ✅ 작성 시간 기준으로 정렬
+
+const uniqueAnonIds = Array.from(new Set(combined.map(c => c.authorId)));
 const map = {};
 uniqueAnonIds.forEach((id, idx) => {
   map[id] = `익명${idx + 1}`;
 });
 setAnonMap(map);
+
 
 
       const newReactionMap = {};

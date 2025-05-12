@@ -446,7 +446,7 @@ const CommentSection = ({ postId, optionIndex, votePercent, myVote }) => {
         </select>
       </div>
 
-    {/* 베스트 댓글 */}
+{/* 베스트 댓글 */}
 {bestComments.length > 0 && (
   <div className="mb-6">
     <h4 className="text-[#6B4D33] font-bold mb-2">🌟 베스트 댓글 TOP3</h4>
@@ -465,7 +465,7 @@ const CommentSection = ({ postId, optionIndex, votePercent, myVote }) => {
             )}
             {!c.isBlind && (
               <>
-                <button onClick={() => setActiveReplyId(String(c.id))} className="hover:underline text-[#6B4D33]">💬 답글</button>
+                <button onClick={() => setActiveReplyId(c.id)} className="hover:underline text-[#6B4D33]">💬 답글</button>
                 {canInteractWith(c, false) && (
                   <button onClick={() => handleReport(c.id)} className="hover:underline text-red-400">🚩 신고</button>
                 )}
@@ -474,7 +474,7 @@ const CommentSection = ({ postId, optionIndex, votePercent, myVote }) => {
           </div>
           {!c.isBlind && renderEmojiButtons(c)}
 
-          {/* ✅ 베스트 댓글에도 답글 입력창 추가 */}
+          {/* ✅ 베스트 댓글 답글 입력창 */}
           {String(activeReplyId) === String(c.id) && (
             <div className="mt-2 ml-4">
               <input
@@ -491,11 +491,50 @@ const CommentSection = ({ postId, optionIndex, votePercent, myVote }) => {
               </button>
             </div>
           )}
+
+          {/* ✅ 베스트 댓글 답글 펼치기 */}
+          {childMap[c.id] && (
+            <>
+              <button
+                onClick={() => setOpenReplyMap(prev => ({ ...prev, [c.id]: !prev[c.id] }))}
+                className="text-xs text-blue-500 hover:underline mt-2"
+              >
+                {openReplyMap[c.id]
+                  ? `🔽 답글 숨기기`
+                  : `💬 답글 ${childMap[c.id].length}개 보기`}
+              </button>
+              {openReplyMap[c.id] && childMap[c.id].map((r) => (
+                <div key={r.id} className="ml-4 mt-2 p-2 border rounded bg-white">
+                  {r.isBlind ? (
+                    <p className="italic text-gray-400">🚫 블라인드된 댓글입니다.</p>
+                  ) : (
+                    <>
+                      <p>{r.text}</p>
+                      {r.imageUrls?.map((url, i) => (
+                        <img key={i} src={url} alt="첨부" className="mt-2 max-h-40 rounded" />
+                      ))}
+                    </>
+                  )}
+                  {renderAuthorLabel(r)}
+                  <div className="flex gap-2 text-xs mt-1">
+                    {canDelete(r) && (
+                      <button onClick={() => handleDelete(r.id)} className="hover:underline text-gray-500">🗑 삭제</button>
+                    )}
+                    {canInteractWith(r, true) && !r.isBlind && (
+                      <button onClick={() => handleReport(r.id)} className="hover:underline text-red-400">🚩 신고</button>
+                    )}
+                  </div>
+                  {!r.isBlind && renderEmojiButtons(r, true)}
+                </div>
+              ))}
+            </>
+          )}
         </div>
       ))}
     </div>
   </div>
 )}
+
 
 
 

@@ -178,7 +178,7 @@ const renderMainImages = (post) =>
   );
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-white">
       <Header
         categories={[]}
         selectedCategory={selectedCategory}

@@ -64,9 +64,9 @@ function Header({
 
 
 
-        {/* 🔍 검색창 */}
-      <div className="flex flex-grow min-w-[180px] max-w-sm border border-[#6B4D33] rounded overflow-hidden mx-auto sm:mx-6">
-  <div className="flex border border-[#6B4D33] rounded overflow-hidden">
+{/* 🔍 검색창 */}
+<div className="flex-1 flex justify-center">
+  <div className="flex w-full max-w-sm border border-[#6B4D33] rounded overflow-hidden">
     <input
       type="text"
       value={searchTerm}
@@ -79,6 +79,7 @@ function Header({
     </button>
   </div>
 </div>
+
 
 
         {/* 👤 유저 메뉴 */}

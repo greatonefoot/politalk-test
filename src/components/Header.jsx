@@ -48,20 +48,16 @@ function Header({
   };
 
   return (
-    <header className="bg-white border-b-2 border-[#6B4D33] shadow-sm">
+    <header className="bg-white border-b-8 border-[#6B4D33] shadow-sm">
       <div className="flex justify-between items-center px-4 py-3 max-w-7xl mx-auto">
         {/* ✅ 로고 - 하얀색 박스 안 PoliTalk */}
-        <Link
-  to="/"
-  onClick={handleLogoClick}
-  className="flex items-center"
->
-  <img
-    src="/politalk_logo.png"
-    alt="PoliTalk 로고"
-    className="w-32 h-auto"
-  />
-</Link>
++ <Link
+   to="/"
+   onClick={handleLogoClick}
+   className="text-3xl font-extrabold text-[#6B4D33] px-4 py-2"
+ >
+   PoliTalk
+ </Link>
 
 
 

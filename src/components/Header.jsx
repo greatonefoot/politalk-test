@@ -19,21 +19,22 @@ function Header({
   const [userInfo, setUserInfo] = useState(null);
   const [profilePic, setProfilePic] = useState("");
 
-  useEffect(() => {
-    const fetchUserInfo = async () => {
-      if (user?.uid && user.emailVerified) {
-        const docRef = doc(db, "users", user.uid);
-        const docSnap = await getDoc(docRef);
-        if (docSnap.exists()) {
-          const data = docSnap.data();
-          setRole(data.role);
-          setProfilePic(data.profilePic || "");
-          setUserInfo(data); 
-        }
+ useEffect(() => {
+  const fetchUserInfo = async () => {
+    if (user?.uid) {
+      const docRef = doc(db, "users", user.uid);
+      const docSnap = await getDoc(docRef);
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        setRole(data.role);
+        setProfilePic(data.profilePic || "");
+        setUserInfo(data); 
       }
-    };
-    fetchUserInfo();
-  }, [user]);
+    }
+  };
+  fetchUserInfo();
+}, [user]);
+
 
   const handleLogoClick = (e) => {
     if (location.pathname === "/") {
@@ -84,7 +85,7 @@ function Header({
 
         {/* 👤 유저 메뉴 */}
         <div className="ml-4 flex items-center gap-3">
-          {user && user.emailVerified ? (
+          {user ? (
             <>
               {/* ✅ 프로필 이미지 */}
               <Link to="/profile">

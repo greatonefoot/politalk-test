@@ -136,14 +136,26 @@ const handleOptionImageChange = (i, file) => {
 };
 
 
+const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
+
 const handleMainImageChange = (e) => {
   const files = Array.from(e.target.files);
   const uniqueFiles = files.filter(file => !mainImages.some(f => f.name === file.name));
   const selected = uniqueFiles.slice(0, MAX_MAIN_IMAGES - mainImages.length);
-  setMainImages(prev => [...prev, ...selected]);
-  setMainPreview(prev => [...prev, ...selected.map(f => URL.createObjectURL(f))]);
-  setImagePositions(prev => [...prev, ...selected.map(() => ({ x: 50, y: 50 }))]);
+
+  const filtered = selected.filter((file) => {
+    if (file.size > MAX_IMAGE_SIZE) {
+      alert(`❌ ${file.name} 파일은 5MB를 초과하여 업로드할 수 없습니다.`);
+      return false;
+    }
+    return true;
+  });
+
+  setMainImages(prev => [...prev, ...filtered]);
+  setMainPreview(prev => [...prev, ...filtered.map(f => URL.createObjectURL(f))]);
+  setImagePositions(prev => [...prev, ...filtered.map(() => ({ x: 50, y: 50 }))]);
 };
+
 
 const handleThumbnailChange = (e) => {
   const file = e.target.files[0];

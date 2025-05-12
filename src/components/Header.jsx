@@ -123,12 +123,19 @@ function Header({
               )}
 
               {/* 📧 이메일 & 관리자 여부 표시 */}
-              <span className="text-sm">
-                {user.email}
-                {role === "admin" && (
-                  <span className="text-orange-300 font-bold ml-1">[관리자]</span>
-                )}
-              </span>
+ {userInfo?.name && (
+  <span className="text-sm flex items-center gap-2 whitespace-nowrap">
+    <span>{userInfo.name}</span>
+    <Link to="/profile" className="underline text-[#6B4D33] hover:text-[#533A26]">
+      마이페이지
+    </Link>
+    {role === "admin" && (
+      <span className="text-orange-300 font-bold">[관리자]</span>
+    )}
+  </span>
+)}
+
+
 
               {/* 🔓 로그아웃 버튼 */}
               <button

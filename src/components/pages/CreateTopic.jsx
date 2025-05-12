@@ -278,41 +278,69 @@ return (
         onChange={handleThumbnailChange}
         className="w-full border p-2 rounded"
       />
-      {thumbnailPreview && (
-        <div className="w-full h-32 bg-gray-100 rounded overflow-hidden">
-          <img src={thumbnailPreview} alt="썸네일 미리보기" className="w-full h-full object-cover" />
-        </div>
-      )}
+    {thumbnailPreview && (
+  <div className="w-full h-32 bg-gray-100 rounded overflow-hidden relative">
+    <img src={thumbnailPreview} alt="썸네일 미리보기" className="w-full h-full object-cover" />
+    <button
+      type="button"
+      onClick={() => {
+        setThumbnail(null);
+        setThumbnailPreview(null);
+      }}
+      className="absolute top-1 right-1 bg-white text-red-500 px-2 py-1 text-xs rounded shadow"
+    >
+      삭제
+    </button>
+  </div>
+)}
 
-      <label className="text-sm font-semibold">📷 본문 이미지 업로드 (최대 {MAX_MAIN_IMAGES}개)</label>
-      <input
-        type="file"
-        multiple
-        accept="image/*"
-        onChange={handleMainImageChange}
-        className="w-full border p-2 rounded"
-      />
+        <label className="text-sm font-semibold">📷 본문 이미지 업로드 (최대 {MAX_MAIN_IMAGES}개)</label>
+        <input
+          type="file"
+          multiple
+          accept="image/*"
+          onChange={handleMainImageChange}
+          className="w-full border p-2 rounded"
+        />
 
       <div className="grid grid-cols-2 gap-2">
-        {mainPreview.map((url, i) => (
-          <div key={i} className="relative group overflow-hidden w-full h-32 bg-gray-100 rounded">
-            <img
-              src={url}
-              draggable={false}
-              onMouseDown={e => handleImageMouseDown(e, i, "main")}
-              style={{
-                position: "absolute",
-                top: `${50 - (imagePositions[i]?.y || 50)}%`,
-                left: `${50 - (imagePositions[i]?.x || 50)}%`,
-                width: "100%",
-                height: "100%",
-                objectFit: "cover",
-                cursor: "grab"
-              }}
-              alt={`main-${i}`}
-            />
-          </div>
-        ))}
+       {mainPreview.map((url, i) => (
+  <div key={i} className="relative group overflow-hidden w-full h-32 bg-gray-100 rounded">
+    <img
+      src={url}
+      draggable={false}
+      onMouseDown={e => handleImageMouseDown(e, i, "main")}
+      style={{
+        position: "absolute",
+        top: `${50 - (imagePositions[i]?.y || 50)}%`,
+        left: `${50 - (imagePositions[i]?.x || 50)}%`,
+        width: "100%",
+        height: "100%",
+        objectFit: "cover",
+        cursor: "grab"
+      }}
+      alt={`main-${i}`}
+    />
+    <button
+      type="button"
+      onClick={() => {
+        const updatedImages = [...mainImages];
+        const updatedPreview = [...mainPreview];
+        const updatedPositions = [...imagePositions];
+        updatedImages.splice(i, 1);
+        updatedPreview.splice(i, 1);
+        updatedPositions.splice(i, 1);
+        setMainImages(updatedImages);
+        setMainPreview(updatedPreview);
+        setImagePositions(updatedPositions);
+      }}
+      className="absolute top-1 right-1 bg-white text-red-500 px-2 py-1 text-xs rounded shadow"
+    >
+      삭제
+    </button>
+  </div>
+))}
+
       </div>
 
       {options.map((opt, idx) => (
@@ -332,24 +360,36 @@ return (
             className="w-full border p-2 rounded"
           />
           {opt.previewUrl && (
-            <div className="relative group overflow-hidden w-full h-32 bg-gray-100 rounded">
-              <img
-                src={opt.previewUrl}
-                draggable={false}
-                onMouseDown={e => handleImageMouseDown(e, idx, "option")}
-                style={{
-                  position: "absolute",
-                  top: `${50 - opt.position.y}%`,
-                  left: `${50 - opt.position.x}%`,
-                  height: "100%",
-                  cursor: "grab"
-                }}
-                alt={`opt-${idx}`}
-              />
-            </div>
-          )}
-        </div>
-      ))}
+  <div className="relative group overflow-hidden w-full h-32 bg-gray-100 rounded">
+    <img
+      src={opt.previewUrl}
+      draggable={false}
+      onMouseDown={e => handleImageMouseDown(e, idx, "option")}
+      style={{
+        position: "absolute",
+        top: `${50 - opt.position.y}%`,
+        left: `${50 - opt.position.x}%`,
+        height: "100%",
+        cursor: "grab"
+      }}
+      alt={`opt-${idx}`}
+    />
+    <button
+      type="button"
+      onClick={() => {
+        const updated = [...options];
+        updated[idx] = { ...updated[idx], file: null, previewUrl: null, position: { x: 50, y: 50 } };
+        setOptions(updated);
+      }}
+      className="absolute top-1 right-1 bg-white text-red-500 px-2 py-1 text-xs rounded shadow"
+    >
+      삭제
+    </button>
+  </div>
+)}
+</div>
+))}   
+
 
       <button
         type="button"

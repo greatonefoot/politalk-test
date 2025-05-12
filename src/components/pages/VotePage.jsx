@@ -299,7 +299,7 @@ const VotePage = () => {
                 const isVisible = visibleSections[idx] !== false;
                 const rawPercent = votePercents[idx];
                 const adjustedPercent = finalPercents[idx];
-                const bgColor = getBackgroundColor(rawPercent);
+                
 
                 return (
                   <div

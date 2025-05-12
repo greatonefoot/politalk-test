@@ -579,7 +579,8 @@ await addDoc(collection(db, "comments"), {
       {/* 일반 댓글 */}
       <div className="space-y-4">
         {parentComments.map((c) => (
-          <div key={c.id} className="p-2 border rounded bg-white shadow">
+ <div key={c.id} className="p-2 border rounded bg-[#f8f8f8] shadow">
+
             {c.isBlind ? (
               <p className="italic text-gray-400">🚫 블라인드된 댓글입니다.</p>
             ) : (
@@ -629,7 +630,7 @@ await addDoc(collection(db, "comments"), {
                     : `💬 답글 ${childMap[c.id].length}개 보기`}
                 </button>
                 {openReplyMap[c.id] && childMap[c.id].map((r) => (
-                  <div key={r.id} className="ml-4 mt-2 p-2 border rounded bg-white shadow-sm">
+                  <div key={r.id} className="ml-4 mt-2 p-2 border rounded bg-[#f8f8f8] shadow-sm">
                     {r.isBlind ? (
                       <p className="italic text-gray-400">🚫 블라인드된 댓글입니다.</p>
                     ) : (

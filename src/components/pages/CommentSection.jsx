@@ -465,7 +465,8 @@ const CommentSection = ({ postId, optionIndex, votePercent, myVote }) => {
                   )}
                   {!c.isBlind && (
                     <>
-                      <button onClick={() => setActiveReplyId(c.id)} className="hover:underline text-[#6B4D33]">💬 답글</button>
+                      <button onClick={() => setActiveReplyId(String(c.id))} className="hover:underline text-[#6B4D33]">💬 답글</button>
+
                       {canInteractWith(c, false) && (
                         <button onClick={() => handleReport(c.id)} className="hover:underline text-red-400">🚩 신고</button>
                       )}
@@ -509,7 +510,7 @@ const CommentSection = ({ postId, optionIndex, votePercent, myVote }) => {
             </div>
             {!c.isBlind && renderEmojiButtons(c)}
             {/* 답글 입력창 */}
-            {activeReplyId === c.id && (
+            {String(activeReplyId) === String(c.id) && (
               <div className="mt-2 ml-4">
                 <input
                   value={replyText}

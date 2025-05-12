@@ -63,16 +63,21 @@ function Header({
 
 
         {/* 🔍 검색창 */}
-       <div className="flex-1 mx-6">
+      <div className="flex-1 mx-6">
+  <div className="flex border border-[#6B4D33] rounded overflow-hidden">
+    <input
+      type="text"
+      value={searchTerm}
+      onChange={(e) => setSearchTerm(e.target.value)}
+      placeholder="검색어를 입력하세요"
+      className="flex-1 px-3 py-2 text-sm text-black focus:outline-none"
+    />
+    <button className="bg-[#6B4D33] px-3 text-white text-lg">
+      🔍
+    </button>
+  </div>
+</div>
 
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="검색어를 입력하세요"
-            className="w-full px-3 py-2 rounded text-black sm:w-3/4"
-          />
-        </div>
 
         {/* 👤 유저 메뉴 */}
         <div className="ml-4 flex items-center gap-3">

@@ -188,12 +188,6 @@ const VotePage = () => {
 
   const votePercents = getVotePercents();
 
-  const getBackgroundColor = (percent) => {
-    if (percent >= 60) return "bg-[#EED9C4]";
-    if (percent >= 40) return "bg-[#F2D2B3]";
-    if (percent >= 20) return "bg-[#F8E0CE]";
-    return "bg-[#F9EBE0]";
-  };
   return (
     <div className="bg-[#fdfaf6] min-h-screen">
       <Header categories={[]} selectedCategory="전체" setSelectedCategory={() => {}} searchTerm="" setSearchTerm={() => {}} />
@@ -330,7 +324,7 @@ const VotePage = () => {
                             alignItems: "center",
                           }
                     }
-                    className={isVisible ? `${bgColor} p-3 rounded relative group` : ""}
+                    className={isVisible ? "bg-white p-3 rounded shadow relative group" : ""}
                   >
                     {isVisible ? (
                       <>

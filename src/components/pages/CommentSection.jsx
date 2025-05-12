@@ -139,80 +139,76 @@ const CommentSection = ({ postId, optionIndex, votePercent, myVote }) => {
     const { "👍": up = 0, "👎": down = 0, "😢": sad = 0, "😡": angry = 0, "💪": strong = 0 } = reactions || {};
     return up * 3 + strong * 2 + sad - down * 2;
   };
-  const fetchComments = async (isInitial = false) => {
-    setLoading(true);
-    const q = query(
-      collection(db, "comments"),
-      where("postId", "==", postId),
-      where("optionIndex", "==", optionIndex),
-      sortType === "공감순" ? orderBy("score", "desc") : orderBy("createdAt", "desc"),
-      ...(lastVisible && !isInitial ? [startAfter(lastVisible)] : []),
-      limit(COMMENTS_PER_PAGE)
+ const fetchComments = async (isInitial = false) => {
+  setLoading(true);
+
+  const q = query(
+    collection(db, "comments"),
+    where("postId", "==", postId),
+    where("optionIndex", "==", optionIndex),
+    sortType === "공감순" ? orderBy("score", "desc") : orderBy("createdAt", "desc"),
+    ...(lastVisible && !isInitial ? [startAfter(lastVisible)] : []),
+    limit(COMMENTS_PER_PAGE)
+  );
+
+  const qs = await getDocs(q);
+  const fetched = qs.docs.map((doc) => {
+    const data = doc.data();
+    return {
+      id: doc.id,
+      ...data,
+      score: data.score ?? 0,
+      reactions: data.reactions ?? {},
+      createdAt: data.createdAt?.toDate?.() || new Date()
+    };
+  });
+
+  const updated = isInitial ? fetched : [...comments, ...fetched];
+  setComments(updated);
+  setLastVisible(qs.docs[qs.docs.length - 1] || null);
+  setHasMore(qs.docs.length === COMMENTS_PER_PAGE);
+
+  if (isInitial) {
+    await fetchUserMap(fetched);
+
+    const all = [...fetched, ...bestComments].filter(
+      (c) => !c.authorUid && c.postId === postId && c.createdAt
     );
 
-    const qs = await getDocs(q);
-    const fetched = qs.docs.map((doc) => {
-      const data = doc.data();
-      return {
-        id: doc.id,
-        ...data,
-        score: data.score ?? 0,
-        reactions: data.reactions ?? {},
-        createdAt: data.createdAt?.toDate?.() || new Date()
-      };
+    all.sort((a, b) => {
+      const aDate = a.createdAt instanceof Date ? a.createdAt : a.createdAt.toDate();
+      const bDate = b.createdAt instanceof Date ? b.createdAt : b.createdAt.toDate();
+      return aDate - bDate;
     });
 
-    const updated = isInitial ? fetched : [...comments, ...fetched];
-    setComments(updated);
-    setLastVisible(qs.docs[qs.docs.length - 1] || null);
-    setHasMore(qs.docs.length === COMMENTS_PER_PAGE);
-if (isInitial) {
-  await fetchUserMap(fetched);
-
- const all = [...fetched, ...bestComments].filter(
-  (c) => !c.authorUid && c.postId === postId && c.createdAt
-);
-
-// 🔥 Timestamp → Date 변환 후 정렬
-all.sort((a, b) => {
-  const aDate = a.createdAt instanceof Date ? a.createdAt : a.createdAt.toDate();
-  const bDate = b.createdAt instanceof Date ? b.createdAt : b.createdAt.toDate();
-  return aDate - bDate;
-});
-
-
-const seen = new Set();
-const uniqueIds = [];
-for (const c of all) {
-  if (!seen.has(c.authorId)) {
-    seen.add(c.authorId);
-    uniqueIds.push(c.authorId);
-  }
-}
-
-const map = {};
-uniqueIds.forEach((id, idx) => {
- const label = "익명" + (idx + 1);
-map[id] = label;
-
-
-
-});
-setAnonMap(map);
-
-}
-
-
-      const newReactionMap = {};
-      fetched.forEach(c => {
-        const saved = localStorage.getItem(`reaction-${c.id}`);
-        newReactionMap[c.id] = saved && saved !== "none" ? saved : null;
-      });
-      setReactionMap(prev => ({ ...prev, ...newReactionMap }));
+    const seen = new Set();
+    const uniqueIds = [];
+    for (const c of all) {
+      if (!seen.has(c.authorId)) {
+        seen.add(c.authorId);
+        uniqueIds.push(c.authorId);
+      }
     }
 
-    setLoading(false);
-  };
+    const map = {};
+    uniqueIds.forEach((id, idx) => {
+      const label = "익명" + (idx + 1);
+      map[id] = label;
+    });
+
+    setAnonMap(map);
+  }
+
+  const newReactionMap = {};
+  fetched.forEach(c => {
+    const saved = localStorage.getItem(`reaction-${c.id}`);
+    newReactionMap[c.id] = saved && saved !== "none" ? saved : null;
+  });
+  setReactionMap(prev => ({ ...prev, ...newReactionMap }));
+
+  setLoading(false);
+};
+
   const handleDelete = async (commentId) => {
     if (!window.confirm("정말 삭제하시겠습니까?")) return;
     await deleteDoc(doc(db, "comments", commentId));

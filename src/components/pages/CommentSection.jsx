@@ -41,6 +41,29 @@ function timeAgo(date) {
 }
 
 const CommentSection = ({ postId, optionIndex, votePercent, myVote }) => {
+  const getOrCreateAnonymousName = async (postId, authorId) => {
+  const q = query(
+    collection(db, "anonymousMap"),
+    where("postId", "==", postId),
+    where("authorId", "==", authorId)
+  );
+  const snap = await getDocs(q);
+  if (!snap.empty) return snap.docs[0].data().anonymousName;
+
+  // 익명1, 익명2, ... 순서대로 부여
+  const allSnap = await getDocs(query(collection(db, "anonymousMap"), where("postId", "==", postId)));
+  const count = allSnap.size + 1;
+  const newName = `익명${count}`;
+
+  await addDoc(collection(db, "anonymousMap"), {
+    postId,
+    authorId,
+    anonymousName: newName,
+  });
+
+  return newName;
+};
+
   const [comments, setComments] = useState([]);
   const [bestComments, setBestComments] = useState([]);
   const [post, setPost] = useState(null);
@@ -343,20 +366,24 @@ if (savedMap) {
       if (url) imageUrls.push(url);
     }
 
-    await addDoc(collection(db, "comments"), {
-      postId,
-      optionIndex: optIndex,
-      text,
-      createdAt: new Date(),
-      authorUid: currentUser?.uid || null,
-      authorId,
-      parentId,
-      imageUrls,
-      reactions: {},
-      score: 0,
-      reportCount: 0,
-      isBlind: false,
-    });
+  const anonymousName = await getOrCreateAnonymousName(postId, authorId);
+
+await addDoc(collection(db, "comments"), {
+  postId,
+  optionIndex: optIndex,
+  text,
+  createdAt: new Date(),
+  authorUid: currentUser?.uid || null,
+  authorId,
+  anonymousName,  // 👈 여기에 추가!
+  parentId,
+  imageUrls,
+  reactions: {},
+  score: 0,
+  reportCount: 0,
+  isBlind: false,
+});
+
 
     setLastCommentTime(Date.now());
     if (parentId) {
@@ -413,8 +440,9 @@ if (savedMap) {
           <div className="w-5 h-5 rounded-full bg-gray-300" />
         )}
         <span className="text-gray-700 font-semibold">
-          {user?.name || anonMap[postId]?.[c.authorId] || "익명"}
-        </span>
+  {user?.name || c.anonymousName || "익명"}
+</span>
+
         {isWriter && <span className="text-[#6B4D33] font-semibold text-xs ml-1">[작성자]</span>}
         <span className="ml-2 text-xs text-gray-400">{time}</span>
       </div>

@@ -166,19 +166,42 @@ const CommentSection = ({ postId, optionIndex, votePercent, myVote }) => {
     setComments(updated);
     setLastVisible(qs.docs[qs.docs.length - 1] || null);
     setHasMore(qs.docs.length === COMMENTS_PER_PAGE);
+if (isInitial) {
+  await fetchUserMap(fetched);
 
-    if (isInitial) {
-      await fetchUserMap(fetched);
+ const all = [...fetched, ...bestComments].filter(
+  (c) => !c.authorUid && c.postId === postId && c.createdAt
+);
 
-      // ✅ 익명 사용자 고정 순서로 부여
-      const all = [...fetched, ...bestComments];
-      const anonOnly = all.filter(c => !c.authorUid && c.postId === postId);
-      const uniqueIds = [...new Set(anonOnly.map(c => c.authorId))];
-      const map = {};
-      uniqueIds.forEach((id, idx) => {
-        map[id] = `익명${idx + 1}`;
-      });
-      setAnonMap(map);
+// 🔥 Timestamp → Date 변환 후 정렬
+all.sort((a, b) => {
+  const aDate = a.createdAt instanceof Date ? a.createdAt : a.createdAt.toDate();
+  const bDate = b.createdAt instanceof Date ? b.createdAt : b.createdAt.toDate();
+  return aDate - bDate;
+});
+
+
+const seen = new Set();
+const uniqueIds = [];
+for (const c of all) {
+  if (!seen.has(c.authorId)) {
+    seen.add(c.authorId);
+    uniqueIds.push(c.authorId);
+  }
+}
+
+const map = {};
+uniqueIds.forEach((id, idx) => {
+ const label = "익명" + (idx + 1);
+map[id] = label;
+
+
+
+});
+setAnonMap(map);
+
+}
+
 
       const newReactionMap = {};
       fetched.forEach(c => {
@@ -490,7 +513,7 @@ const CommentSection = ({ postId, optionIndex, votePercent, myVote }) => {
             </div>
             {!c.isBlind && renderEmojiButtons(c)}
             {/* 답글 입력창 */}
-            {activeReplyId === c.id && canInteractWith(c, true) && (
+            {activeReplyId === c.id && (
               <div className="mt-2 ml-4">
                 <input
                   value={replyText}

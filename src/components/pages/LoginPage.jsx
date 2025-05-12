@@ -296,13 +296,17 @@ const LoginPage = () => {
           🟡 카카오로 로그인
         </button>
 
-        <a href={naverLoginUrl}>
-  <img
-    src="https://static.nid.naver.com/oauth/small_g_in.PNG"
-    alt="네이버 로그인"
-    className="w-full h-10 object-contain mt-2"
-  />
+        <a href={naverLoginUrl} className="w-full">
+  <button className="bg-green-500 text-white w-full py-2 rounded mt-2 flex items-center justify-center gap-2">
+    <img
+      src="https://static.nid.naver.com/oauth/small_g_in.PNG"
+      alt="네이버 로그인"
+      className="h-5"
+    />
+    네이버로 로그인
+  </button>
 </a>
+
 
       </div>
     </div>

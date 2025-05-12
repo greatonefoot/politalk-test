@@ -168,36 +168,36 @@ const CommentSection = ({ postId, optionIndex, votePercent, myVote }) => {
   setLastVisible(qs.docs[qs.docs.length - 1] || null);
   setHasMore(qs.docs.length === COMMENTS_PER_PAGE);
 
-  if (isInitial) {
-    await fetchUserMap(fetched);
+ if (isInitial) {
+  await fetchUserMap(fetched);
 
-    const all = [...fetched, ...bestComments].filter(
-      (c) => !c.authorUid && c.postId === postId && c.createdAt
-    );
+  const all = [...fetched, ...bestComments].filter(
+    (c) => !c.authorUid && c.postId === postId && c.createdAt
+  );
 
-    all.sort((a, b) => {
-      const aDate = a.createdAt instanceof Date ? a.createdAt : a.createdAt.toDate();
-      const bDate = b.createdAt instanceof Date ? b.createdAt : b.createdAt.toDate();
-      return aDate - bDate;
-    });
+  all.sort((a, b) => {
+    const aDate = a.createdAt instanceof Date ? a.createdAt : a.createdAt.toDate();
+    const bDate = b.createdAt instanceof Date ? b.createdAt : b.createdAt.toDate();
+    return aDate - bDate;
+  });
 
-    const seen = new Set();
-    const uniqueIds = [];
-    for (const c of all) {
-      if (!seen.has(c.authorId)) {
-        seen.add(c.authorId);
-        uniqueIds.push(c.authorId);
-      }
+  const seen = new Set();
+  const uniqueIds = [];
+  for (const c of all) {
+    if (!seen.has(c.authorId)) {
+      seen.add(c.authorId);
+      uniqueIds.push(c.authorId);
     }
-
-    const map = {};
-    uniqueIds.forEach((id, idx) => {
-      const label = "익명" + (idx + 1);
-      map[id] = label;
-    });
-
-    setAnonMap(map);
   }
+
+  const perPostMap = {};
+  uniqueIds.forEach((id, idx) => {
+    perPostMap[id] = "익명" + (idx + 1);
+  });
+
+  setAnonMap(prev => ({ ...prev, [postId]: perPostMap }));
+}
+
 
   const newReactionMap = {};
   fetched.forEach(c => {
@@ -403,7 +403,7 @@ const CommentSection = ({ postId, optionIndex, votePercent, myVote }) => {
           <div className="w-5 h-5 rounded-full bg-gray-300" />
         )}
         <span className="text-gray-700 font-semibold">
-          {user?.name || anonMap[c.authorId] || "익명"}
+          {user?.name || anonMap[postId]?.[c.authorId] || "익명"}
         </span>
         {isWriter && <span className="text-[#6B4D33] font-semibold text-xs ml-1">[작성자]</span>}
         <span className="ml-2 text-xs text-gray-400">{time}</span>

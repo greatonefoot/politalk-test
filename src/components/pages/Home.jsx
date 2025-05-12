@@ -243,39 +243,39 @@ const renderMainImages = (post) =>
             {/* 인기글 카드 */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
               {filteredPopular.map((p) => (
-                <Link to={`/post/${p.id}`} key={p.id}>
-             <div
-  className="p-3 rounded shadow transition hover:opacity-90"
-  style={{ backgroundColor: '#FFF5EE' }}
->
+               <Link to={`/post/${p.id}`} key={p.id}>
+  <div className="p-3 rounded border border-[#4B3621] hover:bg-[#fdf8f3] transition">
 
-                    {p.thumbnail ? (
-                     <div className="w-full h-20 flex items-center justify-center overflow-hidden rounded mb-1 bg-white">
-  <img
-    src={p.thumbnail}
-    alt=""
-    className="h-full object-contain"
-  />
-</div>
+    {p.thumbnail ? (
+      <div className="w-full h-20 flex items-center justify-center overflow-hidden rounded mb-1 bg-white">
+        <img
+          src={p.thumbnail}
+          alt=""
+          className="h-full object-contain"
+        />
+      </div>
+    ) : renderMainImages(p)}
 
-                    ) : renderMainImages(p)}
-                    <div className="text-sm font-bold truncate">{p.title}</div>
-                    <div className="text-xs text-gray-600 mb-1">
-                      {authorData[p.id] || "익명"} · 댓글 {commentCounts[p.id] || 0} · 조회 {p.views || 0}
-                    </div>
-                    {votePercents[p.id] &&
-                      Object.entries(votePercents[p.id]).map(([opt, per]) => (
-                        <div key={opt} className="mb-1">
-                          <div className="text-[10px]">{opt}: {per}%</div>
-                          <div className="w-full h-1 bg-gray-300 rounded">
-  <div className="p-3 rounded border border-[#4B3621] hover:bg-[#fdf8f3] transition" />
-</div>
+    <div className="text-sm font-bold truncate">{p.title}</div>
+    <div className="text-xs text-gray-600 mb-1">
+      {authorData[p.id] || "익명"} · 댓글 {commentCounts[p.id] || 0} · 조회 {p.views || 0}
+    </div>
 
+    {votePercents[p.id] &&
+      Object.entries(votePercents[p.id]).map(([opt, per]) => (
+        <div key={opt} className="mb-1">
+          <div className="text-[10px]">{opt}: {per}%</div>
+          <div className="w-full h-1 bg-gray-300 rounded">
+            <div
+              className="h-full"
+              style={{ width: `${per}%`, backgroundColor: '#D2B48C' }}
+            />
+          </div>
+        </div>
+      ))}
+  </div>
+</Link>
 
-                        </div>
-                      ))}
-                  </div>
-                </Link>
               ))}
             </div>
 

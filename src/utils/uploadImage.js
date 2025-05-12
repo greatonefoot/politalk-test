@@ -18,7 +18,7 @@ export const uploadImageAndGetURL = async (file, userId = "anonymous") => {
       headers: {
         "Content-Type": contentType,
         "x-filename": finalName,
-        "Access-Control-Allow-Origin": "*", // 실제 CORS 헤더는 서버에서 처리해야 함
+       
       },
       body: file,
     });

@@ -268,7 +268,7 @@ const renderMainImages = (post) =>
                         <div key={opt} className="mb-1">
                           <div className="text-[10px]">{opt}: {per}%</div>
                           <div className="w-full h-1 bg-gray-300 rounded">
-  <div className="h-full" style={{ width: `${per}%`, backgroundColor: '#D2B48C' }} />
+  <div className="p-3 rounded border border-[#4B3621] hover:bg-[#fdf8f3] transition" />
 </div>
 
 
@@ -303,7 +303,7 @@ const renderMainImages = (post) =>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {sortedPosts.map((p) => (
                 <Link to={`/post/${p.id}`} key={p.id}>
-                  <div className="bg-white p-3 rounded shadow-sm hover:bg-gray-50 transition">
+                  <div className="bg-white p-3 rounded border border-gray-300 hover:bg-gray-50 transition">
                     {p.thumbnail ? (
                      <div className="w-full h-20 flex items-center justify-center overflow-hidden rounded mb-1 bg-white">
   <img

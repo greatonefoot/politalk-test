@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { auth, db } from "../../firebase";
 import {
@@ -7,6 +7,7 @@ import {
   sendEmailVerification,
   sendPasswordResetEmail,
   signInWithPopup,
+  signInWithCustomToken,
   GoogleAuthProvider,
 } from "firebase/auth";
 import {
@@ -17,8 +18,12 @@ import {
   getDoc,
   query,
   where,
-  getDocs
+  getDocs,
 } from "firebase/firestore";
+
+// ✅ 카카오 관련 설정
+const KAKAO_API_KEY = "d840e4500f1ad3fa24e6380c2a8ad8b9";
+const KAKAO_FUNCTION_URL = "https://us-central1-politalk-4e0dd.cloudfunctions.net/kakaoLogin";
 
 const LoginPage = () => {
   const [isSignup, setIsSignup] = useState(false);
@@ -27,6 +32,19 @@ const LoginPage = () => {
   const [nickname, setNickname] = useState("");
   const [agreeTerms, setAgreeTerms] = useState(false);
   const navigate = useNavigate();
+
+  // ✅ Kakao SDK 로드
+  useEffect(() => {
+    const script = document.createElement("script");
+    script.src = "https://developers.kakao.com/sdk/js/kakao.js";
+    script.async = true;
+    script.onload = () => {
+      if (!window.Kakao.isInitialized()) {
+        window.Kakao.init("d840e4500f1ad3fa24e6380c2a8ad8b9");
+      }
+    };
+    document.body.appendChild(script);
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -41,7 +59,6 @@ const LoginPage = () => {
           return;
         }
 
-        // 닉네임 중복 검사
         const q = query(collection(db, "users"), where("name", "==", nickname));
         const snapshot = await getDocs(q);
         if (!snapshot.empty) {
@@ -118,7 +135,7 @@ const LoginPage = () => {
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
       if (!user.emailVerified) {
-        alert("이메일 인증이 필요합니다. 받은 편지함을 확인해주세요.");
+        alert("이메일 인증이 필요합니다.");
         return;
       }
 
@@ -147,6 +164,52 @@ const LoginPage = () => {
       navigate("/");
     } catch (error) {
       alert("오류: " + error.message);
+    }
+  };
+
+  // ✅ 카카오 로그인 처리
+  const handleKakaoLogin = async () => {
+    try {
+      await window.Kakao.Auth.login({
+        scope: "profile_nickname,account_email",
+        success: async (authObj) => {
+          const accessToken = authObj.access_token;
+
+          const res = await fetch(KAKAO_FUNCTION_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ accessToken }),
+          });
+
+          const data = await res.json();
+          if (!data.token) throw new Error("커스텀 토큰 없음");
+
+          const result = await signInWithCustomToken(auth, data.token);
+          const user = result.user;
+
+          const userRef = doc(db, "users", user.uid);
+          const docSnap = await getDoc(userRef);
+          if (!docSnap.exists()) {
+            await setDoc(userRef, {
+              name: "카카오 사용자",
+              profilePic: "",
+              email: user.email || "",
+              role: "user",
+              createdAt: new Date(),
+            });
+          }
+
+          alert("카카오 로그인 성공!");
+          navigate("/");
+        },
+        fail: (err) => {
+          console.error("카카오 로그인 실패:", err);
+          alert("카카오 로그인 실패");
+        },
+      });
+    } catch (err) {
+      console.error("카카오 로그인 전체 실패:", err);
+      alert("카카오 로그인 중 오류 발생");
     }
   };
 
@@ -218,6 +281,10 @@ const LoginPage = () => {
 
         <button onClick={handleGoogleLogin} className="bg-red-500 text-white w-full py-2 rounded mb-2">
           구글로 로그인
+        </button>
+
+        <button onClick={handleKakaoLogin} className="bg-yellow-300 text-black w-full py-2 rounded">
+          🟡 카카오로 로그인
         </button>
       </div>
     </div>

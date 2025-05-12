@@ -250,11 +250,14 @@ const renderMainImages = (post) =>
 >
 
                     {p.thumbnail ? (
-                      <img
-                        src={p.thumbnail}
-                        alt=""
-                        className="w-full h-20 object-cover rounded mb-1"
-                      />
+                     <div className="w-full h-20 flex items-center justify-center overflow-hidden rounded mb-1 bg-white">
+  <img
+    src={p.thumbnail}
+    alt=""
+    className="h-full object-contain"
+  />
+</div>
+
                     ) : renderMainImages(p)}
                     <div className="text-sm font-bold truncate">{p.title}</div>
                     <div className="text-xs text-gray-600 mb-1">
@@ -302,11 +305,14 @@ const renderMainImages = (post) =>
                 <Link to={`/post/${p.id}`} key={p.id}>
                   <div className="bg-white p-3 rounded shadow-sm hover:bg-gray-50 transition">
                     {p.thumbnail ? (
-                      <img
-                        src={p.thumbnail}
-                        alt=""
-                        className="w-full h-20 object-cover rounded mb-1"
-                      />
+                     <div className="w-full h-20 flex items-center justify-center overflow-hidden rounded mb-1 bg-white">
+  <img
+    src={p.thumbnail}
+    alt=""
+    className="h-full object-contain"
+  />
+</div>
+
                     ) : renderMainImages(p)}
                     <div className="font-medium text-sm truncate">{p.title}</div>
                     <div className="text-xs text-gray-600 mb-1">

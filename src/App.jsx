@@ -15,6 +15,7 @@ import TermsPage from "./components/pages/TermsPage";
 import PrivacyPolicy from "./components/pages/PrivacyPolicy";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AdminRoute from "./components/AdminRoute";
+import NaverCallback from "./pages/NaverCallback";
 
 import { Toaster } from "react-hot-toast";
 
@@ -24,7 +25,7 @@ function App() {
 
   return (
     <Router>
-      <div className="min-h-screen bg-gray-100">
+      <div className="min-h-screen bg-white">
         <Routes>
           {/* ✅ 홈, 게시글 보기: 공개 */}
           <Route path="/" element={<Home />} />
@@ -93,6 +94,7 @@ function App() {
               </ProtectedRoute>
             }
           />
+          <Route path="/naver-callback" element={<NaverCallback />} />
         </Routes>
 
         <Toaster position="top-center" />

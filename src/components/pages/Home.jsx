@@ -191,7 +191,7 @@ const renderMainImages = (post) =>
 
           {/* 사이드바 */}
           <div className="w-full lg:w-1/4 space-y-4 hidden sm:block">
-            <div className="bg-white p-3 rounded shadow-sm">
+            <div className="bg-white p-3 rounded border border-gray-300">
               <h3 className="text-sm font-bold mb-2 text-[#4B3621]">📅 주간 인기글</h3>
               <ul className="text-xs space-y-1">
                 {weeklyPopularPosts.map((p) => (
@@ -203,7 +203,7 @@ const renderMainImages = (post) =>
                 ))}
               </ul>
             </div>
-            <div className="bg-white p-3 rounded shadow-sm">
+            <div className="bg-white p-3 rounded border border-gray-300">
               <h3 className="text-sm font-bold mb-2 text-[#4B3621]">🗓 월간 인기글</h3>
               <ul className="text-xs space-y-1">
                 {monthlyPopularPosts.map((p) => (

@@ -452,7 +452,7 @@ const CommentSection = ({ postId, optionIndex, votePercent, myVote }) => {
     <h4 className="text-[#6B4D33] font-bold mb-2">🌟 베스트 댓글 TOP3</h4>
     <div className="space-y-3">
       {bestComments.map((c, i) => (
-        <div key={c.id} className="p-2 border rounded bg-white shadow">
+        <div key={c.id} className="p-2 border rounded bg-yellow-50 shadow">
           <div className="text-xs text-gray-500 font-bold">#{i + 1} · 점수: {c.score}</div>
           <p>{c.text}</p>
           {c.imageUrls?.map((url, i) => (

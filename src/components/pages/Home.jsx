@@ -244,7 +244,7 @@ const renderMainImages = (post) =>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
               {filteredPopular.map((p) => (
                <Link to={`/post/${p.id}`} key={p.id}>
-  <div className="p-3 rounded border border-[#4B3621] hover:bg-[#fdf8f3] transition">
+  <div className="p-3 rounded border-4 border-[#4B3621] hover:bg-[#fdf8f3] transition">
 
     {p.thumbnail ? (
       <div className="w-full h-20 flex items-center justify-center overflow-hidden rounded mb-1 bg-white">

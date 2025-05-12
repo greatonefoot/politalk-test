@@ -48,13 +48,13 @@ function Header({
   };
 
   return (
-    <header className="bg-[#4B3621] text-white">
+    <header className="bg-white border-b border-[#6B4D33] shadow-sm">
       <div className="flex justify-between items-center px-4 py-3 max-w-7xl mx-auto">
         {/* ✅ 로고 - 하얀색 박스 안 PoliTalk */}
         <Link
           to="/"
           onClick={handleLogoClick}
-          className="bg-white text-[#4B3621] text-2xl font-bold px-3 py-1 rounded"
+          className="text-sm bg-[#6B4D33] text-white px-3 py-1 rounded hover:bg-[#533A26]"
         >
           PoliTalk
         </Link>
@@ -94,19 +94,19 @@ function Header({
                 <>
                   <Link
                     to="/admin"
-                    className="text-xs bg-white text-[#4B3621] px-2 py-1 rounded font-bold hover:bg-[#EDE4DC]"
+                    className="text-sm bg-[#6B4D33] text-white px-3 py-1 rounded hover:bg-[#533A26]"
                   >
                     게시물 관리
                   </Link>
                   <Link
                     to="/admin/comments"
-                    className="text-xs bg-white text-[#4B3621] px-2 py-1 rounded font-bold hover:bg-[#EDE4DC]"
+                    className="text-sm bg-[#6B4D33] text-white px-3 py-1 rounded hover:bg-[#533A26]"
                   >
                     댓글 관리
                   </Link>
                   <Link
                     to="/admin/users"
-                    className="text-xs bg-white text-[#4B3621] px-2 py-1 rounded font-bold hover:bg-[#EDE4DC]"
+                    className="text-sm bg-[#6B4D33] text-white px-3 py-1 rounded hover:bg-[#533A26]"
                   >
                     유저 관리
                   </Link>
@@ -124,17 +124,18 @@ function Header({
               {/* 🔓 로그아웃 버튼 */}
               <button
                 onClick={handleLogout}
-                className="bg-white text-[#4B3621] font-bold px-3 py-1 rounded text-sm hover:bg-[#EDE4DC]"
+                className="text-sm bg-[#6B4D33] text-white px-3 py-1 rounded hover:bg-[#533A26]"
               >
                 로그아웃
               </button>
             </>
           ) : (
             <Link to="/login">
-              <div className="bg-white text-[#4B3621] font-bold px-4 py-2 rounded text-sm hover:bg-[#EDE4DC]">
-                로그인
-              </div>
-            </Link>
+  <div className="text-sm bg-[#6B4D33] text-white px-4 py-2 rounded font-bold hover:bg-[#533A26]">
+    로그인
+  </div>
+</Link>
+
           )}
         </div>
       </div>

@@ -171,6 +171,13 @@ const CommentSection = ({ postId, optionIndex, votePercent, myVote }) => {
  if (isInitial) {
   await fetchUserMap(fetched);
 
+// 먼저 localStorage에 저장된 익명 맵이 있으면 그대로 사용
+const savedMap = localStorage.getItem(`anonMap-${postId}`);
+if (savedMap) {
+  const parsed = JSON.parse(savedMap);
+  setAnonMap(prev => ({ ...prev, [postId]: parsed }));
+} else {
+  // 없으면 직접 생성
   const all = [...fetched, ...bestComments].filter(
     (c) => !c.authorUid && c.postId === postId && c.createdAt
   );
@@ -196,6 +203,9 @@ const CommentSection = ({ postId, optionIndex, votePercent, myVote }) => {
   });
 
   setAnonMap(prev => ({ ...prev, [postId]: perPostMap }));
+  localStorage.setItem(`anonMap-${postId}`, JSON.stringify(perPostMap)); // ✅ 저장
+}
+
 }
 
 

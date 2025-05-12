@@ -446,39 +446,58 @@ const CommentSection = ({ postId, optionIndex, votePercent, myVote }) => {
         </select>
       </div>
 
-      {/* 베스트 댓글 */}
-      {bestComments.length > 0 && (
-        <div className="mb-6">
-          <h4 className="text-[#6B4D33] font-bold mb-2">🌟 베스트 댓글 TOP3</h4>
-          <div className="space-y-3">
-            {bestComments.map((c, i) => (
-              <div key={c.id} className="p-2 border rounded bg-yellow-50">
-                <div className="text-xs text-gray-500 font-bold">#{i + 1} · 점수: {c.score}</div>
-                <p>{c.text}</p>
-                {c.imageUrls?.map((url, i) => (
-                  <img key={i} src={url} alt="첨부" className="mt-2 max-h-40 rounded" />
-                ))}
-                {renderAuthorLabel(c)}
-                <div className="flex gap-2 text-xs mt-1">
-                  {canDelete(c) && (
-                    <button onClick={() => handleDelete(c.id)} className="hover:underline text-gray-500">🗑 삭제</button>
-                  )}
-                  {!c.isBlind && (
-                    <>
-                      <button onClick={() => setActiveReplyId(String(c.id))} className="hover:underline text-[#6B4D33]">💬 답글</button>
-
-                      {canInteractWith(c, false) && (
-                        <button onClick={() => handleReport(c.id)} className="hover:underline text-red-400">🚩 신고</button>
-                      )}
-                    </>
-                  )}
-                </div>
-                {!c.isBlind && renderEmojiButtons(c)}
-              </div>
-            ))}
+    {/* 베스트 댓글 */}
+{bestComments.length > 0 && (
+  <div className="mb-6">
+    <h4 className="text-[#6B4D33] font-bold mb-2">🌟 베스트 댓글 TOP3</h4>
+    <div className="space-y-3">
+      {bestComments.map((c, i) => (
+        <div key={c.id} className="p-2 border rounded bg-yellow-50">
+          <div className="text-xs text-gray-500 font-bold">#{i + 1} · 점수: {c.score}</div>
+          <p>{c.text}</p>
+          {c.imageUrls?.map((url, i) => (
+            <img key={i} src={url} alt="첨부" className="mt-2 max-h-40 rounded" />
+          ))}
+          {renderAuthorLabel(c)}
+          <div className="flex gap-2 text-xs mt-1">
+            {canDelete(c) && (
+              <button onClick={() => handleDelete(c.id)} className="hover:underline text-gray-500">🗑 삭제</button>
+            )}
+            {!c.isBlind && (
+              <>
+                <button onClick={() => setActiveReplyId(String(c.id))} className="hover:underline text-[#6B4D33]">💬 답글</button>
+                {canInteractWith(c, false) && (
+                  <button onClick={() => handleReport(c.id)} className="hover:underline text-red-400">🚩 신고</button>
+                )}
+              </>
+            )}
           </div>
+          {!c.isBlind && renderEmojiButtons(c)}
+
+          {/* ✅ 베스트 댓글에도 답글 입력창 추가 */}
+          {String(activeReplyId) === String(c.id) && (
+            <div className="mt-2 ml-4">
+              <input
+                value={replyText}
+                onChange={e => setReplyText(e.target.value)}
+                placeholder="답글 입력..."
+                className="w-full border p-1 rounded text-sm mb-1"
+              />
+              <button
+                onClick={() => handleSubmit(optionIndex, c.id)}
+                className="bg-[#6B4D33] text-white px-2 py-1 text-sm rounded"
+              >
+                답글 작성
+              </button>
+            </div>
+          )}
         </div>
-      )}
+      ))}
+    </div>
+  </div>
+)}
+
+
 
       {/* 일반 댓글 */}
       <div className="space-y-4">

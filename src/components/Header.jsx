@@ -52,12 +52,18 @@ function Header({
       <div className="flex justify-between items-center px-4 py-3 max-w-7xl mx-auto">
         {/* ✅ 로고 - 하얀색 박스 안 PoliTalk */}
         <Link
-          to="/"
-          onClick={handleLogoClick}
-          className="text-sm bg-[#6B4D33] text-white px-3 py-1 rounded hover:bg-[#533A26]"
-        >
-          PoliTalk
-        </Link>
+  to="/"
+  onClick={handleLogoClick}
+  className="flex items-center"
+>
+  <img
+    src="/politalk_logo.png"
+    alt="PoliTalk 로고"
+    className="w-32 h-auto"
+  />
+</Link>
+
+
 
         {/* 🔍 검색창 */}
         <div className="flex w-full max-w-lg items-center mx-4">

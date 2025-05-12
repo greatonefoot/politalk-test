@@ -49,7 +49,7 @@ function Header({
 
   return (
     <header className="bg-white border-b-8 border-[#6B4D33] shadow-sm">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 px-4 py-3 max-w-7xl mx-auto">
+      <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-3 max-w-7xl mx-auto">
         {/* ✅ 로고 - 하얀색 박스 안 PoliTalk */}
 <Link
   to="/"
@@ -63,7 +63,7 @@ function Header({
 
 
         {/* 🔍 검색창 */}
-      <div className="flex-1 mx-6">
+      <div className="flex flex-grow min-w-[180px] max-w-sm border border-[#6B4D33] rounded overflow-hidden mx-auto sm:mx-6">
   <div className="flex border border-[#6B4D33] rounded overflow-hidden">
     <input
       type="text"

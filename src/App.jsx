@@ -15,7 +15,7 @@ import TermsPage from "./components/pages/TermsPage";
 import PrivacyPolicy from "./components/pages/PrivacyPolicy";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AdminRoute from "./components/AdminRoute";
-import NaverCallback from "./pages/NaverCallback";
+import NaverCallback from "./components/pages/NaverCallback";
 
 import { Toaster } from "react-hot-toast";
 

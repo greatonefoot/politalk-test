@@ -21,6 +21,15 @@ import {
   getDocs,
 } from "firebase/firestore";
 
+const NAVER_CLIENT_ID = "KzNqOG3o5fJpv3t2qJ4k"
+const NAVER_CALLBACK_URL = "https://politalk-test.vercel.app/naver-callback";
+
+const naverState = Math.random().toString(36).substring(2);
+const naverLoginUrl = `https://nid.naver.com/oauth2.0/authorize?response_type=code&client_id=${NAVER_CLIENT_ID}&redirect_uri=${encodeURIComponent(
+  NAVER_CALLBACK_URL
+)}&state=${naverState}`;
+
+
 // ✅ 카카오 관련 설정
 const KAKAO_API_KEY = "d840e4500f1ad3fa24e6380c2a8ad8b9";
 const KAKAO_FUNCTION_URL = "https://us-central1-politalk-4e0dd.cloudfunctions.net/kakaoLogin";
@@ -290,5 +299,14 @@ const LoginPage = () => {
     </div>
   );
 };
+
+<a href={naverLoginUrl}>
+  <img
+    src="https://static.nid.naver.com/oauth/small_g_in.PNG"
+    alt="네이버 로그인"
+    className="w-full h-10 object-contain mt-2"
+  />
+</a>
+
 
 export default LoginPage;

@@ -48,7 +48,7 @@ function Header({
   };
 
   return (
-    <header className="bg-white border-b border-[#6B4D33] shadow-sm">
+    <header className="bg-white border-b-2 border-[#6B4D33] shadow-sm">
       <div className="flex justify-between items-center px-4 py-3 max-w-7xl mx-auto">
         {/* ✅ 로고 - 하얀색 박스 안 PoliTalk */}
         <Link

@@ -295,18 +295,19 @@ const LoginPage = () => {
         <button onClick={handleKakaoLogin} className="bg-yellow-300 text-black w-full py-2 rounded">
           🟡 카카오로 로그인
         </button>
-      </div>
-    </div>
-  );
-};
 
-<a href={naverLoginUrl}>
+        <a href={naverLoginUrl}>
   <img
     src="https://static.nid.naver.com/oauth/small_g_in.PNG"
     alt="네이버 로그인"
     className="w-full h-10 object-contain mt-2"
   />
 </a>
+
+      </div>
+    </div>
+  );
+};
 
 
 export default LoginPage;

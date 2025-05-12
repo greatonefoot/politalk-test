@@ -16,6 +16,7 @@ function Header({
   const navigate = useNavigate();
   const [user] = useAuthState(auth);
   const [role, setRole] = useState(null);
+  const [userInfo, setUserInfo] = useState(null);
   const [profilePic, setProfilePic] = useState("");
 
   useEffect(() => {
@@ -27,6 +28,7 @@ function Header({
           const data = docSnap.data();
           setRole(data.role);
           setProfilePic(data.profilePic || "");
+          setUserInfo(data); 
         }
       }
     };

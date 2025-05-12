@@ -195,7 +195,7 @@ const VotePage = () => {
     return "bg-[#F9EBE0]";
   };
   return (
-    <div className="bg-gray-100 min-h-screen">
+    <div className="bg-[#fdfaf6] min-h-screen">
       <Header categories={[]} selectedCategory="전체" setSelectedCategory={() => {}} searchTerm="" setSearchTerm={() => {}} />
       <HotPostsSidebar />
       <main className="mt-20 px-4 flex flex-col items-center max-w-screen-xl mx-auto">

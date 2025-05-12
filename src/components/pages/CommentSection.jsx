@@ -426,7 +426,7 @@ const CommentSection = ({ postId, optionIndex, votePercent, myVote }) => {
   }, {});
 
   return (
-    <div className="p-4 bg-white border shadow rounded">
+    <div className="p-4 bg-[#fdfaf6]">
       {/* 정렬 및 제목 */}
       <div className="flex justify-between items-center mb-4">
         <h3 className="font-bold text-lg text-[#6B4D33]">
@@ -452,7 +452,7 @@ const CommentSection = ({ postId, optionIndex, votePercent, myVote }) => {
     <h4 className="text-[#6B4D33] font-bold mb-2">🌟 베스트 댓글 TOP3</h4>
     <div className="space-y-3">
       {bestComments.map((c, i) => (
-        <div key={c.id} className="p-2 border rounded bg-yellow-50">
+        <div key={c.id} className="p-2 border rounded bg-white shadow">
           <div className="text-xs text-gray-500 font-bold">#{i + 1} · 점수: {c.score}</div>
           <p>{c.text}</p>
           {c.imageUrls?.map((url, i) => (
@@ -541,7 +541,7 @@ const CommentSection = ({ postId, optionIndex, votePercent, myVote }) => {
       {/* 일반 댓글 */}
       <div className="space-y-4">
         {parentComments.map((c) => (
-          <div key={c.id} className="p-2 border rounded bg-gray-50">
+          <div key={c.id} className="p-2 border rounded bg-white shadow">
             {c.isBlind ? (
               <p className="italic text-gray-400">🚫 블라인드된 댓글입니다.</p>
             ) : (
@@ -591,7 +591,7 @@ const CommentSection = ({ postId, optionIndex, votePercent, myVote }) => {
                     : `💬 답글 ${childMap[c.id].length}개 보기`}
                 </button>
                 {openReplyMap[c.id] && childMap[c.id].map((r) => (
-                  <div key={r.id} className="ml-4 mt-2 p-2 border rounded bg-white">
+                  <div key={r.id} className="ml-4 mt-2 p-2 border rounded bg-white shadow-sm">
                     {r.isBlind ? (
                       <p className="italic text-gray-400">🚫 블라인드된 댓글입니다.</p>
                     ) : (

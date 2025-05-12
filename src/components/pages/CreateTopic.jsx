@@ -182,7 +182,7 @@ const handleSubmit = async (e) => {
       return url;
     };
 
-const uploadedThumbnail = thumbnail ? await uploadAndTrack(thumbnail) : "";
+const uploadedThumbnail = thumbnail ? await uploadAndTrack(thumbnail) : null;
 
 const uploadedMainImages = [];
 
@@ -210,19 +210,26 @@ const uploadedOptionImages = await Promise.all(
       votes: 0
     }));
 
-    await addDoc(collection(db, "posts"), {
-      title,
-      content,
-      createdAt: new Date(),
-      views: 0,
-      reports: 0,
-      isFixed: false,
-      authorUid,
-      thumbnail: uploadedThumbnail,
-      mainImages: uploadedMainImages, // ✅ 필드명 변경
-      imagePositions: imagePositions.slice(0, uploadedMainImages.length),
-      options: filteredOptionData
-    });
+const postData = {
+  title,
+  content,
+  createdAt: new Date(),
+  views: 0,
+  reports: 0,
+  isFixed: false,
+  authorUid,
+  mainImages: uploadedMainImages,
+  imagePositions: imagePositions.slice(0, uploadedMainImages.length),
+  options: filteredOptionData,
+};
+
+// 썸네일이 있을 때만 추가
+if (uploadedThumbnail) {
+  postData.thumbnail = uploadedThumbnail;
+}
+
+await addDoc(collection(db, "posts"), postData);
+
 
     alert("주제가 등록되었습니다!");
     window.location.href = "/";

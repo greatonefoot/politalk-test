@@ -160,12 +160,13 @@ const VotePageMobile = () => {
                 {opt.label || opt.text || `선택지 ${idx + 1}`}
               </p>
               {opt.imageUrl && (
-                <img
-                  src={opt.imageUrl}
-                  alt={`선택지 ${idx + 1} 이미지`}
-                  className="h-20 w-full object-cover rounded mt-2"
-                />
-              )}
+  <img
+    src={opt.imageUrl}
+    alt={`선택지 ${idx + 1} 이미지`}
+    className="w-full max-h-40 object-contain rounded mt-2"
+  />
+)}
+
               {voted && (
                 <p className="text-xs text-gray-500 mt-1">{votePercents[idx]}%</p>
               )}

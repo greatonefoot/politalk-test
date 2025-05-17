@@ -246,15 +246,16 @@ const renderMainImages = (post) =>
                <Link to={`/post/${p.id}`} key={p.id}>
   <div className="p-3 rounded border-2 border-[#4B3621] hover:bg-[#fdf8f3] transition">
 
-    {p.thumbnail ? (
-      <div className="w-full h-20 flex items-center justify-center overflow-hidden rounded mb-1 bg-white">
-        <img
-          src={p.thumbnail}
-          alt=""
-          className="h-full object-contain"
-        />
-      </div>
-    ) : renderMainImages(p)}
+{p.thumbnail && (
+  <div className="w-full h-20 flex items-center justify-center overflow-hidden rounded mb-1 bg-white">
+    <img
+      src={p.thumbnail}
+      alt=""
+      className="h-full object-contain"
+    />
+  </div>
+)}
+
 
     <div className="text-sm font-bold truncate">{p.title}</div>
     <div className="text-xs text-gray-600 mb-1">
@@ -304,16 +305,16 @@ const renderMainImages = (post) =>
               {sortedPosts.map((p) => (
                 <Link to={`/post/${p.id}`} key={p.id}>
                   <div className="bg-white p-3 rounded border border-gray-300 hover:bg-gray-50 transition">
-                    {p.thumbnail ? (
-                     <div className="w-full h-20 flex items-center justify-center overflow-hidden rounded mb-1 bg-white">
-  <img
-    src={p.thumbnail}
-    alt=""
-    className="h-full object-contain"
-  />
-</div>
+                 {p.thumbnail && (
+  <div className="w-full h-20 flex items-center justify-center overflow-hidden rounded mb-1 bg-white">
+    <img
+      src={p.thumbnail}
+      alt=""
+      className="h-full object-contain"
+    />
+  </div>
+)}
 
-                    ) : renderMainImages(p)}
                     <div className="font-medium text-sm truncate">{p.title}</div>
                     <div className="text-xs text-gray-600 mb-1">
                       {authorData[p.id] || "익명"} · 댓글 {commentCounts[p.id] || 0} · 조회 {p.views || 0}

@@ -14,6 +14,13 @@ import {
   getDocs,
 } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
+// ✅ Swiper (이미지 슬라이드용) 관련 import
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Navigation, Pagination } from "swiper/modules";
+import "swiper/css";
+import "swiper/css/navigation";
+import "swiper/css/pagination";
+
 
 const VotePageMobile = () => {
   const { postId } = useParams();
@@ -119,18 +126,28 @@ const VotePageMobile = () => {
           </p>
         )}
 
-        {voteData.mainImages?.length > 0 && (
-          <div className="grid grid-cols-2 gap-2 mb-4">
-            {voteData.mainImages.map((url, idx) => (
-              <img
-                key={idx}
-                src={url}
-                alt={`본문 이미지 ${idx + 1}`}
-                className="w-full rounded"
-              />
-            ))}
-          </div>
-        )}
+      {voteData.mainImages?.length > 0 && (
+  <div className="mb-4">
+    <Swiper
+      modules={[Navigation, Pagination]}
+      navigation
+      pagination={{ clickable: true }}
+      spaceBetween={10}
+      slidesPerView={1}
+    >
+      {voteData.mainImages.map((url, idx) => (
+        <SwiperSlide key={idx}>
+          <img
+            src={url}
+            alt={`본문 이미지 ${idx + 1}`}
+            className="w-full rounded max-h-80 object-contain"
+          />
+        </SwiperSlide>
+      ))}
+    </Swiper>
+  </div>
+)}
+
         <div className="grid grid-cols-2 gap-2 mb-4">
           {voteData.options.map((opt, idx) => (
             <div

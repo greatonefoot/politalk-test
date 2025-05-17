@@ -189,7 +189,7 @@ const VotePage = () => {
   const votePercents = getVotePercents();
 
   return (
-    <div className="bg-[#fdfaf6] min-h-screen">
+    <div className="bg-white min-h-screen">
       <Header categories={[]} selectedCategory="전체" setSelectedCategory={() => {}} searchTerm="" setSearchTerm={() => {}} />
       <HotPostsSidebar />
       <main className="mt-20 px-4 flex flex-col items-center max-w-screen-xl mx-auto">
@@ -218,7 +218,7 @@ const VotePage = () => {
                     <img
                       src={url}
                       alt={`본문 이미지 ${idx + 1}`}
-                      className="w-full h-64 object-cover rounded-lg"
+                      className="w-full object-contain rounded-lg max-h-[600px]"
                     />
                   </SwiperSlide>
                 ))}
@@ -324,7 +324,8 @@ const VotePage = () => {
                             alignItems: "center",
                           }
                     }
-                    className={isVisible ? "bg-white p-3 rounded shadow relative group" : ""}
+                    className={isVisible ? "bg-[#f8f8f8] p-3 rounded shadow relative group" : ""}
+
                   >
                     {isVisible ? (
                       <>

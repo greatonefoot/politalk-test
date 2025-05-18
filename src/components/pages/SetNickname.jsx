@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { auth, db } from "../../firebase";
 import { doc, updateDoc } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
-import { uploadImageAndGetURL } from "../utils/uploadImage";
+import { uploadImageAndGetURL } from "../../utils/uploadImage";
 import { onAuthStateChanged } from "firebase/auth";
 
 const SetNickname = () => {

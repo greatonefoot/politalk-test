@@ -16,6 +16,8 @@ import PrivacyPolicy from "./components/pages/PrivacyPolicy";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AdminRoute from "./components/AdminRoute";
 import NaverCallback from "./components/pages/NaverCallback";
+import SetNickname from "./components/pages/SetNickname";
+
 
 import { Toaster } from "react-hot-toast";
 
@@ -36,6 +38,8 @@ function App() {
 
           {/* ✅ 로그인 */}
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/set-nickname" element={<SetNickname />} />
+
 
           {/* ✅ 약관 페이지 */}
           <Route path="/terms" element={<TermsPage />} />

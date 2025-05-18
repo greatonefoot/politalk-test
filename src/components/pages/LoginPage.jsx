@@ -269,29 +269,33 @@ const LoginPage = () => {
           ※ 간편 로그인 및 전화번호 로그인은 <span className="text-red-500 font-semibold">자동 회원가입</span>이 진행됩니다
         </div>
 
-        <button
-        onClick={handleGoogleLogin}
-         className="flex items-center justify-center gap-2 w-full py-2 rounded border bg-white text-black hover:bg-gray-50"
-         >
-          <img src="/google-icon.svg" alt="Google" className="w-5 h-5" />
-          구글 로그인
-          </button>
-         
-        + <button
-   onClick={handleKakaoLogin}
-   className="flex items-center justify-center gap-2 w-full py-2 rounded border bg-white text-black hover:bg-gray-50"
- >
-   <img src="/kakao-icon.svg" alt="Kakao" className="w-5 h-5" />
-   카카오 로그인
-</button>
-        <a href={naverLoginUrl} className="w-full block">
-         <button
-   className="flex items-center justify-center gap-2 w-full py-2 rounded border bg-white text-black hover:bg-gray-50"
- >
-   <img src="/naver-icon.svg" alt="Naver" className="w-5 h-5" />
-   네이버 로그인
- </button>
-        </a>
+      <div className="flex flex-col items-center gap-2 mt-2 w-full">
+  <button
+    onClick={handleGoogleLogin}
+    className="flex items-center justify-center gap-2 px-3 py-1.5 rounded-md border bg-white text-black text-sm w-[220px] hover:bg-gray-50"
+  >
+    <img src="/google-icon.svg" alt="Google" className="w-4 h-4" />
+    구글 로그인
+  </button>
+
+  <button
+    onClick={handleKakaoLogin}
+    className="flex items-center justify-center gap-2 px-3 py-1.5 rounded-md border bg-[#FEE500] text-black text-sm w-[220px] hover:brightness-105"
+  >
+    <img src="/kakao-icon.svg" alt="Kakao" className="w-4 h-4" />
+    카카오 로그인
+  </button>
+
+  <a href={naverLoginUrl} className="block w-[220px]">
+    <button
+      className="flex items-center justify-center gap-2 w-full px-3 py-1.5 rounded-md border bg-[#03C75A] text-white text-sm hover:brightness-110"
+    >
+      <img src="/naver-icon.svg" alt="Naver" className="w-4 h-4" />
+      네이버 로그인
+    </button>
+  </a>
+</div>
+
 
         <div className="border-t pt-4 mt-4 space-y-2">
           <button onClick={() => setShowPhoneLogin(!showPhoneLogin)} className="w-full bg-gray-100 text-black py-2 rounded border">

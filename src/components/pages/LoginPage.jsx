@@ -269,13 +269,28 @@ const LoginPage = () => {
           ※ 간편 로그인 및 전화번호 로그인은 <span className="text-red-500 font-semibold">자동 회원가입</span>이 진행됩니다
         </div>
 
-        <button onClick={handleGoogleLogin} className="bg-green-500 text-white w-full py-2 rounded mt-2">구글 로그인</button>
-        <button onClick={handleKakaoLogin} className="bg-green-500 text-white w-full py-2 rounded">카카오 로그인</button>
-        <a href={naverLoginUrl} className="w-full block">
-          <button className="bg-green-500 text-white w-full py-2 rounded mt-2 flex items-center justify-center gap-2">
-            <img src="https://static.nid.naver.com/oauth/small_g_in.PNG" alt="네이버 로그인" className="h-5" />
-            네이버 로그인
+        <button
+        onClick={handleGoogleLogin}
+         className="flex items-center justify-center gap-2 w-full py-2 rounded border bg-white text-black hover:bg-gray-50"
+         >
+          <img src="/google-icon.svg" alt="Google" className="w-5 h-5" />
+          구글 로그인
           </button>
+         
+        + <button
+   onClick={handleKakaoLogin}
+   className="flex items-center justify-center gap-2 w-full py-2 rounded border bg-white text-black hover:bg-gray-50"
+ >
+   <img src="/kakao-icon.svg" alt="Kakao" className="w-5 h-5" />
+   카카오 로그인
+</button>
+        <a href={naverLoginUrl} className="w-full block">
+         <button
+   className="flex items-center justify-center gap-2 w-full py-2 rounded border bg-white text-black hover:bg-gray-50"
+ >
+   <img src="/naver-icon.svg" alt="Naver" className="w-5 h-5" />
+   네이버 로그인
+ </button>
         </a>
 
         <div className="border-t pt-4 mt-4 space-y-2">

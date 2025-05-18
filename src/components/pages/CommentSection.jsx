@@ -385,6 +385,38 @@ await addDoc(collection(db, "comments"), {
 });
 
 
+// ✅ 알림 생성: 내가 쓴 게 아니라면 대상자에게 알림 보내기
+try {
+  if (currentUser?.uid) {
+    let targetUid = null;
+
+    if (parentId) {
+      // 답글인 경우: 부모 댓글의 작성자
+      const parentSnap = await getDoc(doc(db, "comments", parentId));
+      targetUid = parentSnap.exists() ? parentSnap.data().authorUid : null;
+    } else {
+      // 댓글인 경우: 게시글 작성자
+      targetUid = post?.authorUid;
+    }
+
+    // 자기 자신에게는 알림 안 보냄
+    if (targetUid && targetUid !== currentUser.uid) {
+      await addDoc(collection(db, "notifications"), {
+        type: parentId ? "reply" : "comment",
+        senderId: currentUser.uid,
+        receiverId: targetUid,
+        postId,
+        commentId: null, // 향후 사용 시 댓글 ID도 추가 가능
+        read: false,
+        createdAt: new Date(),
+      });
+    }
+  }
+} catch (e) {
+  console.error("알림 생성 실패:", e);
+}
+
+
     setLastCommentTime(Date.now());
     if (parentId) {
       setReplyText("");

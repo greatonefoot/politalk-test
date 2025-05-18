@@ -18,6 +18,8 @@ import {
 } from "firebase/auth";
 import { useNavigate, Link } from "react-router-dom";
 import { uploadImageAndGetURL } from "../../utils/uploadImage";
+import { onSnapshot } from "firebase/firestore";
+
 
 const MyProfilePage = () => {
   const [user, setUser] = useState(null);
@@ -56,21 +58,25 @@ const MyProfilePage = () => {
     return () => unsubscribe();
   }, [navigate]);
 
-  useEffect(() => {
-    if (!user) return;
-    const fetchNotifications = async () => {
-      const q = query(
-        collection(db, "notifications"),
-        where("targetUid", "==", user.uid)
-      );
-      const qs = await getDocs(q);
-      const notis = qs.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-      setNotifications(
-        notis.sort((a, b) => b.createdAt?.toMillis() - a.createdAt?.toMillis())
-      );
-    };
-    fetchNotifications();
-  }, [user]);
+useEffect(() => {
+  if (!user) return;
+
+  const q = query(
+    collection(db, "notifications"),
+    where("receiverId", "==", user.uid)
+  );
+
+  const unsubscribe = onSnapshot(q, (snapshot) => {
+    const notis = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+    const sorted = notis.sort(
+      (a, b) => b.createdAt?.toMillis() - a.createdAt?.toMillis()
+    );
+    setNotifications(sorted);
+  });
+
+  return () => unsubscribe(); // 🔁 실시간 연결 해제
+}, [user]);
+
   const fetchMyContent = async (uid) => {
     const postsSnap = await getDocs(
       query(collection(db, "posts"), where("authorUid", "==", uid))

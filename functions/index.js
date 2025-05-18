@@ -6,7 +6,7 @@ const { kakaoLogin } = require("./kakaoAuth");
 admin.initializeApp();
 
 const storage = new Storage();
-const bucket = storage.bucket("politalk-4e0dd.appspot.com");
+const bucket = storage.bucket("politalk-4e0dd.firebasestorage.app");
 
 exports.uploadImage = functions.https.onRequest(async (req, res) => {
   if (req.method === "OPTIONS") {

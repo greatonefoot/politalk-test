@@ -10,6 +10,8 @@ import {
   signInWithCustomToken,
   GoogleAuthProvider,
 } from "firebase/auth";
+import { RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth";
+
 import {
   doc,
   setDoc,
@@ -40,6 +42,10 @@ const LoginPage = () => {
   const [password, setPassword] = useState("");
   const [nickname, setNickname] = useState("");
   const [agreeTerms, setAgreeTerms] = useState(false);
+    const [phoneNumber, setPhoneNumber] = useState("");
+  const [verificationCode, setVerificationCode] = useState("");
+  const [confirmationResult, setConfirmationResult] = useState(null);
+
   const navigate = useNavigate();
 
   // ✅ Kakao SDK 로드
@@ -175,6 +181,70 @@ const LoginPage = () => {
       alert("오류: " + error.message);
     }
   };
+  // 📌 invisible reCAPTCHA 설정 함수
+const setupRecaptcha = () => {
+  window.recaptchaVerifier = new RecaptchaVerifier(auth, "recaptcha-container", {
+    size: "invisible", // 화면에 안 보여도 작동함!
+    callback: (response) => {
+      // 인증 성공 시 자동 호출
+    },
+    "expired-callback": () => {
+      alert("reCAPTCHA 만료. 다시 시도해주세요.");
+    }
+  });
+};
+// 📌 인증번호를 전화번호로 보내는 함수
+const handleSendCode = async () => {
+  if (!phoneNumber) {
+    alert("전화번호를 입력해주세요!");
+    return;
+  }
+
+  // reCAPTCHA 먼저 세팅
+  setupRecaptcha();
+
+  try {
+    const confirmation = await signInWithPhoneNumber(
+      auth,
+      phoneNumber,
+      window.recaptchaVerifier
+    );
+    setConfirmationResult(confirmation); // 코드 입력창 열기용
+    alert("인증번호가 문자로 전송되었어요!");
+  } catch (error) {
+    alert("코드 전송 실패: " + error.message);
+  }
+};
+const handleVerifyCode = async () => {
+  if (!verificationCode || !confirmationResult) {
+    alert("인증번호를 입력해주세요!");
+    return;
+  }
+
+  try {
+    const result = await confirmationResult.confirm(verificationCode);
+    const user = result.user;
+
+    // 사용자 정보 Firestore에 저장 (최초 로그인일 경우)
+    const userRef = doc(db, "users", user.uid);
+    const docSnap = await getDoc(userRef);
+    if (!docSnap.exists()) {
+      await setDoc(userRef, {
+        name: "전화 사용자",
+        profilePic: "",
+        email: user.email || "",
+        role: "user",
+        createdAt: new Date(),
+      });
+    }
+
+    alert("전화번호 로그인 성공!");
+    navigate("/");
+  } catch (error) {
+    alert("코드 인증 실패: " + error.message);
+  }
+};
+
 
   // ✅ 카카오 로그인 처리
   const handleKakaoLogin = async () => {
@@ -306,6 +376,42 @@ const LoginPage = () => {
     네이버로 로그인
   </button>
 </a>
+
+{/* 📱 전화번호 로그인 UI */}
+<div className="mt-4 border-t pt-4">
+  <h3 className="text-center font-semibold mb-2">📱 전화번호 로그인</h3>
+
+  <input
+    type="tel"
+    placeholder="+821012345678"
+    value={phoneNumber}
+    onChange={(e) => setPhoneNumber(e.target.value)}
+    className="border px-3 py-2 rounded mb-2 w-full"
+  />
+
+  <button onClick={handleSendCode} className="bg-blue-500 text-white py-2 rounded w-full">
+    인증 코드 보내기
+  </button>
+
+  {confirmationResult && (
+    <>
+      <input
+        type="text"
+        placeholder="인증 코드 입력"
+        value={verificationCode}
+        onChange={(e) => setVerificationCode(e.target.value)}
+        className="border px-3 py-2 rounded mt-2 w-full"
+      />
+      <button onClick={handleVerifyCode} className="bg-green-600 text-white py-2 rounded w-full mt-2">
+        로그인 하기
+      </button>
+    </>
+  )}
+
+  {/* invisible reCAPTCHA 영역 */}
+  <div id="recaptcha-container"></div>
+</div>
+
 
 
       </div>

@@ -35,12 +35,10 @@ const LoginPage = () => {
   const [isSignup, setIsSignup] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [nickname, setNickname] = useState("");
   const [agreeTerms, setAgreeTerms] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState("");
   const [verificationCode, setVerificationCode] = useState("");
   const [confirmationResult, setConfirmationResult] = useState(null);
-
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -55,49 +53,58 @@ const LoginPage = () => {
     document.body.appendChild(script);
   }, []);
 
+  const formatPhoneNumber = (number) => {
+    const cleaned = number.replace(/[^0-9]/g, "");
+    if (cleaned.startsWith("0")) return "+82" + cleaned.slice(1);
+    if (cleaned.startsWith("82")) return "+" + cleaned;
+    return number;
+  };
+
+  const setupRecaptcha = () => {
+    if (!window.recaptchaVerifier) {
+      window.recaptchaVerifier = new RecaptchaVerifier(auth, "recaptcha-container", {
+        size: "invisible",
+        callback: () => {},
+        "expired-callback": () => alert("reCAPTCHA 만료. 다시 시도해주세요."),
+      });
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       if (isSignup) {
-        if (!nickname.trim()) return alert("닉네임을 입력해주세요.");
         if (!agreeTerms) return alert("약관에 동의해야 가입할 수 있습니다.");
-        const snapshot = await getDocs(query(collection(db, "users"), where("name", "==", nickname)));
-        if (!snapshot.empty) return alert("이미 사용 중인 닉네임입니다.");
-
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
         await sendEmailVerification(user);
         await setDoc(doc(db, "users", user.uid), {
-          name: nickname,
+          name: "새 사용자",
           profilePic: "",
-          email: email,
+          email,
           role: "user",
           createdAt: new Date(),
         });
-        alert("가입 완료! 이메일 인증 메일이 전송되었습니다.");
+        alert("가입 완료! 이메일 인증 후 닉네임을 설정해주세요.");
+        navigate("/set-nickname");
       } else {
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
         if (!user.emailVerified) return alert("이메일 인증이 필요합니다.");
-
         const userRef = doc(db, "users", user.uid);
         const docSnap = await getDoc(userRef);
-
         if (!docSnap.exists()) {
           await setDoc(userRef, {
             name: "새 사용자",
             profilePic: "",
-            email: email,
+            email,
             role: "user",
             createdAt: new Date(),
           });
-          navigate("/set-nickname");
-          return;
+          return navigate("/set-nickname");
         } else if (docSnap.data().name === "새 사용자") {
-          navigate("/set-nickname");
-          return;
+          return navigate("/set-nickname");
         }
-
         const ip = (await (await fetch("https://api.ipify.org?format=json")).json()).ip;
         await addDoc(collection(db, "loginLogs"), {
           uid: user.uid,
@@ -105,7 +112,6 @@ const LoginPage = () => {
           timestamp: new Date(),
           ip,
         });
-
         alert("로그인 성공!");
         navigate("/");
       }
@@ -131,8 +137,7 @@ const LoginPage = () => {
 
       const userRef = doc(db, "users", user.uid);
       const docSnap = await getDoc(userRef);
-
-      if (!docSnap.exists()) {
+      if (!docSnap.exists() || docSnap.data().name === "새 사용자") {
         await setDoc(userRef, {
           name: "새 사용자",
           profilePic: "",
@@ -140,11 +145,7 @@ const LoginPage = () => {
           role: "user",
           createdAt: new Date(),
         });
-        navigate("/set-nickname");
-        return;
-      } else if (docSnap.data().name === "새 사용자") {
-        navigate("/set-nickname");
-        return;
+        return navigate("/set-nickname");
       }
 
       alert("구글 로그인 성공!");
@@ -159,11 +160,10 @@ const LoginPage = () => {
       await window.Kakao.Auth.login({
         scope: "profile_nickname,account_email",
         success: async (authObj) => {
-          const accessToken = authObj.access_token;
           const res = await fetch(KAKAO_FUNCTION_URL, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ accessToken }),
+            body: JSON.stringify({ accessToken: authObj.access_token }),
           });
           const data = await res.json();
           if (!data.token) throw new Error("커스텀 토큰 없음");
@@ -173,8 +173,7 @@ const LoginPage = () => {
 
           const userRef = doc(db, "users", user.uid);
           const docSnap = await getDoc(userRef);
-
-          if (!docSnap.exists()) {
+          if (!docSnap.exists() || docSnap.data().name === "새 사용자") {
             await setDoc(userRef, {
               name: "새 사용자",
               profilePic: "",
@@ -182,44 +181,31 @@ const LoginPage = () => {
               role: "user",
               createdAt: new Date(),
             });
-            navigate("/set-nickname");
-            return;
-          } else if (docSnap.data().name === "새 사용자") {
-            navigate("/set-nickname");
-            return;
+            return navigate("/set-nickname");
           }
 
           alert("카카오 로그인 성공!");
           navigate("/");
         },
         fail: (err) => {
-          alert("카카오 로그인 실패");
           console.error(err);
+          alert("카카오 로그인 실패");
         },
       });
     } catch (err) {
-      alert("카카오 로그인 오류");
       console.error(err);
+      alert("카카오 로그인 오류 발생");
     }
   };
 
-  const setupRecaptcha = () => {
-    window.recaptchaVerifier = new RecaptchaVerifier(auth, "recaptcha-container", {
-      size: "invisible",
-      callback: () => {},
-      "expired-callback": () => {
-        alert("reCAPTCHA 만료. 다시 시도해주세요.");
-      },
-    });
-  };
-
   const handleSendCode = async () => {
-    if (!phoneNumber) return alert("전화번호를 입력해주세요.");
+    if (!phoneNumber) return alert("전화번호를 입력해주세요!");
     setupRecaptcha();
+    const formatted = formatPhoneNumber(phoneNumber);
     try {
-      const confirmation = await signInWithPhoneNumber(auth, phoneNumber, window.recaptchaVerifier);
+      const confirmation = await signInWithPhoneNumber(auth, formatted, window.recaptchaVerifier);
       setConfirmationResult(confirmation);
-      alert("인증번호를 전송했습니다.");
+      alert("인증번호가 전송되었습니다.");
     } catch (error) {
       alert("전송 실패: " + error.message);
     }
@@ -233,8 +219,7 @@ const LoginPage = () => {
 
       const userRef = doc(db, "users", user.uid);
       const docSnap = await getDoc(userRef);
-
-      if (!docSnap.exists()) {
+      if (!docSnap.exists() || docSnap.data().name === "새 사용자") {
         await setDoc(userRef, {
           name: "새 사용자",
           profilePic: "",
@@ -242,14 +227,10 @@ const LoginPage = () => {
           role: "user",
           createdAt: new Date(),
         });
-        navigate("/set-nickname");
-        return;
-      } else if (docSnap.data().name === "새 사용자") {
-        navigate("/set-nickname");
-        return;
+        return navigate("/set-nickname");
       }
 
-      alert("전화번호 로그인 성공!");
+      alert("로그인 성공!");
       navigate("/");
     } catch (error) {
       alert("코드 인증 실패: " + error.message);
@@ -257,37 +238,30 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 relative">
-      <Link to="/" className="absolute top-4 left-4 text-naver underline text-sm hover:text-naverDark">
-        ← 홈으로
-      </Link>
+    <div className="min-h-screen flex items-center justify-center bg-gray-100 relative px-4">
+      <Link to="/" className="absolute top-4 left-4 text-naver underline text-sm hover:text-naverDark">← 홈으로</Link>
 
-      <div className="max-w-sm w-full bg-white rounded p-6 shadow">
-        <h2 className="text-xl font-bold mb-4 text-center">
-          {isSignup ? "회원가입" : "로그인"}
-        </h2>
+      <div className="w-full max-w-md bg-white rounded-xl p-6 shadow-md space-y-6">
+        <h2 className="text-xl font-bold text-center">{isSignup ? "회원가입" : "로그인"}</h2>
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          <input type="email" placeholder="이메일" value={email} onChange={(e) => setEmail(e.target.value)} className="border px-3 py-2 rounded" required />
-          <input type="password" placeholder="비밀번호" value={password} onChange={(e) => setPassword(e.target.value)} className="border px-3 py-2 rounded" required />
+        <form onSubmit={handleSubmit} className="space-y-3">
+          <input type="email" placeholder="이메일" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full border px-3 py-2 rounded" required />
+          <input type="password" placeholder="비밀번호" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full border px-3 py-2 rounded" required />
           {isSignup && (
-            <>
-              <input type="text" placeholder="닉네임" value={nickname} onChange={(e) => setNickname(e.target.value)} className="border px-3 py-2 rounded" required />
-              <label className="flex items-center gap-2 text-sm">
-                <input type="checkbox" checked={agreeTerms} onChange={(e) => setAgreeTerms(e.target.checked)} />
-                <span>
-                  <a href="/terms" className="underline text-blue-600" target="_blank">이용약관</a> 및{" "}
-                  <a href="/privacy" className="underline text-blue-600" target="_blank">개인정보 처리방침</a>에 동의합니다
-                </span>
-              </label>
-            </>
+            <label className="flex items-start gap-2 text-sm">
+              <input type="checkbox" checked={agreeTerms} onChange={(e) => setAgreeTerms(e.target.checked)} />
+              <span>
+                <a href="/terms" target="_blank" className="underline text-blue-600">이용약관</a> 및{" "}
+                <a href="/privacy" target="_blank" className="underline text-blue-600">개인정보 처리방침</a>에 동의합니다
+              </span>
+            </label>
           )}
-          <button type="submit" className="bg-naver text-white py-2 rounded">
+          <button type="submit" className="bg-naver text-white w-full py-2 rounded">
             {isSignup ? "회원가입" : "로그인"}
           </button>
         </form>
 
-        <div className="mt-4 flex justify-between text-sm">
+        <div className="flex justify-between text-sm">
           <button onClick={() => setIsSignup(!isSignup)} className="text-blue-600">
             {isSignup ? "로그인 하기" : "회원가입 하기"}
           </button>
@@ -296,33 +270,26 @@ const LoginPage = () => {
           </button>
         </div>
 
-        <hr className="my-4" />
+        <hr />
 
-        <button onClick={handleGoogleLogin} className="bg-red-500 text-white w-full py-2 rounded mb-2">
-          구글로 로그인
-        </button>
-
-        <button onClick={handleKakaoLogin} className="bg-yellow-300 text-black w-full py-2 rounded">
-          🟡 카카오로 로그인
-        </button>
-
-        <a href={naverLoginUrl} className="w-full">
+        <button onClick={handleGoogleLogin} className="bg-red-500 text-white w-full py-2 rounded">구글로 로그인</button>
+        <button onClick={handleKakaoLogin} className="bg-yellow-300 text-black w-full py-2 rounded">🟡 카카오로 로그인</button>
+        <a href={naverLoginUrl} className="w-full block">
           <button className="bg-green-500 text-white w-full py-2 rounded mt-2 flex items-center justify-center gap-2">
             <img src="https://static.nid.naver.com/oauth/small_g_in.PNG" alt="네이버 로그인" className="h-5" />
             네이버로 로그인
           </button>
         </a>
 
-        <div className="mt-4 border-t pt-4">
-          <h3 className="text-center font-semibold mb-2">📱 전화번호 로그인</h3>
-          <input type="tel" placeholder="+821012345678" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} className="border px-3 py-2 rounded mb-2 w-full" />
+        <div className="border-t pt-4 mt-4 space-y-2">
+          <h3 className="text-center font-semibold">📱 전화번호 로그인</h3>
+          <input type="tel" placeholder="01012345678 (숫자만)" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} className="w-full border px-3 py-2 rounded" />
           <button onClick={handleSendCode} className="bg-blue-500 text-white py-2 rounded w-full">인증 코드 보내기</button>
+
           {confirmationResult && (
             <>
-              <input type="text" placeholder="인증 코드 입력" value={verificationCode} onChange={(e) => setVerificationCode(e.target.value)} className="border px-3 py-2 rounded mt-2 w-full" />
-              <button onClick={handleVerifyCode} className="bg-green-600 text-white py-2 rounded w-full mt-2">
-                로그인 하기
-              </button>
+              <input type="text" placeholder="인증번호 입력" value={verificationCode} onChange={(e) => setVerificationCode(e.target.value)} className="w-full border px-3 py-2 rounded" />
+              <button onClick={handleVerifyCode} className="bg-green-600 text-white py-2 rounded w-full">로그인 하기</button>
             </>
           )}
           <div id="recaptcha-container"></div>

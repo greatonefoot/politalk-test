@@ -274,11 +274,12 @@ const LoginPage = () => {
     onClick={handleGoogleLogin}
     className="flex items-center justify-center gap-2 px-3 py-1.5 rounded-md border bg-white text-black text-sm w-[220px] hover:bg-gray-50"
   >
-    <img
-  src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg"
+<img
+  src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
   alt="Google"
   className="w-5 h-5"
 />
+
     구글 로그인
   </button>
 
@@ -299,11 +300,12 @@ const LoginPage = () => {
     <button
       className="flex items-center justify-center gap-2 w-full px-3 py-1.5 rounded-md border bg-[#03C75A] text-white text-sm hover:brightness-110"
     >
-      <img
-  src="https://static.nid.naver.com/oauth/small_g_in.PNG"
+<img
+  src="https://upload.wikimedia.org/wikipedia/commons/2/2e/Naver_Logotype.svg"
   alt="Naver"
   className="w-5 h-5"
 />
+
       네이버 로그인
     </button>
   </a>

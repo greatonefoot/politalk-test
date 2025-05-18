@@ -301,10 +301,11 @@ const LoginPage = () => {
       className="flex items-center justify-center gap-2 w-full px-3 py-1.5 rounded-md border bg-[#03C75A] text-white text-sm hover:brightness-110"
     >
 <img
-  src="https://upload.wikimedia.org/wikipedia/commons/0/09/Naver_icon.svg"
+  src="https://upload.wikimedia.org/wikipedia/commons/2/2e/Naver_Logotype.svg"
   alt="Naver"
-  className="w-5 h-5"
+  className="h-4"
 />
+
 
 
       네이버 로그인

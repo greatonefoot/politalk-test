@@ -18,9 +18,6 @@ import {
   addDoc,
   collection,
   getDoc,
-  query,
-  where,
-  getDocs,
 } from "firebase/firestore";
 
 const NAVER_CLIENT_ID = "KzNqOG3o5fJpv3t2qJ4k";
@@ -39,6 +36,7 @@ const LoginPage = () => {
   const [phoneNumber, setPhoneNumber] = useState("");
   const [verificationCode, setVerificationCode] = useState("");
   const [confirmationResult, setConfirmationResult] = useState(null);
+  const [showPhoneLogin, setShowPhoneLogin] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -119,6 +117,7 @@ const LoginPage = () => {
       alert("오류: " + error.message);
     }
   };
+
   const handleResetPassword = async () => {
     if (!email) return alert("이메일을 입력해주세요.");
     try {
@@ -134,7 +133,6 @@ const LoginPage = () => {
       const provider = new GoogleAuthProvider();
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
-
       const userRef = doc(db, "users", user.uid);
       const docSnap = await getDoc(userRef);
       if (!docSnap.exists() || docSnap.data().name === "새 사용자") {
@@ -147,7 +145,6 @@ const LoginPage = () => {
         });
         return navigate("/set-nickname");
       }
-
       alert("구글 로그인 성공!");
       navigate("/");
     } catch (error) {
@@ -170,7 +167,6 @@ const LoginPage = () => {
 
           const result = await signInWithCustomToken(auth, data.token);
           const user = result.user;
-
           const userRef = doc(db, "users", user.uid);
           const docSnap = await getDoc(userRef);
           if (!docSnap.exists() || docSnap.data().name === "새 사용자") {
@@ -183,7 +179,6 @@ const LoginPage = () => {
             });
             return navigate("/set-nickname");
           }
-
           alert("카카오 로그인 성공!");
           navigate("/");
         },
@@ -216,7 +211,6 @@ const LoginPage = () => {
     try {
       const result = await confirmationResult.confirm(verificationCode);
       const user = result.user;
-
       const userRef = doc(db, "users", user.uid);
       const docSnap = await getDoc(userRef);
       if (!docSnap.exists() || docSnap.data().name === "새 사용자") {
@@ -229,7 +223,6 @@ const LoginPage = () => {
         });
         return navigate("/set-nickname");
       }
-
       alert("로그인 성공!");
       navigate("/");
     } catch (error) {
@@ -272,27 +265,38 @@ const LoginPage = () => {
 
         <hr />
 
-        <button onClick={handleGoogleLogin} className="bg-red-500 text-white w-full py-2 rounded">구글로 로그인</button>
-        <button onClick={handleKakaoLogin} className="bg-yellow-300 text-black w-full py-2 rounded">🟡 카카오로 로그인</button>
+        <div className="text-sm text-center text-gray-500">
+          ※ 간편 로그인 및 전화번호 로그인은 <span className="text-red-500 font-semibold">자동 회원가입</span>이 진행됩니다
+        </div>
+
+        <button onClick={handleGoogleLogin} className="bg-green-500 text-white w-full py-2 rounded mt-2">구글 로그인</button>
+        <button onClick={handleKakaoLogin} className="bg-green-500 text-white w-full py-2 rounded">카카오 로그인</button>
         <a href={naverLoginUrl} className="w-full block">
           <button className="bg-green-500 text-white w-full py-2 rounded mt-2 flex items-center justify-center gap-2">
             <img src="https://static.nid.naver.com/oauth/small_g_in.PNG" alt="네이버 로그인" className="h-5" />
-            네이버로 로그인
+            네이버 로그인
           </button>
         </a>
 
         <div className="border-t pt-4 mt-4 space-y-2">
-          <h3 className="text-center font-semibold">📱 전화번호 로그인</h3>
-          <input type="tel" placeholder="01012345678 (숫자만)" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} className="w-full border px-3 py-2 rounded" />
-          <button onClick={handleSendCode} className="bg-blue-500 text-white py-2 rounded w-full">인증 코드 보내기</button>
+          <button onClick={() => setShowPhoneLogin(!showPhoneLogin)} className="w-full bg-gray-100 text-black py-2 rounded border">
+            📱 전화번호 로그인 {showPhoneLogin ? "▲" : "▼"}
+          </button>
 
-          {confirmationResult && (
+          {showPhoneLogin && (
             <>
-              <input type="text" placeholder="인증번호 입력" value={verificationCode} onChange={(e) => setVerificationCode(e.target.value)} className="w-full border px-3 py-2 rounded" />
-              <button onClick={handleVerifyCode} className="bg-green-600 text-white py-2 rounded w-full">로그인 하기</button>
+              <input type="tel" placeholder="01012345678 (숫자만)" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} className="w-full border px-3 py-2 rounded" />
+              <button onClick={handleSendCode} className="bg-blue-500 text-white py-2 rounded w-full">인증 코드 보내기</button>
+
+              {confirmationResult && (
+                <>
+                  <input type="text" placeholder="인증번호 입력" value={verificationCode} onChange={(e) => setVerificationCode(e.target.value)} className="w-full border px-3 py-2 rounded" />
+                  <button onClick={handleVerifyCode} className="bg-green-600 text-white py-2 rounded w-full">로그인</button>
+                </>
+              )}
+              <div id="recaptcha-container"></div>
             </>
           )}
-          <div id="recaptcha-container"></div>
         </div>
       </div>
     </div>

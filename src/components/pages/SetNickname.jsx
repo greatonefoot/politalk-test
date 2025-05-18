@@ -11,17 +11,17 @@ const SetNickname = () => {
   const [previewUrl, setPreviewUrl] = useState("");
   const [loading, setLoading] = useState(false);
   const [user, setUser] = useState(null);
-  const [checkingAuth, setCheckingAuth] = useState(true);
+  const [checkingUser, setCheckingUser] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      if (currentUser) {
-        setUser(currentUser);
-      } else {
+      if (!currentUser) {
         navigate("/login");
+      } else {
+        setUser(currentUser);
       }
-      setCheckingAuth(false);
+      setCheckingUser(false);
     });
     return () => unsubscribe();
   }, []);
@@ -40,7 +40,10 @@ const SetNickname = () => {
       return;
     }
 
-    if (!user) return;
+    if (!user) {
+      alert("유저 정보가 없습니다.");
+      return;
+    }
 
     setLoading(true);
     let profileUrl = "";
@@ -70,7 +73,9 @@ const SetNickname = () => {
     }
   };
 
-  if (checkingAuth) return <div className="text-center mt-20">로딩 중...</div>;
+  if (checkingUser) {
+    return <div className="text-center mt-20 text-gray-600">사용자 정보를 불러오는 중...</div>;
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">

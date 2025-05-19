@@ -1,5 +1,9 @@
-import React from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { BrowserRouter as Router, Routes, Route, useNavigate } from "react-router-dom";
+import { onAuthStateChanged } from "firebase/auth";
+import { collection, onSnapshot, query, where } from "firebase/firestore";
+import { auth, db } from "./firebase";
+import toast, { Toaster } from "react-hot-toast";
 
 import Home from "./components/pages/Home";
 import VotePage from "./components/pages/VotePage";
@@ -19,12 +23,7 @@ import AdminRoute from "./components/AdminRoute";
 import NaverCallback from "./components/pages/NaverCallback";
 import SetNickname from "./components/pages/SetNickname";
 
-
-
-
-import { Toaster } from "react-hot-toast";
-
-// 👇 이 줄들 복사해서 붙여넣어
+// 👇 확인용 로그
 console.log("✅ Home", typeof Home);
 console.log("✅ VotePage", typeof VotePage);
 console.log("✅ VotePageMobile", typeof VotePageMobile);
@@ -40,98 +39,150 @@ console.log("✅ PrivacyPolicy", typeof PrivacyPolicy);
 console.log("✅ SetNickname", typeof SetNickname);
 console.log("✅ RulesPage", typeof RulesPage);
 
-
-function App() {
-  // ✅ 모바일 분기
+function AppWrapper() {
+  const [user, setUser] = useState(null);
   const isMobile = window.innerWidth <= 768;
+  const navigate = useNavigate();
 
+  // ✅ 로그인 상태 감지
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (u) => {
+      setUser(u);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  // ✅ 실시간 알림 구독
+  useEffect(() => {
+    if (!user) return;
+
+    const q = query(
+      collection(db, "notifications"),
+      where("receiverId", "==", user.uid),
+      where("read", "==", false)
+    );
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      snapshot.docChanges().forEach((change) => {
+        if (change.type === "added") {
+          const data = change.doc.data();
+          toast(`🔔 ${data.message || "새 알림이 도착했습니다."}`, {
+            icon: "📬",
+            duration: 5000,
+            position: "top-center",
+            style: { cursor: "pointer" },
+            onClick: () => {
+              if (data.postId && data.commentId) {
+                navigate(`/post/${data.postId}#comment-${data.commentId}`);
+              } else if (data.postId) {
+                navigate(`/post/${data.postId}`);
+              }
+            },
+          });
+        }
+      });
+    });
+
+    return () => unsubscribe();
+  }, [user, navigate]);
+
+  return (
+    <>
+      <Routes>
+        {/* ✅ 홈, 게시글 보기: 공개 */}
+        <Route path="/" element={<Home />} />
+        <Route
+          path="/post/:postId"
+          element={isMobile ? <VotePageMobile /> : <VotePage />}
+        />
+
+        {/* ✅ 로그인 */}
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/set-nickname" element={<SetNickname />} />
+
+        {/* ✅ 약관 페이지 */}
+        <Route path="/terms" element={<TermsPage />} />
+        <Route path="/privacy" element={<PrivacyPolicy />} />
+        <Route path="/rules" element={<RulesPage />} />
+
+        {/* ✅ 글 작성: 로그인 필요 */}
+        <Route
+          path="/create"
+          element={
+            <ProtectedRoute>
+              <CreateTopic />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* ✅ 관리자 전용 */}
+        <Route
+          path="/admin"
+          element={
+            <AdminRoute>
+              <AdminPage />
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/comments"
+          element={
+            <AdminRoute>
+              <AdminCommentsPage />
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/users"
+          element={
+            <AdminRoute>
+              <AdminUserPage />
+            </AdminRoute>
+          }
+        />
+
+        {/* ✅ 마이페이지: 로그인 필요 */}
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <MyProfilePage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/myhistory"
+          element={
+            <ProtectedRoute>
+              <MyHistoryPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route path="/naver-callback" element={<NaverCallback />} />
+      </Routes>
+
+      <Toaster position="top-center" />
+      <footer className="text-center text-sm text-gray-500 p-4">
+        <a href="/terms" className="mr-4 underline hover:text-black">
+          이용약관
+        </a>
+        <a href="/privacy" className="mr-4 underline hover:text-black">
+          개인정보 처리방침
+        </a>
+        <a href="/rules" className="underline hover:text-black">
+          커뮤니티 운영규칙
+        </a>
+      </footer>
+    </>
+  );
+}
+
+export default function App() {
   return (
     <Router>
       <div className="min-h-screen bg-white">
-        <Routes>
-          {/* ✅ 홈, 게시글 보기: 공개 */}
-          <Route path="/" element={<Home />} />
-          <Route
-            path="/post/:postId"
-            element={isMobile ? <VotePageMobile /> : <VotePage />}
-          />
-
-          {/* ✅ 로그인 */}
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/set-nickname" element={<SetNickname />} />
-
-
-          {/* ✅ 약관 페이지 */}
-          <Route path="/terms" element={<TermsPage />} />
-          <Route path="/privacy" element={<PrivacyPolicy />} />
-          <Route path="/rules" element={<RulesPage />} />
-
-
-          {/* ✅ 글 작성: 로그인 필요 */}
-          <Route
-            path="/create"
-            element={
-              <ProtectedRoute>
-                <CreateTopic />
-              </ProtectedRoute>
-            }
-          />
-
-          {/* ✅ 관리자 전용 */}
-          <Route
-            path="/admin"
-            element={
-              <AdminRoute>
-                <AdminPage />
-              </AdminRoute>
-            }
-          />
-          <Route
-            path="/admin/comments"
-            element={
-              <AdminRoute>
-                <AdminCommentsPage />
-              </AdminRoute>
-            }
-          />
-          <Route
-            path="/admin/users"
-            element={
-              <AdminRoute>
-                <AdminUserPage />
-              </AdminRoute>
-            }
-          />
-
-          {/* ✅ 마이페이지: 로그인 필요 */}
-          <Route
-            path="/profile"
-            element={
-              <ProtectedRoute>
-                <MyProfilePage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/myhistory"
-            element={
-              <ProtectedRoute>
-                <MyHistoryPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route path="/naver-callback" element={<NaverCallback />} />
-        </Routes>
-
-        <Toaster position="top-center" />
-        <footer className="text-center text-sm text-gray-500 p-4">
-  <a href="/terms" className="mr-4 underline hover:text-black">이용약관</a>
-  <a href="/privacy" className="mr-4 underline hover:text-black">개인정보 처리방침</a>
-  <a href="/rules" className="underline hover:text-black">커뮤니티 운영규칙</a>
-</footer>
+        <AppWrapper />
       </div>
     </Router>
   );
 }
-
-export default App;

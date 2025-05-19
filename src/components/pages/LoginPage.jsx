@@ -314,6 +314,13 @@ const LoginPage = () => {
   </a>
 </div>
 
+<p className="text-center text-sm text-gray-500 mt-2">
+  PoliTalk은 <span className="font-semibold text-black">이메일과 닉네임만 수집</span>하며,<br />
+  이름, 성별, 출생연도 등 <span className="text-red-500">개인정보는 수집하지 않습니다.</span><br />
+  자유롭고 안전한 <span className="font-semibold">익명 토론</span>을 보장합니다.
+</p>
+
+
 
         <div className="border-t pt-4 mt-4 space-y-2">
           <button onClick={() => setShowPhoneLogin(!showPhoneLogin)} className="w-full bg-gray-100 text-black py-2 rounded border">

@@ -406,14 +406,18 @@ try {
     // 자기 자신에게는 알림 안 보냄
     if (targetUid && targetUid !== currentUser.uid) {
       await addDoc(collection(db, "notifications"), {
-        type: parentId ? "reply" : "comment",
-        senderId: currentUser.uid,
-        receiverId: targetUid,
-        postId,
-        commentId: null, // 향후 사용 시 댓글 ID도 추가 가능
-        read: false,
-        createdAt: new Date(),
-      });
+  type: parentId ? "reply" : "comment",
+  senderId: currentUser.uid,
+  receiverId: targetUid,
+  postId,
+  commentId: null,
+  read: false,
+  createdAt: new Date(),
+  message: parentId
+    ? "내 댓글에 답글이 달렸습니다."
+    : "내 게시글에 댓글이 달렸습니다.",
+});
+
     }
   }
 } catch (e) {

@@ -41,7 +41,10 @@ function timeAgo(date) {
 }
 
 const CommentSection = ({ postId, optionIndex, votePercent, myVote }) => {
-  const getOrCreateAnonymousName = async (postId, authorId) => {
+ const getOrCreateAnonymousName = async (postId, authorId) => {
+  // ✅ 로그인한 유저는 익명 이름 안 만듦
+  if (currentUser?.uid) return null;
+
   const q = query(
     collection(db, "anonymousMap"),
     where("postId", "==", postId),
@@ -50,7 +53,6 @@ const CommentSection = ({ postId, optionIndex, votePercent, myVote }) => {
   const snap = await getDocs(q);
   if (!snap.empty) return snap.docs[0].data().anonymousName;
 
-  // 익명1, 익명2, ... 순서대로 부여
   const allSnap = await getDocs(query(collection(db, "anonymousMap"), where("postId", "==", postId)));
   const count = allSnap.size + 1;
   const newName = `익명${count}`;
@@ -63,6 +65,7 @@ const CommentSection = ({ postId, optionIndex, votePercent, myVote }) => {
 
   return newName;
 };
+
 
   const [comments, setComments] = useState([]);
   const [bestComments, setBestComments] = useState([]);
@@ -366,7 +369,8 @@ if (savedMap) {
       if (url) imageUrls.push(url);
     }
 
-  const anonymousName = await getOrCreateAnonymousName(postId, authorId);
+  const anonymousName = currentUser?.uid ? null : await getOrCreateAnonymousName(postId, authorId);
+
 
 await addDoc(collection(db, "comments"), {
   postId,

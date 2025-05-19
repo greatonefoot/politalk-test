@@ -17,6 +17,8 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import AdminRoute from "./components/AdminRoute";
 import NaverCallback from "./components/pages/NaverCallback";
 import SetNickname from "./components/pages/SetNickname";
+import CommunityRulesPage from "./components/pages/CommunityRulesPage";
+
 
 
 import { Toaster } from "react-hot-toast";
@@ -44,6 +46,8 @@ function App() {
           {/* ✅ 약관 페이지 */}
           <Route path="/terms" element={<TermsPage />} />
           <Route path="/privacy" element={<PrivacyPolicy />} />
+          <Route path="/rules" element={<CommunityRulesPage />} />
+
 
           {/* ✅ 글 작성: 로그인 필요 */}
           <Route
@@ -102,6 +106,11 @@ function App() {
         </Routes>
 
         <Toaster position="top-center" />
+        <footer className="text-center text-sm text-gray-500 p-4">
+  <a href="/terms" className="mr-4 underline hover:text-black">이용약관</a>
+  <a href="/privacy" className="mr-4 underline hover:text-black">개인정보 처리방침</a>
+  <a href="/rules" className="underline hover:text-black">커뮤니티 운영규칙</a>
+</footer>
       </div>
     </Router>
   );

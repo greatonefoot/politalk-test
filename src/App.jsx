@@ -24,6 +24,23 @@ import SetNickname from "./components/pages/SetNickname";
 
 import { Toaster } from "react-hot-toast";
 
+// 👇 이 줄들 복사해서 붙여넣어
+console.log("✅ Home", typeof Home);
+console.log("✅ VotePage", typeof VotePage);
+console.log("✅ VotePageMobile", typeof VotePageMobile);
+console.log("✅ CreateTopic", typeof CreateTopic);
+console.log("✅ AdminPage", typeof AdminPage);
+console.log("✅ AdminCommentsPage", typeof AdminCommentsPage);
+console.log("✅ AdminUserPage", typeof AdminUserPage);
+console.log("✅ MyProfilePage", typeof MyProfilePage);
+console.log("✅ MyHistoryPage", typeof MyHistoryPage);
+console.log("✅ LoginPage", typeof LoginPage);
+console.log("✅ TermsPage", typeof TermsPage);
+console.log("✅ PrivacyPolicy", typeof PrivacyPolicy);
+console.log("✅ SetNickname", typeof SetNickname);
+console.log("✅ RulesPage", typeof RulesPage);
+
+
 function App() {
   // ✅ 모바일 분기
   const isMobile = window.innerWidth <= 768;

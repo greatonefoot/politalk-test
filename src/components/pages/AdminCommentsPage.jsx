@@ -33,10 +33,12 @@ const AdminCommentsPage = () => {
   // 🚨 신고 댓글 불러오기
   useEffect(() => {
     const fetchReportedComments = async () => {
-      const q = query(
-        collection(db, "comments"),
-        where("reportCount", ">", 0) // ✅ reportCount 기준
-      );
+     const q = query(
+  collection(db, "comments"),
+  where("reportCount", ">", 0),
+  orderBy("createdAt", "desc") // ✅ 최신순 정렬
+);
+
       const querySnapshot = await getDocs(q);
       const commentData = querySnapshot.docs.map((doc) => ({
         id: doc.id,

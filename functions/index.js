@@ -8,6 +8,7 @@ admin.initializeApp();
 const storage = new Storage();
 const bucket = storage.bucket("politalk-4e0dd.firebasestorage.app");
 
+// ✅ 이미지 업로드 함수
 exports.uploadImage = functions.https.onRequest(async (req, res) => {
   if (req.method === "OPTIONS") {
     res.set("Access-Control-Allow-Origin", "*");
@@ -42,4 +43,24 @@ exports.uploadImage = functions.https.onRequest(async (req, res) => {
   }
 });
 
+// ✅ 카카오 로그인 함수
 exports.kakaoLogin = kakaoLogin;
+
+// ✅ Firebase Auth 사용자 삭제 함수 (강제 탈퇴용)
+exports.deleteAuthUser = functions.https.onCall(async (data, context) => {
+  const { uid } = data;
+
+  // 선택: 관리자만 실행하도록 제한
+  if (!context.auth || context.auth.token.role !== "admin") {
+    throw new functions.https.HttpsError("permission-denied", "관리자 권한이 필요합니다.");
+  }
+
+  try {
+    await admin.auth().deleteUser(uid);
+    console.log(`✅ Auth 계정 삭제 완료: ${uid}`);
+    return { success: true };
+  } catch (error) {
+    console.error("❌ Auth 계정 삭제 실패:", error);
+    throw new functions.https.HttpsError("internal", "사용자 삭제 실패");
+  }
+});

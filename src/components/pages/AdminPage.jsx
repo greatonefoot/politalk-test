@@ -1,18 +1,30 @@
 import React, { useEffect, useState } from "react";
 import { db } from "../../firebase";
-import { collection, getDocs, doc, updateDoc, deleteDoc } from "firebase/firestore";
+import {
+  collection,
+  getDocs,
+  doc,
+  updateDoc,
+  deleteDoc,
+  query,
+  orderBy, // ✅ 정렬용 import 추가
+} from "firebase/firestore";
 
 const AdminPage = () => {
   const [posts, setPosts] = useState([]);
 
   useEffect(() => {
     const fetchPosts = async () => {
-      const querySnapshot = await getDocs(collection(db, "posts"));
+      const q = query(
+        collection(db, "posts"),
+        orderBy("createdAt", "desc") // ✅ 최신순 정렬
+      );
+      const querySnapshot = await getDocs(q);
       const postData = querySnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data(),
       }));
-      setPosts(postData.sort((a, b) => (b.reports || 0) - (a.reports || 0)));
+      setPosts(postData); // ✅ sort 제거 (정렬은 Firestore 쿼리에서 수행됨)
     };
 
     fetchPosts();

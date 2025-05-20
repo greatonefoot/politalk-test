@@ -97,20 +97,21 @@ function AppWrapper() {
   return (
     <>
       <audio ref={audioRef} src="/ding.mp3" preload="auto" />
-      <div className="absolute top-4 right-4 z-50">
-        <button
-          className="relative"
-          onClick={() => navigate("/profile")}
-          title="알림 확인"
-        >
-          <span className="text-2xl">🔔</span>
-          {unreadCount > 0 && (
-            <span className="absolute -top-1 -right-2 bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full">
-              {unreadCount}
-            </span>
-          )}
-        </button>
-      </div>
+     <div className="fixed top-4 right-4 z-50 sm:top-2 sm:right-2">
+  <button
+    className="relative text-2xl sm:text-xl"
+    onClick={() => navigate("/profile")}
+    title="알림 확인"
+  >
+    <span>🔔</span>
+    {unreadCount > 0 && (
+      <span className="absolute -top-1 -right-2 bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full">
+        {unreadCount}
+      </span>
+    )}
+  </button>
+</div>
+
 
       <Routes>
         <Route path="/" element={<Home />} />

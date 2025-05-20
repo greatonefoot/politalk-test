@@ -57,41 +57,46 @@ function AppWrapper() {
 useEffect(() => {
   if (!user) return;
 
+  console.log("👀 [알림] user 확인됨:", user.uid); // ✅ user 체크
 
   const q = query(
     collection(db, "notifications"),
     where("receiverId", "==", user.uid),
-    where("isRead", "==", false) // ✅ read → isRead
+    where("isRead", "==", false)
   );
 
   const unsubscribe = onSnapshot(q, (snapshot) => {
+    console.log("📡 [알림] 실시간 수신:", snapshot.size);
+
     snapshot.docChanges().forEach((change) => {
+      console.log("🔄 [알림] 문서 변경:", change.type);
+
       if (change.type === "added") {
         const data = change.doc.data();
         const id = change.doc.id;
 
-        if (!shownIds.current.has(id)) {
-          shownIds.current.add(id);
-          toast(`🔔 ${data.message || "새 알림이 도착했습니다."}`, {
-            icon: "📬",
-            duration: 5000,
-            position: "top-center",
-            style: { cursor: "pointer" },
-            onClick: () => {
-              if (data.postId && data.commentId) {
-                window.location.href = `/post/${data.postId}#comment-${data.commentId}`;
-              } else if (data.postId) {
-                window.location.href = `/post/${data.postId}`;
-              }
-            },
-          });
-        }
+        console.log("✅ [알림] 새 알림 도착:", id, data);
+
+        toast(`🔔 ${data.message || "새 알림이 도착했습니다."}`, {
+          icon: "📬",
+          duration: 5000,
+          position: "top-center",
+          style: { cursor: "pointer" },
+          onClick: () => {
+            if (data.postId && data.commentId) {
+              window.location.href = `/post/${data.postId}#comment-${data.commentId}`;
+            } else if (data.postId) {
+              window.location.href = `/post/${data.postId}`;
+            }
+          },
+        });
       }
     });
   });
 
   return () => unsubscribe();
-}, [user]); // ✅ navigate 제거
+}, [user]);
+
 
 
 

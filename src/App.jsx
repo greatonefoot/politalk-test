@@ -43,6 +43,8 @@ function AppWrapper() {
   const [user, setUser] = useState(null);
   const isMobile = window.innerWidth <= 768;
   const navigate = useNavigate();
+  const [unreadCount, setUnreadCount] = useState(0); // ✅ 안 읽은 알림 개수 상태
+
   const shownIds = useRef(new Set());
 
 
@@ -58,6 +60,20 @@ useEffect(() => {
   if (!user) return;
 
   console.log("👀 [알림] user 확인됨:", user.uid); // ✅ user 체크
+    // ✅ 알림 개수 실시간 구독
+  const q2 = query(
+    collection(db, "notifications"),
+    where("receiverId", "==", user.uid),
+    where("read", "==", false)
+  );
+
+  const unsubscribe2 = onSnapshot(q2, (snapshot) => {
+    setUnreadCount(snapshot.size); // ✅ 안 읽은 개수 저장
+  });
+
+  // ✅ 이 unsubscribe도 같이 리턴해야 함
+  return () => unsubscribe2();
+
 
   const q = query(
     collection(db, "notifications"),
@@ -82,12 +98,19 @@ useEffect(() => {
           duration: 5000,
           position: "top-center",
           style: { cursor: "pointer" },
-          onClick: () => {
-            if (data.postId && data.commentId) {
-              window.location.href = `/post/${data.postId}#comment-${data.commentId}`;
-            } else if (data.postId) {
-              window.location.href = `/post/${data.postId}`;
-            }
+        onClick: async () => {
+  try {
+    const notiRef = doc(db, "notifications", id); // 알림 문서 ID
+    await updateDoc(notiRef, { read: true }); // ✅ 읽음 처리
+
+    if (data.postId && data.commentId) {
+      window.location.href = `/post/${data.postId}#comment-${data.commentId}`;
+    } else if (data.postId) {
+      window.location.href = `/post/${data.postId}`;
+    }
+  } catch (e) {
+    console.error("알림 읽음 처리 실패:", e);
+  }
           },
         });
       }
@@ -102,6 +125,10 @@ useEffect(() => {
 
   return (
     <>
+        <div style={{ position: "absolute", top: 10, right: 10 }}>
+      🔔 알림 {unreadCount > 0 ? `(${unreadCount})` : ""}
+    </div>
+
       <Routes>
         {/* ✅ 홈, 게시글 보기: 공개 */}
         <Route path="/" element={<Home />} />

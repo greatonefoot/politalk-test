@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { BrowserRouter as Router, Routes, Route, useNavigate } from "react-router-dom";
 import { onAuthStateChanged } from "firebase/auth";
 import { collection, onSnapshot, query, where } from "firebase/firestore";
@@ -43,6 +43,8 @@ function AppWrapper() {
   const [user, setUser] = useState(null);
   const isMobile = window.innerWidth <= 768;
   const navigate = useNavigate();
+  const shownIds = useRef(new Set());
+
 
   // ✅ 로그인 상태 감지
   useEffect(() => {
@@ -52,25 +54,23 @@ function AppWrapper() {
     return () => unsubscribe();
   }, []);
 
-// ✅ 실시간 알림 구독 (중복 방지 + navigate 제거)
 useEffect(() => {
   if (!user) return;
 
   const q = query(
     collection(db, "notifications"),
     where("receiverId", "==", user.uid),
-    where("isRead", "==", false) // ✅ read → isRead 로 통일
+    where("isRead", "==", false) // ✅ read → isRead
   );
 
   const unsubscribe = onSnapshot(q, (snapshot) => {
-    const shownIds = new Set(); // ✅ 중복 방지용 (한 번 뜬 알림은 무시)
     snapshot.docChanges().forEach((change) => {
       if (change.type === "added") {
         const data = change.doc.data();
         const id = change.doc.id;
 
-        if (!shownIds.has(id)) {
-          shownIds.add(id);
+        if (!shownIds.current.has(id)) {
+          shownIds.current.add(id);
           toast(`🔔 ${data.message || "새 알림이 도착했습니다."}`, {
             icon: "📬",
             duration: 5000,
@@ -91,6 +91,7 @@ useEffect(() => {
 
   return () => unsubscribe();
 }, [user]); // ✅ navigate 제거
+
 
 
   return (

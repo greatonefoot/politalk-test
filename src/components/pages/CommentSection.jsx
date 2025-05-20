@@ -372,14 +372,15 @@ if (savedMap) {
   const anonymousName = currentUser?.uid ? null : await getOrCreateAnonymousName(postId, authorId);
 
 
-await addDoc(collection(db, "comments"), {
+// 댓글 저장 후
+const commentRef = await addDoc(collection(db, "comments"), {
   postId,
   optionIndex: optIndex,
   text,
   createdAt: new Date(),
   authorUid: currentUser?.uid || null,
   authorId,
-  anonymousName,  // 👈 여기에 추가!
+  anonymousName,
   parentId,
   imageUrls,
   reactions: {},
@@ -388,41 +389,37 @@ await addDoc(collection(db, "comments"), {
   isBlind: false,
 });
 
-
-// ✅ 알림 생성: 내가 쓴 게 아니라면 대상자에게 알림 보내기
+// 🔔 알림 생성
 try {
-  if (currentUser?.uid) {
-    let targetUid = null;
+  let targetUid = null;
 
-    if (parentId) {
-      // 답글인 경우: 부모 댓글의 작성자
-      const parentSnap = await getDoc(doc(db, "comments", parentId));
-      targetUid = parentSnap.exists() ? parentSnap.data().authorUid : null;
-    } else {
-      // 댓글인 경우: 게시글 작성자
-      targetUid = post?.authorUid;
-    }
+  if (parentId) {
+    const parentSnap = await getDoc(doc(db, "comments", parentId));
+    targetUid = parentSnap.exists() ? parentSnap.data().authorUid : null;
+  } else {
+    targetUid = post?.authorUid;
+  }
 
-    // 자기 자신에게는 알림 안 보냄
-    if (targetUid && targetUid !== currentUser.uid) {
-      await addDoc(collection(db, "notifications"), {
-  type: parentId ? "reply" : "comment",
-  senderId: currentUser.uid,
-  receiverId: targetUid,
-  postId,
-  commentId: null,
-  read: false,
-  createdAt: new Date(),
-  message: parentId
-    ? "내 댓글에 답글이 달렸습니다."
-    : "내 게시글에 댓글이 달렸습니다.",
-});
-
-    }
+  // ✅ 로그인 여부와 상관없이 알림 생성 (단, 받는 사람이 로그인 유저일 때만)
+  if (targetUid) {
+    await addDoc(collection(db, "notifications"), {
+      type: parentId ? "reply" : "comment",
+      senderId: currentUser?.uid || null,
+      receiverId: targetUid,
+      postId,
+      commentId: commentRef.id,
+      postTitle: post?.title || "",
+      message: parentId
+        ? "내 댓글에 답글이 달렸습니다."
+        : "내 게시글에 댓글이 달렸습니다.",
+      read: false,
+      createdAt: new Date(),
+    });
   }
 } catch (e) {
-  console.error("알림 생성 실패:", e);
+  console.error("🔔 알림 생성 실패:", e);
 }
+
 
 
     setLastCommentTime(Date.now());

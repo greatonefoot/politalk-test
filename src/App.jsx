@@ -52,20 +52,25 @@ function AppWrapper() {
     return () => unsubscribe();
   }, []);
 
-  // ✅ 실시간 알림 구독
-  useEffect(() => {
-    if (!user) return;
+// ✅ 실시간 알림 구독 (중복 방지 + navigate 제거)
+useEffect(() => {
+  if (!user) return;
 
-    const q = query(
-      collection(db, "notifications"),
-      where("receiverId", "==", user.uid),
-      where("read", "==", false)
-    );
+  const q = query(
+    collection(db, "notifications"),
+    where("receiverId", "==", user.uid),
+    where("isRead", "==", false) // ✅ read → isRead 로 통일
+  );
 
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      snapshot.docChanges().forEach((change) => {
-        if (change.type === "added") {
-          const data = change.doc.data();
+  const unsubscribe = onSnapshot(q, (snapshot) => {
+    const shownIds = new Set(); // ✅ 중복 방지용 (한 번 뜬 알림은 무시)
+    snapshot.docChanges().forEach((change) => {
+      if (change.type === "added") {
+        const data = change.doc.data();
+        const id = change.doc.id;
+
+        if (!shownIds.has(id)) {
+          shownIds.add(id);
           toast(`🔔 ${data.message || "새 알림이 도착했습니다."}`, {
             icon: "📬",
             duration: 5000,
@@ -73,18 +78,20 @@ function AppWrapper() {
             style: { cursor: "pointer" },
             onClick: () => {
               if (data.postId && data.commentId) {
-                navigate(`/post/${data.postId}#comment-${data.commentId}`);
+                window.location.href = `/post/${data.postId}#comment-${data.commentId}`;
               } else if (data.postId) {
-                navigate(`/post/${data.postId}`);
+                window.location.href = `/post/${data.postId}`;
               }
             },
           });
         }
-      });
+      }
     });
+  });
 
-    return () => unsubscribe();
-  }, [user, navigate]);
+  return () => unsubscribe();
+}, [user]); // ✅ navigate 제거
+
 
   return (
     <>

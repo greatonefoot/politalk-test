@@ -62,7 +62,7 @@ useEffect(() => {
   const q = query(
     collection(db, "notifications"),
     where("receiverId", "==", user.uid),
-    where("isRead", "==", false)
+    where("read", "==", false)
   );
 
   const unsubscribe = onSnapshot(q, (snapshot) => {

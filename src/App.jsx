@@ -57,6 +57,8 @@ function AppWrapper() {
 useEffect(() => {
   if (!user) return;
 
+      const shownIds = new Set();
+
   const q = query(
     collection(db, "notifications"),
     where("receiverId", "==", user.uid),

@@ -412,7 +412,7 @@ try {
       message: parentId
         ? "내 댓글에 답글이 달렸습니다."
         : "내 게시글에 댓글이 달렸습니다.",
-      read: false,
+      isread: false,
       createdAt: new Date(),
     });
   }

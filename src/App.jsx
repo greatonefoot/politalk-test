@@ -52,10 +52,13 @@ function AppWrapper() {
         const id = change.doc.id;
         const data = change.doc.data();
 
-        const createdAt = data.createdAt || 0;
+const createdAt =
+  typeof data.createdAt === "number"
+    ? data.createdAt
+    : data.createdAt?.toMillis?.() || 0;
 const oneHourAgo = Date.now() - 1000 * 60 * 60;
+if (createdAt < oneHourAgo) return;
 
-if (createdAt < oneHourAgo) return; // 너무 오래된 알림이면 무시
 
 
         if (change.type === "added" && !shownNotifications.current.has(id)) {

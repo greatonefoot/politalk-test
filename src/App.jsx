@@ -40,58 +40,54 @@ function AppWrapper() {
   useEffect(() => {
     if (!user) return;
 
-    const qBadge = query(
-      collection(db, "notifications"),
-      where("receiverId", "==", user.uid),
-      where("read", "==", false)
-    );
-    const unsubscribeBadge = onSnapshot(qBadge, (snapshot) => {
-      setUnreadCount(snapshot.size);
-    });
+    const q = query(
+  collection(db, "notifications"),
+  where("receiverId", "==", user.uid),
+  where("read", "==", false)
+);
+const unsubscribe = onSnapshot(q, (snapshot) => {
+  // ✅ 안 읽은 알림 수 업데이트
+  setUnreadCount(snapshot.size);
 
-    const qToast = query(
-      collection(db, "notifications"),
-      where("receiverId", "==", user.uid),
-      where("read", "==", false)
-    );
-    const unsubscribeToast = onSnapshot(qToast, (snapshot) => {
-      snapshot.docChanges().forEach((change) => {
-        if (change.type === "added") {
-          const data = change.doc.data();
-          const id = change.doc.id;
-          const message =
-            data.type === "reply"
-              ? "내 댓글에 답글이 달렸습니다."
-              : "내 게시글에 댓글이 달렸습니다.";
+  // ✅ 새 알림 toast로 띄우기
+  snapshot.docChanges().forEach((change) => {
+    if (change.type === "added") {
+      const data = change.doc.data();
+      const id = change.doc.id;
+      const message =
+        data.type === "reply"
+          ? "내 댓글에 답글이 달렸습니다."
+          : "내 게시글에 댓글이 달렸습니다.";
 
-          if (audioRef.current) audioRef.current.play().catch(() => {});
+      if (audioRef.current) audioRef.current.play().catch(() => {});
 
-          toast(`🔔 ${message}`, {
-            icon: "📬",
-            duration: 5000,
-            position: "top-center",
-            style: { cursor: "pointer" },
-            onClick: async () => {
-              try {
-                await updateDoc(doc(db, "notifications", id), { read: true });
-                if (data.postId && data.commentId) {
-                  window.location.href = `/post/${data.postId}#comment-${data.commentId}`;
-                } else if (data.postId) {
-                  window.location.href = `/post/${data.postId}`;
-                }
-              } catch (e) {
-                console.error("알림 읽음 처리 실패:", e);
-              }
-            },
-          });
-        }
+      toast(`🔔 ${message}`, {
+        icon: "📬",
+        duration: 5000,
+        position: "top-center",
+        style: { cursor: "pointer" },
+        onClick: async () => {
+          try {
+            await updateDoc(doc(db, "notifications", id), { read: true });
+            setUnreadCount(prev => Math.max(0, prev - 1)); // ✅ 클릭 시 뱃지 줄이기
+            if (data.postId && data.commentId) {
+              window.location.href = `/post/${data.postId}#comment-${data.commentId}`;
+            } else if (data.postId) {
+              window.location.href = `/post/${data.postId}`;
+            }
+          } catch (e) {
+            console.error("알림 읽음 처리 실패:", e);
+          }
+        },
       });
-    });
+    }
+  });
+});
 
-    return () => {
-      unsubscribeBadge();
-      unsubscribeToast();
-    };
+
+return () => {
+  unsubscribe(); // ← 새로 정의한 onSnapshot 종료 함수
+};
   }, [user]);
 
   return (

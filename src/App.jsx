@@ -52,15 +52,6 @@ function AppWrapper() {
         const id = change.doc.id;
         const data = change.doc.data();
 
-const createdAt =
-  typeof data.createdAt === "number"
-    ? data.createdAt
-    : data.createdAt?.toMillis?.() || 0;
-const oneHourAgo = Date.now() - 1000 * 60 * 60;
-if (createdAt < oneHourAgo) return;
-
-
-
         if (change.type === "added" && !shownNotifications.current.has(id)) {
          shownNotifications.current.add(id);
 localStorage.setItem(
@@ -79,13 +70,14 @@ localStorage.setItem(
   duration: 5000,
   position: "top-center",
   style: { cursor: "pointer" },
-  onClick: () => {
-    if (data.postId && data.commentId) {
-      window.location.href = `/post/${data.postId}#comment-${data.commentId}`;
-    } else if (data.postId) {
-      window.location.href = `/post/${data.postId}`;
-    }
-  },
+onClick: () => {
+  if (data.postId && data.commentId) {
+    navigate(`/post/${data.postId}#comment-${data.commentId}`);
+  } else if (data.postId) {
+    navigate(`/post/${data.postId}`);
+  }
+},
+
 });
 
         }

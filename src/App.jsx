@@ -25,13 +25,11 @@ import SetNickname from "./components/pages/SetNickname";
 
 function AppWrapper() {
   const [user, setUser] = useState(null);
-  const shownNotifications = useRef(new Set(
-    JSON.parse(localStorage.getItem("shownNotifications") || "[]")
-  ));
+  const shownNotifications = useRef(
+    new Set(JSON.parse(localStorage.getItem("shownNotifications") || "[]"))
+  );
   const isMobile = window.innerWidth <= 768;
-  const navigate = useNavigate();
-  const navigateRef = useRef(navigate); // ✅ 안전하게 보존
-
+  const navigate = useNavigate(); // ✅ navigate 직접 사용
   const audioRef = useRef(null);
 
   useEffect(() => {
@@ -76,11 +74,11 @@ function AppWrapper() {
             onClick: () => {
               setTimeout(() => {
                 if (data.postId && data.commentId) {
-                  navigateRef.current(`/post/${data.postId}#comment-${data.commentId}`);
+                  navigate(`/post/${data.postId}#comment-${data.commentId}`);
                 } else if (data.postId) {
-                  navigateRef.current(`/post/${data.postId}`);
+                  navigate(`/post/${data.postId}`);
                 }
-              }, 100);
+              }, 100); // 약간 지연 → SPA 라우팅 보장
             },
           });
         }
@@ -89,7 +87,6 @@ function AppWrapper() {
 
     return () => unsubscribe();
   }, [user]);
-
 
   return (
     <>
@@ -172,6 +169,7 @@ function AppWrapper() {
     </>
   );
 }
+
 
 
 export default function App() {

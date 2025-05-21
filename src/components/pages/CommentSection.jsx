@@ -377,7 +377,7 @@ const commentRef = await addDoc(collection(db, "comments"), {
   postId,
   optionIndex: optIndex,
   text,
-  createdAt: new Date(),
+  createdAt: Date.now(),
   authorUid: currentUser?.uid || null,
   authorId,
   anonymousName,

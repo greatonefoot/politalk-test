@@ -52,7 +52,13 @@ function AppWrapper() {
         const id = change.doc.id;
         const data = change.doc.data();
 
-        if (change.type === "added" && !shownNotifications.current.has(id)) {
+        // 이미 표시된 알림이면 무시 + 내가 보낸 알림이면 무시
+if (
+  change.type === "added" &&
+  !shownNotifications.current.has(id) &&
+  data.senderId !== user.uid
+) {
+
           shownNotifications.current.add(id);
           localStorage.setItem(
             "shownNotifications",
@@ -67,7 +73,6 @@ function AppWrapper() {
           if (audioRef.current) audioRef.current.play().catch(() => {});
 
           toast(`🔔 ${message}`, {
-            icon: "📬",
             duration: 5000,
             position: "top-center",
             style: { cursor: "pointer" },

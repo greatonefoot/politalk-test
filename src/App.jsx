@@ -25,7 +25,9 @@ import SetNickname from "./components/pages/SetNickname";
 
 function AppWrapper() {
   const [user, setUser] = useState(null);
-  const shownNotifications = useRef(new Set());
+  const shownNotifications = useRef(new Set(
+  JSON.parse(localStorage.getItem("shownNotifications") || "[]")
+));
   const isMobile = window.innerWidth <= 768;
   const navigate = useNavigate();
   const audioRef = useRef(null);
@@ -50,8 +52,18 @@ function AppWrapper() {
         const id = change.doc.id;
         const data = change.doc.data();
 
+        const createdAt = data.createdAt || 0;
+const oneHourAgo = Date.now() - 1000 * 60 * 60;
+
+if (createdAt < oneHourAgo) return; // 너무 오래된 알림이면 무시
+
+
         if (change.type === "added" && !shownNotifications.current.has(id)) {
-          shownNotifications.current.add(id);
+         shownNotifications.current.add(id);
+localStorage.setItem(
+  "shownNotifications",
+  JSON.stringify(Array.from(shownNotifications.current))
+);
 
           const message =
             data.type === "reply"
@@ -59,11 +71,20 @@ function AppWrapper() {
               : "내 게시글에 댓글이 달렸습니다.";
 
           if (audioRef.current) audioRef.current.play().catch(() => {});
-          toast(`🔔 ${message}`, {
-            icon: "📬",
-            duration: 5000,
-            position: "top-center",
-          });
+      toast(`🔔 ${message}`, {
+  icon: "📬",
+  duration: 5000,
+  position: "top-center",
+  style: { cursor: "pointer" },
+  onClick: () => {
+    if (data.postId && data.commentId) {
+      window.location.href = `/post/${data.postId}#comment-${data.commentId}`;
+    } else if (data.postId) {
+      window.location.href = `/post/${data.postId}`;
+    }
+  },
+});
+
         }
       });
     });

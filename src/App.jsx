@@ -71,12 +71,15 @@ localStorage.setItem(
   position: "top-center",
   style: { cursor: "pointer" },
 onClick: () => {
-  if (data.postId && data.commentId) {
-    navigate(`/post/${data.postId}#comment-${data.commentId}`);
-  } else if (data.postId) {
-    navigate(`/post/${data.postId}`);
-  }
+  setTimeout(() => {
+    if (data.postId && data.commentId) {
+      navigate(`/post/${data.postId}#comment-${data.commentId}`);
+    } else if (data.postId) {
+      navigate(`/post/${data.postId}`);
+    }
+  }, 100); // 100ms 지연 후 실행 → context 안정화
 },
+
 
 });
 

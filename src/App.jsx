@@ -43,7 +43,7 @@ function AppWrapper() {
     const q = query(
   collection(db, "notifications"),
   where("receiverId", "==", user.uid),
-  where("read", "==", false)
+  where("isread", "==", false)
 );
 const unsubscribe = onSnapshot(q, (snapshot) => {
   // ✅ 안 읽은 알림 수 업데이트
@@ -68,7 +68,7 @@ const unsubscribe = onSnapshot(q, (snapshot) => {
         style: { cursor: "pointer" },
         onClick: async () => {
           try {
-            await updateDoc(doc(db, "notifications", id), { read: true });
+            await updateDoc(doc(db, "notifications", id), { isread: true });
             setUnreadCount(prev => Math.max(0, prev - 1)); // ✅ 클릭 시 뱃지 줄이기
             if (data.postId && data.commentId) {
               window.location.href = `/post/${data.postId}#comment-${data.commentId}`;

@@ -26,10 +26,12 @@ import SetNickname from "./components/pages/SetNickname";
 function AppWrapper() {
   const [user, setUser] = useState(null);
   const shownNotifications = useRef(new Set(
-  JSON.parse(localStorage.getItem("shownNotifications") || "[]")
-));
+    JSON.parse(localStorage.getItem("shownNotifications") || "[]")
+  ));
   const isMobile = window.innerWidth <= 768;
   const navigate = useNavigate();
+  const navigateRef = useRef(navigate); // ✅ 안전하게 보존
+
   const audioRef = useRef(null);
 
   useEffect(() => {
@@ -53,11 +55,11 @@ function AppWrapper() {
         const data = change.doc.data();
 
         if (change.type === "added" && !shownNotifications.current.has(id)) {
-         shownNotifications.current.add(id);
-localStorage.setItem(
-  "shownNotifications",
-  JSON.stringify(Array.from(shownNotifications.current))
-);
+          shownNotifications.current.add(id);
+          localStorage.setItem(
+            "shownNotifications",
+            JSON.stringify(Array.from(shownNotifications.current))
+          );
 
           const message =
             data.type === "reply"
@@ -65,30 +67,29 @@ localStorage.setItem(
               : "내 게시글에 댓글이 달렸습니다.";
 
           if (audioRef.current) audioRef.current.play().catch(() => {});
-      toast(`🔔 ${message}`, {
-  icon: "📬",
-  duration: 5000,
-  position: "top-center",
-  style: { cursor: "pointer" },
-onClick: () => {
-  setTimeout(() => {
-    if (data.postId && data.commentId) {
-      navigate(`/post/${data.postId}#comment-${data.commentId}`);
-    } else if (data.postId) {
-      navigate(`/post/${data.postId}`);
-    }
-  }, 100); // 100ms 지연 후 실행 → context 안정화
-},
 
-
-});
-
+          toast(`🔔 ${message}`, {
+            icon: "📬",
+            duration: 5000,
+            position: "top-center",
+            style: { cursor: "pointer" },
+            onClick: () => {
+              setTimeout(() => {
+                if (data.postId && data.commentId) {
+                  navigateRef.current(`/post/${data.postId}#comment-${data.commentId}`);
+                } else if (data.postId) {
+                  navigateRef.current(`/post/${data.postId}`);
+                }
+              }, 100);
+            },
+          });
         }
       });
     });
 
     return () => unsubscribe();
   }, [user]);
+
 
   return (
     <>

@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import { BrowserRouter as Router, Routes, Route, useNavigate } from "react-router-dom";
 import { onAuthStateChanged } from "firebase/auth";
-import { collection, onSnapshot, query, where, doc, updateDoc } from "firebase/firestore";
+import { collection, onSnapshot, query, where } from "firebase/firestore";
 import { auth, db } from "./firebase";
 import toast, { Toaster } from "react-hot-toast";
 
@@ -18,9 +18,12 @@ import LoginPage from "./components/pages/LoginPage";
 import TermsPage from "./components/pages/TermsPage";
 import PrivacyPolicy from "./components/pages/PrivacyPolicy";
 import RulesPage from "./components/pages/RulesPage";
+import SetNickname from "./components/pages/SetNickname";
+import SignupEmail from "./components/pages/SignupEmail";
+import SignupPassword from "./components/pages/SignupPassword";
+
 import ProtectedRoute from "./components/ProtectedRoute";
 import AdminRoute from "./components/AdminRoute";
-import SetNickname from "./components/pages/SetNickname";
 
 function AppWrapper() {
   const [user, setUser] = useState(null);
@@ -28,7 +31,7 @@ function AppWrapper() {
     new Set(JSON.parse(localStorage.getItem("shownNotifications") || "[]"))
   );
   const isMobile = window.innerWidth <= 768;
-  const navigate = useNavigate(); // ✅ navigate 직접 사용
+  const navigate = useNavigate();
   const audioRef = useRef(null);
 
   useEffect(() => {
@@ -41,23 +44,17 @@ function AppWrapper() {
   useEffect(() => {
     if (!user) return;
 
-    const q = query(
-      collection(db, "notifications"),
-      where("receiverId", "==", user.uid)
-    );
-
+    const q = query(collection(db, "notifications"), where("receiverId", "==", user.uid));
     const unsubscribe = onSnapshot(q, (snapshot) => {
       snapshot.docChanges().forEach((change) => {
         const id = change.doc.id;
         const data = change.doc.data();
 
-        // 이미 표시된 알림이면 무시 + 내가 보낸 알림이면 무시
-if (
-  change.type === "added" &&
-  !shownNotifications.current.has(id) &&
-  data.senderId !== user.uid
-) {
-
+        if (
+          change.type === "added" &&
+          !shownNotifications.current.has(id) &&
+          data.senderId !== user.uid
+        ) {
           shownNotifications.current.add(id);
           localStorage.setItem(
             "shownNotifications",
@@ -82,7 +79,7 @@ if (
                 } else if (data.postId) {
                   navigate(`/post/${data.postId}`);
                 }
-              }, 100); // 약간 지연 → SPA 라우팅 보장
+              }, 100);
             },
           });
         }
@@ -97,16 +94,18 @@ if (
       <audio ref={audioRef} src="/ding.mp3" preload="auto" />
 
       <Routes>
+        {/* 🔓 공개 페이지 */}
         <Route path="/" element={<Home />} />
-        <Route
-          path="/post/:postId"
-          element={isMobile ? <VotePageMobile /> : <VotePage />}
-        />
+        <Route path="/post/:postId" element={isMobile ? <VotePageMobile /> : <VotePage />} />
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/signup-email" element={<SignupEmail />} />
+        <Route path="/signup-password" element={<SignupPassword />} />
         <Route path="/set-nickname" element={<SetNickname />} />
         <Route path="/terms" element={<TermsPage />} />
         <Route path="/privacy" element={<PrivacyPolicy />} />
         <Route path="/rules" element={<RulesPage />} />
+
+        {/* 🛡️ 인증 필요 페이지 */}
         <Route
           path="/create"
           element={
@@ -115,6 +114,24 @@ if (
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <MyProfilePage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/myhistory"
+          element={
+            <ProtectedRoute>
+              <MyHistoryPage />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* 👑 관리자 전용 페이지 */}
         <Route
           path="/admin"
           element={
@@ -139,25 +156,10 @@ if (
             </AdminRoute>
           }
         />
-        <Route
-          path="/profile"
-          element={
-            <ProtectedRoute>
-              <MyProfilePage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/myhistory"
-          element={
-            <ProtectedRoute>
-              <MyHistoryPage />
-            </ProtectedRoute>
-          }
-        />
       </Routes>
 
       <Toaster position="top-center" />
+
       <footer className="text-center text-sm text-gray-500 p-4">
         <a href="/terms" className="mr-4 underline hover:text-black">
           이용약관
@@ -172,8 +174,6 @@ if (
     </>
   );
 }
-
-
 
 export default function App() {
   return (

@@ -65,6 +65,7 @@ exports.naverLogin = functions.https.onRequest((req, res) => {
     try {
       // ✅ CORS 헤더 직접 설정
       res.set("Access-Control-Allow-Origin", "*");
+    res.set("Access-Control-Allow-Credentials", "true");
 
       const { code, state } = req.query;
 

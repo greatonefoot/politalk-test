@@ -94,24 +94,33 @@ const SignupPage = () => {
       <div className="bg-white rounded-xl p-6 shadow-md w-full max-w-md">
         <h1 className="text-2xl font-bold text-center mb-4">회원가입</h1>
 
-        {step === "email" && (
-          <form onSubmit={handleSendEmail} className="space-y-3">
-            <input
-              type="email"
-              placeholder="이메일 입력"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full border px-3 py-2 rounded"
-              required
-            />
-            <button
-              type="submit"
-              className="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700"
-            >
-              인증 메일 보내기
-            </button>
-          </form>
-        )}
+{step === "email" && (
+  <>
+    <form onSubmit={handleSendEmail} className="space-y-3">
+      <input
+        type="email"
+        placeholder="이메일 입력"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        className="w-full border px-3 py-2 rounded"
+        required
+      />
+      <button
+        type="submit"
+        className="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700"
+      >
+        인증 메일 보내기
+      </button>
+    </form>
+
+    {/* ✅ 안내 문구: 바로 form 아래에 위치 */}
+    <p className="text-center text-sm text-gray-500 mt-4">
+      PoliTalk은 <span className="font-semibold text-black">이메일과 닉네임만 수집</span>하며,<br />
+      이름, 성별, 출생연도 등 <span className="text-red-500">개인정보는 수집하지 않습니다.</span>
+    </p>
+  </>
+)}
+
 
         {step === "password" && (
           <form onSubmit={handleSetPassword} className="space-y-3">

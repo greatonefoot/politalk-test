@@ -93,6 +93,16 @@ const Home = () => {
     setVotePercents((prev) => ({ ...prev, ...percents }));
     setAuthorData((prev) => ({ ...prev, ...authors }));
   };
+  const isToday = (timestamp) => {
+  const createdDate = timestamp instanceof Timestamp ? timestamp.toDate() : new Date();
+  const today = new Date();
+  return (
+    createdDate.getFullYear() === today.getFullYear() &&
+    createdDate.getMonth() === today.getMonth() &&
+    createdDate.getDate() === today.getDate()
+  );
+};
+
 
   const filterPopularPosts = (days) => {
     const cutoff = new Date(Date.now() - days * 86400000);
@@ -315,7 +325,13 @@ const renderMainImages = (post) =>
   </div>
 )}
 
-                    <div className="font-medium text-sm truncate">{p.title}</div>
+                    <div className="font-medium text-sm truncate flex items-center gap-1">
+  {p.title}
+  {isToday(p.createdAt) && (
+    <span className="text-[10px] bg-red-500 text-white px-1 py-0.5 rounded">NEW</span>
+  )}
+</div>
+
                     <div className="text-xs text-gray-600 mb-1">
                       {authorData[p.id] || "익명"} · 댓글 {commentCounts[p.id] || 0} · 조회 {p.views || 0}
                     </div>

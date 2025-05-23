@@ -11,9 +11,10 @@ const NaverCallback = () => {
     const state = url.searchParams.get("state");
 
     if (code) {
-      fetch(
-  `https://us-central1-politalk-4e0dd.cloudfunctions.net/naverLogin?code=${code}&state=${state}`
+     fetch(
+  `https://politalk-4e0dd.web.app/naverLogin?code=${code}&state=${state}`
 )
+
 
         .then((res) => res.json())
         .then(async ({ customToken }) => {

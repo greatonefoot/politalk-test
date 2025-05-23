@@ -104,7 +104,7 @@ function AppWrapper() {
         <Route path="/terms" element={<TermsPage />} />
         <Route path="/privacy" element={<PrivacyPolicy />} />
         <Route path="/rules" element={<RulesPage />} />
-        <Route path="/signup-email" element={<Navigate to="/signup" replace />} />
+ 
 
 
         {/* 🛡️ 인증 필요 페이지 */}

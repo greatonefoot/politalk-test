@@ -129,11 +129,13 @@ await setDoc(doc(db, "users", user.uid), {
               인증 메일 보내기
             </button>
 
-<p className="text-xs text-center text-gray-500 mt-6">
-  <span className="text-black font-semibold">PoliTalk</span>은 <span className="font-semibold">이메일과 닉네임만 수집</span>하며,<br />
-  <span className="text-red-600 font-medium">이름, 성별, 출생연도 등 개인정보는 수집하지 않습니다.</span><br />
-  <span className="text-gray-700">자유롭고 안전한 익명 토론을 보장합니다.</span>
+<p className="text-xs text-center text-gray-500 mt-6 leading-relaxed">
+  <span className="text-gray-500 font-medium">PoliTalk</span>
+  <span className="text-black font-semibold">은 이메일과 닉네임만 수집</span>하며,<br />
+  <span className="text-gray-500">이름, 성별, 출생연도 등 </span>
+  <span className="text-red-500 font-medium">개인정보는 수집하지 않습니다.</span>
 </p>
+
 
           </form>
         )}

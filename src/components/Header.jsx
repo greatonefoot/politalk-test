@@ -90,7 +90,7 @@ function Header({
               {/* ✅ 프로필 이미지 */}
               <Link to="/profile">
                 <img
-                  src={profilePic || "https://via.placeholder.com/32"}
+                  src={profilePic || "/default-profile.png"}
                   alt="프로필"
                   className="w-8 h-8 rounded-full object-cover border border-white"
                 />

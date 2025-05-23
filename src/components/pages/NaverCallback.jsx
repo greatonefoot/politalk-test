@@ -1,4 +1,4 @@
-// src/pages/NaverCallback.jsx
+// ✅ src/pages/NaverCallback.jsx
 import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -11,11 +11,9 @@ const NaverCallback = () => {
     const state = url.searchParams.get("state");
 
     if (code) {
-     fetch(
-  `https://politalk-4e0dd.web.app/naverLogin?code=${code}&state=${state}`
-)
-
-
+      fetch(
+        `https://naverlogin-wbm25judka-uc.a.run.app?code=${code}&state=${state}`
+      )
         .then((res) => res.json())
         .then(async ({ customToken }) => {
           if (customToken) {

@@ -128,6 +128,12 @@ await setDoc(doc(db, "users", user.uid), {
             >
               인증 메일 보내기
             </button>
+
+            <p className="text-xs text-gray-500 text-center mt-2">
+  PoliTalk은 <span className="font-semibold">이메일</span>과 <span className="font-semibold">닉네임</span>만 수집하며,<br />
+  <span className="font-semibold">이름, 성별, 출생연도</span> 등 개인정보는 수집하지 않습니다.
+</p>
+
           </form>
         )}
 

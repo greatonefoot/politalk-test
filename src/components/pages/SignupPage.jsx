@@ -73,13 +73,14 @@ const SignupPage = () => {
       await updatePassword(user, password); // ✅ 비밀번호 설정
       await updateProfile(user, { displayName: "새 사용자" });
 
-     await setDoc(doc(db, "users", user.uid), {
+await setDoc(doc(db, "users", user.uid), {
   email,
   name: "새 사용자",
-  profilePic: "https://firebasestorage.googleapis.com/v0/b/politalk-4e0dd.appspot.com/o/default-profile.png?alt=media",
+  profilePic: "https://firebasestorage.googleapis.com/v0/b/politalk-4e0dd.firebasestorage.app/o/%EC%8A%A4%ED%81%AC%EB%A6%B0%EC%83%B7%202025-05-24%20045701.png?alt=media&token=34c2f3b1-0606-4196-9896-fa7a66fa726f",
   role: "user",
   createdAt: Date.now(),
 });
+
 
 
       alert("회원가입이 완료되었습니다!");

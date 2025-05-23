@@ -63,6 +63,9 @@ exports.naverLogin = functions.https.onRequest((req, res) => {
 
   cors(req, res, async () => {
     try {
+      // ✅ CORS 헤더 직접 설정
+      res.set("Access-Control-Allow-Origin", "*");
+
       const { code, state } = req.query;
 
       const NAVER_CLIENT_ID = "KzNqOG3o5fJpv3t2qJ4k";

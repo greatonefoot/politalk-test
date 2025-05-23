@@ -1,3 +1,4 @@
+// src/components/pages/LoginPage.jsx
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { auth, db } from "../../firebase";
@@ -25,14 +26,16 @@ const LoginPage = () => {
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
+
       if (!user.emailVerified) return alert("이메일 인증이 필요합니다.");
 
       const userRef = doc(db, "users", user.uid);
       const docSnap = await getDoc(userRef);
+
       if (!docSnap.exists()) {
         await setDoc(userRef, {
           name: "새 사용자",
-          profilePic: "",
+          profilePic: "/default-profile.png",
           email,
           role: "user",
           createdAt: new Date(),
@@ -42,6 +45,7 @@ const LoginPage = () => {
         return navigate("/set-nickname");
       }
 
+      // 로그인 기록 저장
       const ip = (await (await fetch("https://api.ipify.org?format=json")).json()).ip;
       await addDoc(collection(db, "loginLogs"), {
         uid: user.uid,
@@ -74,16 +78,20 @@ const LoginPage = () => {
       const user = result.user;
       const userRef = doc(db, "users", user.uid);
       const docSnap = await getDoc(userRef);
-      if (!docSnap.exists() || docSnap.data().name === "새 사용자") {
+
+      if (!docSnap.exists()) {
         await setDoc(userRef, {
           name: "새 사용자",
-          profilePic: "",
+          profilePic: user.photoURL || "/default-profile.png",
           email: user.email,
           role: "user",
           createdAt: new Date(),
         });
         return navigate("/set-nickname");
+      } else if (docSnap.data().name === "새 사용자") {
+        return navigate("/set-nickname");
       }
+
       alert("구글 로그인 성공!");
       navigate("/");
     } catch (error) {

@@ -9,6 +9,7 @@ import {
   getDoc,
   updateDoc,
   deleteDoc,
+  onSnapshot,
 } from "firebase/firestore";
 import {
   onAuthStateChanged,
@@ -18,8 +19,6 @@ import {
 } from "firebase/auth";
 import { useNavigate, Link } from "react-router-dom";
 import { uploadImageAndGetURL } from "../../utils/uploadImage";
-import { onSnapshot } from "firebase/firestore";
-
 
 const MyProfilePage = () => {
   const [user, setUser] = useState(null);
@@ -27,7 +26,7 @@ const MyProfilePage = () => {
   const [profilePic, setProfilePic] = useState("");
   const [imageFile, setImageFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
-  const [dragPosition, setDragPosition] = useState({ x: 50, y: 50 }); // ✅ 이미지 중심 위치
+  const [dragPosition, setDragPosition] = useState({ x: 50, y: 50 });
   const imageRef = useRef(null);
 
   const [myPosts, setMyPosts] = useState([]);
@@ -35,6 +34,12 @@ const MyProfilePage = () => {
   const [commentPostTitles, setCommentPostTitles] = useState({});
   const [votedPosts, setVotedPosts] = useState([]);
   const [notifications, setNotifications] = useState([]);
+
+  const [showAllPosts, setShowAllPosts] = useState(false);
+  const [showAllComments, setShowAllComments] = useState(false);
+  const [showAllVotes, setShowAllVotes] = useState(false);
+  const [showAllNotis, setShowAllNotis] = useState(false);
+
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -50,7 +55,7 @@ const MyProfilePage = () => {
         const data = userDoc.data();
         setNickname(data.name || "");
         setProfilePic(data.profilePic || "");
-        setDragPosition(data.profilePicPosition || { x: 50, y: 50 }); // ✅ 저장된 위치
+        setDragPosition(data.profilePicPosition || { x: 50, y: 50 });
       }
       await fetchMyContent(currentUser.uid);
       await fetchVotedPosts();
@@ -58,24 +63,24 @@ const MyProfilePage = () => {
     return () => unsubscribe();
   }, [navigate]);
 
-useEffect(() => {
-  if (!user) return;
+  useEffect(() => {
+    if (!user) return;
 
-  const q = query(
-    collection(db, "notifications"),
-    where("receiverId", "==", user.uid)
-  );
-
-  const unsubscribe = onSnapshot(q, (snapshot) => {
-    const notis = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-    const sorted = notis.sort(
-      (a, b) => b.createdAt?.toMillis() - a.createdAt?.toMillis()
+    const q = query(
+      collection(db, "notifications"),
+      where("receiverId", "==", user.uid)
     );
-    setNotifications(sorted);
-  });
 
-  return () => unsubscribe(); // 🔁 실시간 연결 해제
-}, [user]);
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const notis = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+      const sorted = notis.sort(
+        (a, b) => b.createdAt?.toMillis() - a.createdAt?.toMillis()
+      );
+      setNotifications(sorted);
+    });
+
+    return () => unsubscribe();
+  }, [user]);
 
   const fetchMyContent = async (uid) => {
     const postsSnap = await getDocs(
@@ -116,7 +121,6 @@ useEffect(() => {
       .filter(Boolean);
     setVotedPosts(data);
   };
-
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -143,11 +147,12 @@ useEffect(() => {
     await updateDoc(doc(db, "users", user.uid), {
       name: nickname,
       profilePic: uploadedUrl,
-      profilePicPosition: dragPosition, // ✅ 위치도 저장
+      profilePicPosition: dragPosition,
     });
 
     alert("프로필이 업데이트되었습니다!");
   };
+
   const handleLogout = async () => {
     await signOut(auth);
     navigate("/login");
@@ -278,41 +283,51 @@ useEffect(() => {
         {notifications.length === 0 ? (
           <p className="text-gray-500">알림이 없습니다.</p>
         ) : (
-          <ul className="space-y-2">
-            {notifications.map((noti) => (
-              <li
-                key={noti.id}
-                className={`p-3 border rounded flex justify-between items-start hover:bg-gray-50 ${noti.isRead ? "text-gray-400" : "font-semibold"}`}
-              >
-                <div
-                  className="flex-1 cursor-pointer"
-                  onClick={async () => {
-                    if (!noti.isRead) {
-                      await updateDoc(doc(db, "notifications", noti.id), { isRead: true });
-                      setNotifications(prev =>
-                        prev.map(n => n.id === noti.id ? { ...n, isRead: true } : n)
-                      );
-                    }
-                    navigate(`/post/${noti.postId}`);
-                  }}
+          <>
+            <ul className="space-y-2">
+              {(showAllNotis ? notifications : notifications.slice(0, 5)).map((noti) => (
+                <li
+                  key={noti.id}
+                  className={`p-3 border rounded flex justify-between items-start hover:bg-gray-50 ${noti.isRead ? "text-gray-400" : "font-semibold"}`}
                 >
-                  <div>{noti.message || "알림 내용 없음"}</div>
-                  <div className="text-xs text-gray-500">
-                    {new Date(noti.createdAt?.toDate()).toLocaleString()}
+                  <div
+                    className="flex-1 cursor-pointer"
+                    onClick={async () => {
+                      if (!noti.isRead) {
+                        await updateDoc(doc(db, "notifications", noti.id), { isRead: true });
+                        setNotifications(prev =>
+                          prev.map(n => n.id === noti.id ? { ...n, isRead: true } : n)
+                        );
+                      }
+                      navigate(`/post/${noti.postId}`);
+                    }}
+                  >
+                    <div>{noti.message || "알림 내용 없음"}</div>
+                    <div className="text-xs text-gray-500">
+                      {new Date(noti.createdAt?.toDate()).toLocaleString()}
+                    </div>
                   </div>
-                </div>
-                <button
-                  onClick={async () => {
-                    await deleteDoc(doc(db, "notifications", noti.id));
-                    setNotifications(prev => prev.filter(n => n.id !== noti.id));
-                  }}
-                  className="text-red-500 text-sm ml-4"
-                >
-                  🗑
-                </button>
-              </li>
-            ))}
-          </ul>
+                  <button
+                    onClick={async () => {
+                      await deleteDoc(doc(db, "notifications", noti.id));
+                      setNotifications(prev => prev.filter(n => n.id !== noti.id));
+                    }}
+                    className="text-red-500 text-sm ml-4"
+                  >
+                    🗑
+                  </button>
+                </li>
+              ))}
+            </ul>
+            {notifications.length > 5 && (
+              <button
+                onClick={() => setShowAllNotis(!showAllNotis)}
+                className="mt-2 text-blue-500 hover:underline text-sm"
+              >
+                {showAllNotis ? "▲ 접기" : "▼ 더보기"}
+              </button>
+            )}
+          </>
         )}
       </div>
 
@@ -322,15 +337,25 @@ useEffect(() => {
         {myPosts.length === 0 ? (
           <p className="text-gray-500">작성한 글이 없습니다.</p>
         ) : (
-          <ul className="space-y-2">
-            {myPosts.map(post => (
-              <li key={post.id}>
-                <Link to={`/post/${post.id}`} className="text-blue-600 hover:underline">
-                  📄 {post.title} <span className="text-sm text-gray-500">({post.views || 0} 조회)</span>
-                </Link>
-              </li>
-            ))}
-          </ul>
+          <>
+            <ul className="space-y-2">
+              {(showAllPosts ? myPosts : myPosts.slice(0, 5)).map(post => (
+                <li key={post.id}>
+                  <Link to={`/post/${post.id}`} className="text-blue-600 hover:underline">
+                    📄 {post.title} <span className="text-sm text-gray-500">({post.views || 0} 조회)</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+            {myPosts.length > 5 && (
+              <button
+                onClick={() => setShowAllPosts(!showAllPosts)}
+                className="mt-2 text-blue-500 hover:underline text-sm"
+              >
+                {showAllPosts ? "▲ 접기" : "▼ 더보기"}
+              </button>
+            )}
+          </>
         )}
       </div>
 
@@ -340,34 +365,53 @@ useEffect(() => {
         {votedPosts.length === 0 ? (
           <p className="text-gray-500">투표한 글이 없습니다.</p>
         ) : (
-          <ul className="space-y-2">
-            {votedPosts.map(post => (
-              <li key={post.id}>
-                <Link to={`/post/${post.id}`} className="text-green-700 hover:underline">
-                  ✔️ {post.title} <span className="text-sm text-gray-500">({post.views || 0} 조회)</span>
-                </Link>
-              </li>
-            ))}
-          </ul>
+          <>
+            <ul className="space-y-2">
+              {(showAllVotes ? votedPosts : votedPosts.slice(0, 5)).map(post => (
+                <li key={post.id}>
+                  <Link to={`/post/${post.id}`} className="text-green-700 hover:underline">
+                    ✔️ {post.title} <span className="text-sm text-gray-500">({post.views || 0} 조회)</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+            {votedPosts.length > 5 && (
+              <button
+                onClick={() => setShowAllVotes(!showAllVotes)}
+                className="mt-2 text-blue-500 hover:underline text-sm"
+              >
+                {showAllVotes ? "▲ 접기" : "▼ 더보기"}
+              </button>
+            )}
+          </>
         )}
       </div>
-
       {/* 내가 쓴 댓글 */}
       <div className="bg-white rounded-xl shadow p-6">
         <h2 className="text-xl font-semibold mb-4">💬 내가 쓴 댓글</h2>
         {myComments.length === 0 ? (
           <p className="text-gray-500">작성한 댓글이 없습니다.</p>
         ) : (
-          <ul className="space-y-2">
-            {myComments.map(comment => (
-              <li key={comment.id}>
-                <Link to={`/post/${comment.postId}`} className="hover:underline">
-                  <p className="text-gray-800">💬 {comment.text}</p>
-                  <p className="text-sm text-gray-500">↪ 글: {commentPostTitles[comment.postId]}</p>
-                </Link>
-              </li>
-            ))}
-          </ul>
+          <>
+            <ul className="space-y-2">
+              {(showAllComments ? myComments : myComments.slice(0, 5)).map(comment => (
+                <li key={comment.id}>
+                  <Link to={`/post/${comment.postId}`} className="hover:underline">
+                    <p className="text-gray-800">💬 {comment.text}</p>
+                    <p className="text-sm text-gray-500">↪ 글: {commentPostTitles[comment.postId]}</p>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+            {myComments.length > 5 && (
+              <button
+                onClick={() => setShowAllComments(!showAllComments)}
+                className="mt-2 text-blue-500 hover:underline text-sm"
+              >
+                {showAllComments ? "▲ 접기" : "▼ 더보기"}
+              </button>
+            )}
+          </>
         )}
         <div className="text-center">
           <button

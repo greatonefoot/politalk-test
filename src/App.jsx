@@ -19,7 +19,6 @@ import TermsPage from "./components/pages/TermsPage";
 import PrivacyPolicy from "./components/pages/PrivacyPolicy";
 import RulesPage from "./components/pages/RulesPage";
 import SetNickname from "./components/pages/SetNickname";
-import SignupEmail from "./components/pages/SignupEmail";
 import SignupPassword from "./components/pages/SignupPassword";
 
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -98,8 +97,8 @@ function AppWrapper() {
         <Route path="/" element={<Home />} />
         <Route path="/post/:postId" element={isMobile ? <VotePageMobile /> : <VotePage />} />
         <Route path="/login" element={<LoginPage />} />
-        <Route path="/signup-email" element={<SignupEmail />} />
-        <Route path="/signup-password" element={<SignupPassword />} />
+        <Route path="/signup" element={<SignupPage />} />
+        <Route path="/signup-success" element={<SignupSuccessPage />} />
         <Route path="/set-nickname" element={<SetNickname />} />
         <Route path="/terms" element={<TermsPage />} />
         <Route path="/privacy" element={<PrivacyPolicy />} />

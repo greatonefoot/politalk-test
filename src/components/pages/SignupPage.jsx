@@ -73,13 +73,14 @@ const SignupPage = () => {
       await updatePassword(user, password); // ✅ 비밀번호 설정
       await updateProfile(user, { displayName: "새 사용자" });
 
-      await setDoc(doc(db, "users", user.uid), {
-        email,
-        name: "새 사용자",
-        profilePic: "/default-profile.png",
-        role: "user",
-        createdAt: Date.now(),
-      });
+     await setDoc(doc(db, "users", user.uid), {
+  email,
+  name: "새 사용자",
+  profilePic: "https://firebasestorage.googleapis.com/v0/b/politalk-4e0dd.appspot.com/o/default-profile.png?alt=media",
+  role: "user",
+  createdAt: Date.now(),
+});
+
 
       alert("회원가입이 완료되었습니다!");
       navigate("/set-nickname");

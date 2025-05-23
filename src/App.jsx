@@ -19,7 +19,6 @@ import TermsPage from "./components/pages/TermsPage";
 import PrivacyPolicy from "./components/pages/PrivacyPolicy";
 import RulesPage from "./components/pages/RulesPage";
 import SetNickname from "./components/pages/SetNickname";
-import SignupPassword from "./components/pages/SignupPassword";
 
 import ProtectedRoute from "./components/ProtectedRoute";
 import AdminRoute from "./components/AdminRoute";

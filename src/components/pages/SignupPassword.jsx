@@ -17,7 +17,8 @@ const SignupPassword = () => {
           setEmail(storedEmail);
         })
         .catch((error) => {
-          alert("이메일 인증 실패: " + error.message);
+          alert("이메일 인증 실패: " + (error.message || JSON.stringify(error)));
+
         });
     } else {
       alert("잘못된 접근입니다. 이메일 인증부터 진행해주세요.");
@@ -40,7 +41,9 @@ const SignupPassword = () => {
       alert("비밀번호 설정 완료! 닉네임을 설정해주세요.");
       navigate("/set-nickname");
     } catch (error) {
-      alert("회원가입 실패: " + error.message);
+     alert("회원가입 실패: " + (error.message || JSON.stringify(error)));
+
+실패
     }
   };
 

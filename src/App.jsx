@@ -20,7 +20,6 @@ import PrivacyPolicy from "./components/pages/PrivacyPolicy";
 import RulesPage from "./components/pages/RulesPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AdminRoute from "./components/AdminRoute";
-import NaverCallback from "./components/pages/NaverCallback";
 import SetNickname from "./components/pages/SetNickname";
 
 function AppWrapper() {
@@ -156,7 +155,6 @@ if (
             </ProtectedRoute>
           }
         />
-        <Route path="/naver-callback" element={<NaverCallback />} />
       </Routes>
 
       <Toaster position="top-center" />

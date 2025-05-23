@@ -226,7 +226,7 @@ const VotePage = () => {
             </div>
           )}
 
-          <div className="flex flex-col md:flex-row justify-center items-center gap-4 my-6">
+         <div className="flex flex-col md:flex-row justify-center items-center gap-4 my-20 md:mt-40">
             {voteData.options.map((opt, idx) => (
               <div key={idx} className={`bg-white rounded-xl shadow-md overflow-hidden w-full max-w-xs transition transform hover:scale-105 ${votedOption === idx ? "ring-2 ring-[#C8A97E]" : ""}`}>
                 {opt.imageUrl && (

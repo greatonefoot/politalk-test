@@ -19,8 +19,8 @@ import TermsPage from "./components/pages/TermsPage";
 import PrivacyPolicy from "./components/pages/PrivacyPolicy";
 import RulesPage from "./components/pages/RulesPage";
 import SetNickname from "./components/pages/SetNickname";
-import SignupPage from "./components/pages/SignupPage"; // ✅ 추가
-import SignupSuccessPage from "./components/pages/SignupSuccessPage"; // ✅ 이것도 같이 추가
+import SignupPage from "./components/pages/SignupEmail"; // ✅ 추가
+import SignupPassword from "./components/pages/SignupPassword";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AdminRoute from "./components/AdminRoute";
 import { Navigate } from "react-router-dom";
@@ -99,7 +99,7 @@ function AppWrapper() {
         <Route path="/post/:postId" element={isMobile ? <VotePageMobile /> : <VotePage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup-email" element={<SignupPage />} />
-        <Route path="/signup-success" element={<SignupSuccessPage />} />
+        <Route path="/signup-password" element={<SignupPassword />} />
         <Route path="/set-nickname" element={<SetNickname />} />
         <Route path="/terms" element={<TermsPage />} />
         <Route path="/privacy" element={<PrivacyPolicy />} />

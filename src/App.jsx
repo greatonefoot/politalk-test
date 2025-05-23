@@ -23,6 +23,7 @@ import SignupPage from "./components/pages/SignupPage"; // ✅ 추가
 import SignupSuccessPage from "./components/pages/SignupSuccessPage"; // ✅ 이것도 같이 추가
 import ProtectedRoute from "./components/ProtectedRoute";
 import AdminRoute from "./components/AdminRoute";
+import { Navigate } from "react-router-dom";
 
 function AppWrapper() {
   const [user, setUser] = useState(null);
@@ -103,6 +104,8 @@ function AppWrapper() {
         <Route path="/terms" element={<TermsPage />} />
         <Route path="/privacy" element={<PrivacyPolicy />} />
         <Route path="/rules" element={<RulesPage />} />
+        <Route path="/signup-email" element={<Navigate to="/signup" replace />} />
+
 
         {/* 🛡️ 인증 필요 페이지 */}
         <Route

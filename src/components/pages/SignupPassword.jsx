@@ -1,34 +1,39 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { auth, db } from "../../firebase";
-import { createUserWithEmailAndPassword, isSignInWithEmailLink, signInWithEmailLink } from "firebase/auth";
+import {
+  isSignInWithEmailLink,
+  signInWithEmailLink,
+  createUserWithEmailAndPassword,
+} from "firebase/auth";
 import { doc, setDoc } from "firebase/firestore";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 const SignupPassword = () => {
+  const [searchParams] = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
 
   useEffect(() => {
-    const storedEmail = window.localStorage.getItem("emailForSignIn");
-    if (isSignInWithEmailLink(auth, window.location.href) && storedEmail) {
-      signInWithEmailLink(auth, storedEmail, window.location.href)
+    const emailFromUrl = searchParams.get("email");
+    if (isSignInWithEmailLink(auth, window.location.href) && emailFromUrl) {
+      signInWithEmailLink(auth, emailFromUrl, window.location.href)
         .then(() => {
-          setEmail(storedEmail);
+          setEmail(emailFromUrl);
         })
         .catch((error) => {
-         alert("이메일 인증 실패: " + (error.message || JSON.stringify(error)));
-
+          alert("이메일 인증 실패: " + (error?.message || JSON.stringify(error)));
         });
     } else {
       alert("잘못된 접근입니다. 이메일 인증부터 진행해주세요.");
       navigate("/signup-email");
     }
-  }, [navigate]);
+  }, [navigate, searchParams]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!password) return alert("비밀번호를 입력해주세요.");
+
     try {
       const result = await createUserWithEmailAndPassword(auth, email, password);
       await setDoc(doc(db, "users", result.user.uid), {
@@ -41,9 +46,7 @@ const SignupPassword = () => {
       alert("비밀번호 설정 완료! 닉네임을 설정해주세요.");
       navigate("/set-nickname");
     } catch (error) {
-     alert("회원가입 실패: " + (error.message || JSON.stringify(error)));
-
-실패
+      alert("회원가입 실패: " + (error?.message || JSON.stringify(error)));
     }
   };
 

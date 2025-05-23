@@ -22,7 +22,7 @@ const SignupEmail = () => {
       await sendSignInLinkToEmail(auth, email, actionCodeSettings);
       window.localStorage.setItem("emailForSignIn", email);
       alert("이메일 인증 링크를 보냈습니다. 메일을 확인해주세요.");
-      navigate("/signup-password");
+      
     } catch (error) {
       alert("오류: " + (error?.message || JSON.stringify(error)));
     } finally {

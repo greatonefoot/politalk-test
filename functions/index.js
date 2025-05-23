@@ -1,7 +1,11 @@
+// functions/index.js
+
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
 const { Storage } = require("@google-cloud/storage");
 const { kakaoLogin } = require("./kakaoAuth");
+const cors = require("cors")({ origin: true });
+const fetch = require("node-fetch");
 
 admin.initializeApp();
 
@@ -46,11 +50,58 @@ exports.uploadImage = functions.https.onRequest(async (req, res) => {
 // ✅ 카카오 로그인 함수
 exports.kakaoLogin = kakaoLogin;
 
-// ✅ Firebase Auth 사용자 삭제 함수 (강제 탈퇴용)
+// ✅ 네이버 로그인 함수
+exports.naverLogin = functions.https.onRequest((req, res) => {
+  cors(req, res, async () => {
+    try {
+      const { code, state } = req.query;
+
+      const NAVER_CLIENT_ID = "KzNqOG3o5fJpv3t2qJ4k";
+      const NAVER_CLIENT_SECRET = "vGYO_15MVr"; // 🔒 반드시 설정 필요
+
+      // 1단계: 토큰 요청
+      const tokenRes = await fetch(
+        `https://nid.naver.com/oauth2.0/token?grant_type=authorization_code&client_id=${NAVER_CLIENT_ID}&client_secret=${NAVER_CLIENT_SECRET}&code=${code}&state=${state}`
+      );
+      const tokenData = await tokenRes.json();
+      if (!tokenData.access_token) throw new Error("토큰 요청 실패");
+
+      // 2단계: 사용자 정보 요청
+      const userRes = await fetch("https://openapi.naver.com/v1/nid/me", {
+        headers: {
+          Authorization: `Bearer ${tokenData.access_token}`,
+        },
+      });
+      const userData = await userRes.json();
+      const { id, email } = userData.response;
+      if (!id) throw new Error("사용자 정보 없음");
+
+      // 3단계: Firebase 사용자 생성/로그인
+      const firebaseUid = `naver:${id}`;
+      await admin.auth().getUser(firebaseUid).catch(async (error) => {
+        if (error.code === "auth/user-not-found") {
+          await admin.auth().createUser({
+            uid: firebaseUid,
+            email: email || undefined,
+          });
+        } else {
+          throw error;
+        }
+      });
+
+      const customToken = await admin.auth().createCustomToken(firebaseUid);
+      return res.status(200).json({ token: customToken });
+    } catch (err) {
+      console.error("네이버 로그인 오류:", err);
+      return res.status(500).json({ error: "네이버 로그인 실패" });
+    }
+  });
+});
+
+// ✅ Firebase Auth 사용자 삭제 함수
 exports.deleteAuthUser = functions.https.onCall(async (data, context) => {
   const { uid } = data;
 
-  // 선택: 관리자만 실행하도록 제한
   if (!context.auth || context.auth.token.role !== "admin") {
     throw new functions.https.HttpsError("permission-denied", "관리자 권한이 필요합니다.");
   }

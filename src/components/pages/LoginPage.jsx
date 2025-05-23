@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { auth, db } from "../../firebase";
 import {
@@ -7,7 +7,6 @@ import {
   sendEmailVerification,
   sendPasswordResetEmail,
   signInWithPopup,
-  signInWithCustomToken,
   GoogleAuthProvider,
 } from "firebase/auth";
 import {
@@ -18,32 +17,12 @@ import {
   getDoc,
 } from "firebase/firestore";
 
-const NAVER_CLIENT_ID = "KzNqOG3o5fJpv3t2qJ4k";
-const NAVER_CALLBACK_URL = "https://politalk-test.vercel.app/naver-callback";
-const naverState = Math.random().toString(36).substring(2);
-const naverLoginUrl = `https://nid.naver.com/oauth2.0/authorize?response_type=code&client_id=${NAVER_CLIENT_ID}&redirect_uri=${encodeURIComponent(NAVER_CALLBACK_URL)}&state=${naverState}`;
-
-const KAKAO_API_KEY = "d840e4500f1ad3fa24e6380c2a8ad8b9";
-const KAKAO_FUNCTION_URL = "https://us-central1-politalk-4e0dd.cloudfunctions.net/kakaoLogin";
-
 const LoginPage = () => {
   const [isSignup, setIsSignup] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [agreeTerms, setAgreeTerms] = useState(false);
   const navigate = useNavigate();
-
-  useEffect(() => {
-    const script = document.createElement("script");
-    script.src = "https://developers.kakao.com/sdk/js/kakao.js";
-    script.async = true;
-    script.onload = () => {
-      if (!window.Kakao.isInitialized()) {
-        window.Kakao.init(KAKAO_API_KEY);
-      }
-    };
-    document.body.appendChild(script);
-  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -94,7 +73,6 @@ const LoginPage = () => {
       alert("오류: " + error.message);
     }
   };
-
   const handleResetPassword = async () => {
     if (!email) return alert("이메일을 입력해주세요.");
     try {
@@ -129,46 +107,6 @@ const LoginPage = () => {
     }
   };
 
-  const handleKakaoLogin = async () => {
-    try {
-      await window.Kakao.Auth.login({
-        scope: "profile_nickname,account_email",
-        success: async (authObj) => {
-          const res = await fetch(KAKAO_FUNCTION_URL, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ accessToken: authObj.access_token }),
-          });
-          const data = await res.json();
-          if (!data.token) throw new Error("커스텀 토큰 없음");
-
-          const result = await signInWithCustomToken(auth, data.token);
-          const user = result.user;
-          const userRef = doc(db, "users", user.uid);
-          const docSnap = await getDoc(userRef);
-          if (!docSnap.exists() || docSnap.data().name === "새 사용자") {
-            await setDoc(userRef, {
-              name: "새 사용자",
-              profilePic: "",
-              email: user.email || "",
-              role: "user",
-              createdAt: new Date(),
-            });
-            return navigate("/set-nickname");
-          }
-          alert("카카오 로그인 성공!");
-          navigate("/");
-        },
-        fail: (err) => {
-          console.error(err);
-          alert("카카오 로그인 실패");
-        },
-      });
-    } catch (err) {
-      console.error(err);
-      alert("카카오 로그인 오류 발생");
-    }
-  };
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 relative px-4">
       <Link to="/" className="absolute top-4 left-4 text-naver underline text-sm hover:text-naverDark">
@@ -224,10 +162,6 @@ const LoginPage = () => {
 
         <hr />
 
-        <div className="text-sm text-center text-gray-500">
-          ※ 간편 로그인(Google, Kakao, Naver)은 <span className="text-red-500 font-semibold">자동 회원가입</span>이 진행됩니다
-        </div>
-
         <div className="flex flex-col items-center gap-2 mt-2 w-full">
           <button
             onClick={handleGoogleLogin}
@@ -240,31 +174,6 @@ const LoginPage = () => {
             />
             구글 로그인
           </button>
-
-          <button
-            onClick={handleKakaoLogin}
-            className="flex items-center justify-center gap-2 px-3 py-1.5 rounded-md border bg-[#FEE500] text-black text-sm w-[220px] hover:brightness-105"
-          >
-            <img
-              src="https://developers.kakao.com/assets/img/about/logos/kakaolink/kakaolink_btn_small.png"
-              alt="Kakao"
-              className="w-5 h-5"
-            />
-            카카오 로그인
-          </button>
-
-          <a href={naverLoginUrl} className="block w-[220px]">
-            <button
-              className="flex items-center justify-center gap-2 w-full px-3 py-1.5 rounded-md border bg-[#03C75A] text-white text-sm hover:brightness-110"
-            >
-              <img
-                src="https://static.nid.naver.com/oauth/small_g_in.PNG"
-                alt="Naver"
-                className="w-5 h-5"
-              />
-              네이버 로그인
-            </button>
-          </a>
         </div>
 
         <p className="text-center text-sm text-gray-500 mt-2">

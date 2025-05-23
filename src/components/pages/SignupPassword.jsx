@@ -17,7 +17,7 @@ const SignupPassword = () => {
           setEmail(storedEmail);
         })
         .catch((error) => {
-          alert("이메일 인증 실패: " + (error.message || JSON.stringify(error)));
+         alert("이메일 인증 실패: " + (error.message || JSON.stringify(error)));
 
         });
     } else {

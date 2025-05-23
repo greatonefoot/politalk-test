@@ -9,13 +9,13 @@ import {
   query,
   orderBy,
 } from "firebase/firestore";
-import { getFunctions, httpsCallable } from "firebase/functions"; // ✅ Firebase Functions 호출용
+import { getFunctions, httpsCallable } from "firebase/functions";
 
 const AdminUserPage = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const functions = getFunctions(); // ✅ functions 인스턴스 생성
-  const deleteAuthUser = httpsCallable(functions, "deleteAuthUser"); // ✅ 함수 지정
+  const functions = getFunctions();
+  const deleteAuthUser = httpsCallable(functions, "deleteAuthUser");
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -40,10 +40,11 @@ const AdminUserPage = () => {
     if (window.confirm("정말 이 사용자를 탈퇴시키겠습니까?")) {
       try {
         await deleteDoc(doc(db, "users", uid)); // ✅ Firestore에서 삭제
-        await deleteAuthUser({ uid });          // ✅ Auth 계정도 삭제
+        await deleteAuthUser({ uid });          // ✅ Firebase Auth 계정 삭제
         setUsers((prev) => prev.filter((u) => u.id !== uid));
+        alert("탈퇴 처리 완료");
       } catch (error) {
-        console.error("삭제 실패:", error);
+        console.error("❌ 삭제 실패:", error);
         alert("탈퇴 중 오류가 발생했습니다.");
       }
     }

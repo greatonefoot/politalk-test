@@ -4,8 +4,9 @@ const { Storage } = require("@google-cloud/storage");
 
 admin.initializeApp();
 
+// ✅ GCS 버킷 설정
 const storage = new Storage();
-const bucket = storage.bucket("politalk-4e0dd.firebasestorage.app");
+const bucket = storage.bucket("politalk-4e0dd.appspot.com"); // 🔁 버킷 이름 확인 필요 (firebasestorage.app이 아니라 storage 버킷 ID 사용)
 
 // ✅ 이미지 업로드 함수
 exports.uploadImage = functions.https.onRequest(async (req, res) => {
@@ -46,6 +47,7 @@ exports.uploadImage = functions.https.onRequest(async (req, res) => {
 exports.deleteAuthUser = functions.https.onCall(async (data, context) => {
   const { uid } = data;
 
+  // 🔐 관리자 권한 확인
   if (!context.auth || context.auth.token.role !== "admin") {
     throw new functions.https.HttpsError("permission-denied", "관리자 권한이 필요합니다.");
   }

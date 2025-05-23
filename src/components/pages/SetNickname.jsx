@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { auth, db } from "../../firebase";
-import { doc, updateDoc } from "firebase/firestore";
+import { doc, updateDoc, collection, query, where, getDocs } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
 import { uploadImageAndGetURL } from "../../utils/uploadImage";
 import { onAuthStateChanged } from "firebase/auth";
 
 const SetNickname = () => {
   const [nickname, setNickname] = useState("");
+  const [nicknameAvailable, setNicknameAvailable] = useState(null); // 중복 여부
   const [profileImage, setProfileImage] = useState(null);
   const [previewUrl, setPreviewUrl] = useState("");
   const [loading, setLoading] = useState(false);
@@ -20,17 +21,16 @@ const SetNickname = () => {
         navigate("/login");
       } else {
         if (!currentUser.emailVerified) {
-  alert("이메일 인증을 먼저 완료해주세요.");
-  navigate("/signup-success");
-  return;
-}
-
+          alert("이메일 인증을 먼저 완료해주세요.");
+          navigate("/signup-success");
+          return;
+        }
         setUser(currentUser);
       }
       setCheckingUser(false);
     });
     return () => unsubscribe();
-  }, []);
+  }, [navigate]);
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
@@ -40,9 +40,30 @@ const SetNickname = () => {
     }
   };
 
+  const checkDuplicateNickname = async () => {
+    if (!nickname.trim()) {
+      alert("닉네임을 입력해주세요.");
+      return;
+    }
+    const q = query(collection(db, "users"), where("name", "==", nickname));
+    const snapshot = await getDocs(q);
+    const isDuplicate = !snapshot.empty;
+    setNicknameAvailable(!isDuplicate);
+    if (isDuplicate) {
+      alert("이미 사용 중인 닉네임입니다.");
+    } else {
+      alert("사용 가능한 닉네임입니다.");
+    }
+  };
+
   const handleSubmit = async () => {
     if (!nickname.trim()) {
       alert("닉네임을 입력해주세요.");
+      return;
+    }
+
+    if (nicknameAvailable === false) {
+      alert("닉네임이 중복되었습니다. 다른 닉네임을 입력해주세요.");
       return;
     }
 
@@ -92,9 +113,26 @@ const SetNickname = () => {
           type="text"
           placeholder="닉네임"
           value={nickname}
-          onChange={(e) => setNickname(e.target.value)}
-          className="border px-3 py-2 rounded w-full mb-4"
+          onChange={(e) => {
+            setNickname(e.target.value);
+            setNicknameAvailable(null); // 입력 바뀌면 초기화
+          }}
+          className="border px-3 py-2 rounded w-full mb-2"
         />
+        <button
+          type="button"
+          onClick={checkDuplicateNickname}
+          className="text-sm text-green-600 underline mb-2"
+        >
+          닉네임 중복 확인
+        </button>
+        {nicknameAvailable !== null && (
+          <p className={`text-sm mb-2 ${nicknameAvailable ? "text-green-600" : "text-red-500"}`}>
+            {nicknameAvailable
+              ? "사용 가능한 닉네임입니다."
+              : "이미 사용 중인 닉네임입니다."}
+          </p>
+        )}
 
         <div className="mb-4">
           <label className="block mb-1">프로필 이미지</label>
@@ -110,8 +148,8 @@ const SetNickname = () => {
 
         <button
           onClick={handleSubmit}
-          disabled={loading}
-          className="bg-green-600 text-white w-full py-2 rounded"
+          disabled={loading || nicknameAvailable === false}
+          className="bg-green-600 text-white w-full py-2 rounded disabled:opacity-50"
         >
           {loading ? "저장 중..." : "저장하기"}
         </button>

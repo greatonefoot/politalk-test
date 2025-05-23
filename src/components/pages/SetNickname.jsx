@@ -19,6 +19,12 @@ const SetNickname = () => {
       if (!currentUser) {
         navigate("/login");
       } else {
+        if (!currentUser.emailVerified) {
+  alert("이메일 인증을 먼저 완료해주세요.");
+  navigate("/signup-success");
+  return;
+}
+
         setUser(currentUser);
       }
       setCheckingUser(false);

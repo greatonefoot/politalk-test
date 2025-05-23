@@ -268,7 +268,6 @@ const renderMainImages = (post) =>
 
 
     <div className="text-sm font-bold truncate">{p.title}</div>
-    <div className="text-sm font-bold truncate">{p.title}</div>
 
     <div className="text-xs text-gray-600 mb-1">
       {authorData[p.id] || "익명"} · 댓글 {commentCounts[p.id] || 0} · 조회 {p.views || 0}
@@ -335,7 +334,7 @@ const renderMainImages = (post) =>
   </div>
 )}
 
-
+<div className="text-sm font-bold truncate">{p.title}</div>
                     <div className="text-xs text-gray-600 mb-1">
                       {authorData[p.id] || "익명"} · 댓글 {commentCounts[p.id] || 0} · 조회 {p.views || 0}
                     </div>

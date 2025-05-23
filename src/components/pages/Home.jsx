@@ -314,12 +314,12 @@ const renderMainImages = (post) =>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {sortedPosts.map((p) => (
                 <Link to={`/post/${p.id}`} key={p.id}>
-                 <div className="relative overflow-visible bg-white p-3 rounded border border-gray-300 hover:bg-gray-50 transition">
+<div className="relative overflow-visible bg-white p-3 pt-6 rounded border border-gray-300 hover:bg-gray-50 transition">
 
 {isToday(p.createdAt) && (
-  <div className="absolute -top-4 -left-4 w-24 h-6 bg-yellow-100 text-yellow-800 text-[10px] font-bold flex items-center justify-center rotate-[-45deg] shadow z-20">
-  NEW
-</div>
+  <div className="absolute -top-5 -left-5 w-24 h-6 bg-yellow-100 text-yellow-800 text-[10px] font-bold flex items-center justify-center rotate-[-45deg] shadow z-20">
+    NEW
+  </div>
 )}
 
 

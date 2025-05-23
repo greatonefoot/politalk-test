@@ -76,7 +76,7 @@ const SignupPage = () => {
 await setDoc(doc(db, "users", user.uid), {
   email,
   name: "새 사용자",
-  profilePic: "https://firebasestorage.googleapis.https://firebasestorage.googleapis.com/v0/b/politalk-4e0dd.firebasestorage.app/o/ChatGPT%20Image%202025%EB%85%84%205%EC%9B%94%2024%EC%9D%BC%20%EC%98%A4%EC%A0%84%2006_06_08.png?alt=media&token=51bfe28d-729d-4eb5-9171-17219d98b7b8/v0/b/politalk-4e0dd.firebasestorage.app/o/%EC%8A%A4%ED%81%AC%EB%A6%B0%EC%83%B7%202025-05-24%20045701.png?alt=media&token=34c2f3b1-0606-4196-9896-fa7a66fa726f",
+  profilePic: "https://https://firebasestorage.googleapis.com/v0/b/politalk-4e0dd.firebasestorage.app/o/ChatGPT%20Image%202025%EB%85%84%205%EC%9B%94%2024%EC%9D%BC%20%EC%98%A4%EC%A0%84%2006_06_08.png?alt=media&token=51bfe28d-729d-4eb5-9171-17219d98b7b8.googleapis.https://firebasestorage.googleapis.com/v0/b/politalk-4e0dd.firebasestorage.app/o/ChatGPT%20Image%202025%EB%85%84%205%EC%9B%94%2024%EC%9D%BC%20%EC%98%A4%EC%A0%84%2006_06_08.png?alt=media&token=51bfe28d-729d-4eb5-9171-17219d98b7b8/v0/b/politalk-4e0dd.firebasestorage.app/o/%EC%8A%A4%ED%81%AC%EB%A6%B0%EC%83%B7%202025-05-24%20045701.png?alt=media&token=34c2f3b1-0606-4196-9896-fa7a66fa726f",
   role: "user",
   createdAt: Date.now(),
 });

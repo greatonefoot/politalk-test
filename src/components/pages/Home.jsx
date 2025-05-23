@@ -317,7 +317,7 @@ const renderMainImages = (post) =>
                   <div className="relative bg-white p-3 rounded border border-gray-300 hover:bg-gray-50 transition">
 
 {isToday(p.createdAt) && (
-  <div className="absolute top-0 left-0 bg-yellow-100 text-yellow-800 text-[10px] font-bold px-2 py-1 rounded-br-lg shadow-sm z-10">
+  <div className="absolute -top-2 -left-2 w-24 h-6 bg-yellow-100 text-yellow-800 text-[10px] font-bold flex items-center justify-center rotate-[-45deg] shadow z-20">
     NEW
   </div>
 )}
@@ -333,12 +333,6 @@ const renderMainImages = (post) =>
   </div>
 )}
 
-                    <div className="font-medium text-sm truncate flex items-center gap-1">
-  {p.title}
-  {isToday(p.createdAt) && (
-    <span className="text-[10px] bg-red-500 text-white px-1 py-0.5 rounded">NEW</span>
-  )}
-</div>
 
                     <div className="text-xs text-gray-600 mb-1">
                       {authorData[p.id] || "익명"} · 댓글 {commentCounts[p.id] || 0} · 조회 {p.views || 0}

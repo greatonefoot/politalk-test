@@ -19,8 +19,7 @@ import TermsPage from "./components/pages/TermsPage";
 import PrivacyPolicy from "./components/pages/PrivacyPolicy";
 import RulesPage from "./components/pages/RulesPage";
 import SetNickname from "./components/pages/SetNickname";
-import SignupPage from "./components/pages/SignupEmail"; // ✅ 추가
-import SignupPassword from "./components/pages/SignupPassword";
+import SignupPage from "./components/pages/SignupPage"; // ✅ 새 회원가입 컴포넌트만 유지
 import ProtectedRoute from "./components/ProtectedRoute";
 import AdminRoute from "./components/AdminRoute";
 import { Navigate } from "react-router-dom";
@@ -98,14 +97,11 @@ function AppWrapper() {
         <Route path="/" element={<Home />} />
         <Route path="/post/:postId" element={isMobile ? <VotePageMobile /> : <VotePage />} />
         <Route path="/login" element={<LoginPage />} />
-        <Route path="/signup-email" element={<SignupPage />} />
-        <Route path="/signup-password" element={<SignupPassword />} />
+        <Route path="/signup" element={<SignupPage />} />
         <Route path="/set-nickname" element={<SetNickname />} />
         <Route path="/terms" element={<TermsPage />} />
         <Route path="/privacy" element={<PrivacyPolicy />} />
         <Route path="/rules" element={<RulesPage />} />
- 
-
 
         {/* 🛡️ 인증 필요 페이지 */}
         <Route

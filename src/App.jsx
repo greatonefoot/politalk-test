@@ -19,7 +19,8 @@ import TermsPage from "./components/pages/TermsPage";
 import PrivacyPolicy from "./components/pages/PrivacyPolicy";
 import RulesPage from "./components/pages/RulesPage";
 import SetNickname from "./components/pages/SetNickname";
-
+import SignupPage from "./components/pages/SignupPage"; // ✅ 추가
+import SignupSuccessPage from "./components/pages/SignupSuccessPage"; // ✅ 이것도 같이 추가
 import ProtectedRoute from "./components/ProtectedRoute";
 import AdminRoute from "./components/AdminRoute";
 

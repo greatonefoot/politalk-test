@@ -5,27 +5,28 @@ import {
   isSignInWithEmailLink,
   signInWithEmailLink,
   updateProfile,
+  updatePassword,
 } from "firebase/auth";
-import { doc, setDoc, getDoc } from "firebase/firestore";
+import { doc, setDoc } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
 
 const SignupPage = () => {
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState(""); // 향후 비번 설정용
-  const [step, setStep] = useState("email"); // or "password"
+  const [password, setPassword] = useState("");
+  const [step, setStep] = useState("email");
   const [processing, setProcessing] = useState(false);
   const navigate = useNavigate();
 
-  // 로그인된 상태인데 링크가 아니면 막기
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
-      const isLink = isSignInWithEmailLink(auth, window.location.href);
-      if (user && !isLink) navigate("/");
+      const isEmailLink = isSignInWithEmailLink(auth, window.location.href);
+      if (user && !isEmailLink) {
+        navigate("/");
+      }
     });
     return () => unsubscribe();
   }, [navigate]);
 
-  // 인증 링크 클릭 시 비밀번호 입력 폼으로 전환
   useEffect(() => {
     const url = window.location.href;
     const urlEmail = new URLSearchParams(window.location.search).get("email");
@@ -37,7 +38,6 @@ const SignupPage = () => {
     }
   }, []);
 
-  // 인증 메일 보내기
   const handleSendEmail = async (e) => {
     e.preventDefault();
     if (!email) return alert("이메일을 입력해주세요.");
@@ -56,27 +56,19 @@ const SignupPage = () => {
     }
   };
 
-  // 회원 정보 등록
   const handleSetPassword = async (e) => {
     e.preventDefault();
+    if (!password) return alert("비밀번호를 입력해주세요.");
     setProcessing(true);
 
     try {
-      const result = await signInWithEmailLink(auth, email, window.location.href);
-      const user = result.user;
+      const userCredential = await signInWithEmailLink(auth, email, window.location.href);
+      const user = userCredential.user;
 
-      // Firestore에 이미 존재하는지 확인
-      const userRef = doc(db, "users", user.uid);
-      const snap = await getDoc(userRef);
-
-      if (snap.exists()) {
-        alert("이미 가입된 이메일입니다.");
-        return navigate("/");
-      }
-
+      await updatePassword(user, password); // ✅ 비밀번호 설정
       await updateProfile(user, { displayName: "새 사용자" });
 
-      await setDoc(userRef, {
+      await setDoc(doc(db, "users", user.uid), {
         email,
         name: "새 사용자",
         profilePic: "/default-profile.png",
@@ -84,7 +76,7 @@ const SignupPage = () => {
         createdAt: Date.now(),
       });
 
-      alert("회원가입 완료! 닉네임을 설정해주세요.");
+      alert("회원가입이 완료되었습니다!");
       navigate("/set-nickname");
     } catch (err) {
       alert("가입 오류: " + err.message);
@@ -99,29 +91,22 @@ const SignupPage = () => {
         <h1 className="text-2xl font-bold text-center mb-4">회원가입</h1>
 
         {step === "email" && (
-          <>
-            <form onSubmit={handleSendEmail} className="space-y-3">
-              <input
-                type="email"
-                placeholder="이메일 입력"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full border px-3 py-2 rounded"
-                required
-              />
-              <button
-                type="submit"
-                className="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700"
-              >
-                인증 메일 보내기
-              </button>
-            </form>
-
-            <p className="text-center text-sm text-gray-500 mt-4">
-              PoliTalk은 <span className="font-semibold text-black">이메일과 닉네임만 수집</span>하며,<br />
-              이름, 성별, 출생연도 등 <span className="text-red-500">개인정보는 수집하지 않습니다.</span>
-            </p>
-          </>
+          <form onSubmit={handleSendEmail} className="space-y-3">
+            <input
+              type="email"
+              placeholder="이메일 입력"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full border px-3 py-2 rounded"
+              required
+            />
+            <button
+              type="submit"
+              className="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700"
+            >
+              인증 메일 보내기
+            </button>
+          </form>
         )}
 
         {step === "password" && (
@@ -129,11 +114,12 @@ const SignupPage = () => {
             <p className="text-sm text-gray-600">인증된 이메일: {email}</p>
             <input
               type="password"
-              placeholder="비밀번호 (사용되지 않음)"
+              placeholder="비밀번호 (6자 이상)"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="w-full border px-3 py-2 rounded"
               required
+              minLength={6}
             />
             <button
               type="submit"
@@ -143,10 +129,6 @@ const SignupPage = () => {
               {processing ? "처리 중..." : "회원가입 완료"}
             </button>
           </form>
-        )}
-
-        {step !== "email" && step !== "password" && (
-          <p className="text-center text-gray-500 mt-4">잘못된 접근입니다. 다시 시도해주세요.</p>
         )}
       </div>
     </div>

@@ -9,8 +9,6 @@ import {
   signInWithPopup,
   signInWithCustomToken,
   GoogleAuthProvider,
-  RecaptchaVerifier,
-  signInWithPhoneNumber,
 } from "firebase/auth";
 import {
   doc,
@@ -33,10 +31,6 @@ const LoginPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [agreeTerms, setAgreeTerms] = useState(false);
-  const [phoneNumber, setPhoneNumber] = useState("");
-  const [verificationCode, setVerificationCode] = useState("");
-  const [confirmationResult, setConfirmationResult] = useState(null);
-  const [showPhoneLogin, setShowPhoneLogin] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -50,23 +44,6 @@ const LoginPage = () => {
     };
     document.body.appendChild(script);
   }, []);
-
-  const formatPhoneNumber = (number) => {
-    const cleaned = number.replace(/[^0-9]/g, "");
-    if (cleaned.startsWith("0")) return "+82" + cleaned.slice(1);
-    if (cleaned.startsWith("82")) return "+" + cleaned;
-    return number;
-  };
-
-  const setupRecaptcha = () => {
-    if (!window.recaptchaVerifier) {
-      window.recaptchaVerifier = new RecaptchaVerifier(auth, "recaptcha-container", {
-        size: "invisible",
-        callback: () => {},
-        "expired-callback": () => alert("reCAPTCHA 만료. 다시 시도해주세요."),
-      });
-    }
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -192,57 +169,39 @@ const LoginPage = () => {
       alert("카카오 로그인 오류 발생");
     }
   };
-
-  const handleSendCode = async () => {
-    if (!phoneNumber) return alert("전화번호를 입력해주세요!");
-    setupRecaptcha();
-    const formatted = formatPhoneNumber(phoneNumber);
-    try {
-      const confirmation = await signInWithPhoneNumber(auth, formatted, window.recaptchaVerifier);
-      setConfirmationResult(confirmation);
-      alert("인증번호가 전송되었습니다.");
-    } catch (error) {
-      alert("전송 실패: " + error.message);
-    }
-  };
-
-  const handleVerifyCode = async () => {
-    if (!verificationCode || !confirmationResult) return alert("인증번호를 입력해주세요.");
-    try {
-      const result = await confirmationResult.confirm(verificationCode);
-      const user = result.user;
-      const userRef = doc(db, "users", user.uid);
-      const docSnap = await getDoc(userRef);
-      if (!docSnap.exists() || docSnap.data().name === "새 사용자") {
-        await setDoc(userRef, {
-          name: "새 사용자",
-          profilePic: "",
-          email: user.email || "",
-          role: "user",
-          createdAt: new Date(),
-        });
-        return navigate("/set-nickname");
-      }
-      alert("로그인 성공!");
-      navigate("/");
-    } catch (error) {
-      alert("코드 인증 실패: " + error.message);
-    }
-  };
-
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 relative px-4">
-      <Link to="/" className="absolute top-4 left-4 text-naver underline text-sm hover:text-naverDark">← 홈으로</Link>
+      <Link to="/" className="absolute top-4 left-4 text-naver underline text-sm hover:text-naverDark">
+        ← 홈으로
+      </Link>
 
       <div className="w-full max-w-md bg-white rounded-xl p-6 shadow-md space-y-6">
         <h2 className="text-xl font-bold text-center">{isSignup ? "회원가입" : "로그인"}</h2>
 
         <form onSubmit={handleSubmit} className="space-y-3">
-          <input type="email" placeholder="이메일" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full border px-3 py-2 rounded" required />
-          <input type="password" placeholder="비밀번호" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full border px-3 py-2 rounded" required />
+          <input
+            type="email"
+            placeholder="이메일"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="w-full border px-3 py-2 rounded"
+            required
+          />
+          <input
+            type="password"
+            placeholder="비밀번호"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="w-full border px-3 py-2 rounded"
+            required
+          />
           {isSignup && (
             <label className="flex items-start gap-2 text-sm">
-              <input type="checkbox" checked={agreeTerms} onChange={(e) => setAgreeTerms(e.target.checked)} />
+              <input
+                type="checkbox"
+                checked={agreeTerms}
+                onChange={(e) => setAgreeTerms(e.target.checked)}
+              />
               <span>
                 <a href="/terms" target="_blank" className="underline text-blue-600">이용약관</a> 및{" "}
                 <a href="/privacy" target="_blank" className="underline text-blue-600">개인정보 처리방침</a>에 동의합니다
@@ -266,82 +225,53 @@ const LoginPage = () => {
         <hr />
 
         <div className="text-sm text-center text-gray-500">
-          ※ 간편 로그인 및 전화번호 로그인은 <span className="text-red-500 font-semibold">자동 회원가입</span>이 진행됩니다
+          ※ 간편 로그인(Google, Kakao, Naver)은 <span className="text-red-500 font-semibold">자동 회원가입</span>이 진행됩니다
         </div>
 
-      <div className="flex flex-col items-center gap-2 mt-2 w-full">
-  <button
-    onClick={handleGoogleLogin}
-    className="flex items-center justify-center gap-2 px-3 py-1.5 rounded-md border bg-white text-black text-sm w-[220px] hover:bg-gray-50"
-  >
-<img
-  src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
-  alt="Google"
-  className="w-5 h-5"
-/>
-
-    구글 로그인
-  </button>
-
-  <button
-    onClick={handleKakaoLogin}
-    className="flex items-center justify-center gap-2 px-3 py-1.5 rounded-md border bg-[#FEE500] text-black text-sm w-[220px] hover:brightness-105"
-  >
-    <img
-  src="https://developers.kakao.com/assets/img/about/logos/kakaolink/kakaolink_btn_small.png"
-  alt="Kakao"
-  className="w-5 h-5"
-/>
-
-    카카오 로그인
-  </button>
-
-  <a href={naverLoginUrl} className="block w-[220px]">
-    <button
-      className="flex items-center justify-center gap-2 w-full px-3 py-1.5 rounded-md border bg-[#03C75A] text-white text-sm hover:brightness-110"
-    >
-<img
-  src="https://static.nid.naver.com/oauth/small_g_in.PNG"
-  alt="Naver"
-  className="w-5 h-5"
-/>
-
-
-
-
-      네이버 로그인
-    </button>
-  </a>
-</div>
-
-<p className="text-center text-sm text-gray-500 mt-2">
-  PoliTalk은 <span className="font-semibold text-black">이메일과 닉네임만 수집</span>하며,<br />
-  이름, 성별, 출생연도 등 <span className="text-red-500">개인정보는 수집하지 않습니다.</span><br />
-  자유롭고 안전한 <span className="font-semibold">익명 토론</span>을 보장합니다.
-</p>
-
-
-
-        <div className="border-t pt-4 mt-4 space-y-2">
-          <button onClick={() => setShowPhoneLogin(!showPhoneLogin)} className="w-full bg-gray-100 text-black py-2 rounded border">
-            📱 전화번호 로그인 {showPhoneLogin ? "▲" : "▼"}
+        <div className="flex flex-col items-center gap-2 mt-2 w-full">
+          <button
+            onClick={handleGoogleLogin}
+            className="flex items-center justify-center gap-2 px-3 py-1.5 rounded-md border bg-white text-black text-sm w-[220px] hover:bg-gray-50"
+          >
+            <img
+              src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
+              alt="Google"
+              className="w-5 h-5"
+            />
+            구글 로그인
           </button>
 
-          {showPhoneLogin && (
-            <>
-              <input type="tel" placeholder="01012345678 (숫자만)" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} className="w-full border px-3 py-2 rounded" />
-              <button onClick={handleSendCode} className="bg-blue-500 text-white py-2 rounded w-full">인증 코드 보내기</button>
+          <button
+            onClick={handleKakaoLogin}
+            className="flex items-center justify-center gap-2 px-3 py-1.5 rounded-md border bg-[#FEE500] text-black text-sm w-[220px] hover:brightness-105"
+          >
+            <img
+              src="https://developers.kakao.com/assets/img/about/logos/kakaolink/kakaolink_btn_small.png"
+              alt="Kakao"
+              className="w-5 h-5"
+            />
+            카카오 로그인
+          </button>
 
-              {confirmationResult && (
-                <>
-                  <input type="text" placeholder="인증번호 입력" value={verificationCode} onChange={(e) => setVerificationCode(e.target.value)} className="w-full border px-3 py-2 rounded" />
-                  <button onClick={handleVerifyCode} className="bg-green-600 text-white py-2 rounded w-full">로그인</button>
-                </>
-              )}
-              <div id="recaptcha-container"></div>
-            </>
-          )}
+          <a href={naverLoginUrl} className="block w-[220px]">
+            <button
+              className="flex items-center justify-center gap-2 w-full px-3 py-1.5 rounded-md border bg-[#03C75A] text-white text-sm hover:brightness-110"
+            >
+              <img
+                src="https://static.nid.naver.com/oauth/small_g_in.PNG"
+                alt="Naver"
+                className="w-5 h-5"
+              />
+              네이버 로그인
+            </button>
+          </a>
         </div>
+
+        <p className="text-center text-sm text-gray-500 mt-2">
+          PoliTalk은 <span className="font-semibold text-black">이메일과 닉네임만 수집</span>하며,<br />
+          이름, 성별, 출생연도 등 <span className="text-red-500">개인정보는 수집하지 않습니다.</span><br />
+          자유롭고 안전한 <span className="font-semibold">익명 토론</span>을 보장합니다.
+        </p>
       </div>
     </div>
   );

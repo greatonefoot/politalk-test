@@ -1,13 +1,20 @@
 import React, { useState, useEffect } from "react";
 import { auth, db } from "../../firebase";
-import { doc, updateDoc, collection, query, where, getDocs } from "firebase/firestore";
+import {
+  doc,
+  updateDoc,
+  collection,
+  query,
+  where,
+  getDocs,
+} from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
 import { uploadImageAndGetURL } from "../../utils/uploadImage";
 import { onAuthStateChanged } from "firebase/auth";
 
 const SetNickname = () => {
   const [nickname, setNickname] = useState("");
-  const [nicknameAvailable, setNicknameAvailable] = useState(null); // 중복 여부
+  const [nicknameAvailable, setNicknameAvailable] = useState(null);
   const [profileImage, setProfileImage] = useState(null);
   const [previewUrl, setPreviewUrl] = useState("");
   const [loading, setLoading] = useState(false);
@@ -62,8 +69,12 @@ const SetNickname = () => {
       return;
     }
 
-    if (nicknameAvailable === false) {
-      alert("닉네임이 중복되었습니다. 다른 닉네임을 입력해주세요.");
+    // ✅ 닉네임 중복 재검사
+    const q = query(collection(db, "users"), where("name", "==", nickname));
+    const snapshot = await getDocs(q);
+    const isDuplicate = !snapshot.empty;
+    if (isDuplicate) {
+      alert("이미 사용 중인 닉네임입니다. 다른 닉네임을 입력해주세요.");
       return;
     }
 
@@ -115,7 +126,7 @@ const SetNickname = () => {
           value={nickname}
           onChange={(e) => {
             setNickname(e.target.value);
-            setNicknameAvailable(null); // 입력 바뀌면 초기화
+            setNicknameAvailable(null);
           }}
           className="border px-3 py-2 rounded w-full mb-2"
         />
@@ -148,7 +159,7 @@ const SetNickname = () => {
 
         <button
           onClick={handleSubmit}
-          disabled={loading || nicknameAvailable === false}
+          disabled={loading}
           className="bg-green-600 text-white w-full py-2 rounded disabled:opacity-50"
         >
           {loading ? "저장 중..." : "저장하기"}

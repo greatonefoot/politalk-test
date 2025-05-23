@@ -1,3 +1,4 @@
+// src/components/pages/SignupPage.jsx
 import React, { useEffect, useState } from "react";
 import { auth, db } from "../../firebase";
 import {
@@ -13,10 +14,12 @@ import { useNavigate } from "react-router-dom";
 const SignupPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [step, setStep] = useState("email");
+  const [step, setStep] = useState("email"); // "email" or "password"
   const [processing, setProcessing] = useState(false);
+  const [agreed, setAgreed] = useState(false); // ✅ 약관 동의 여부
   const navigate = useNavigate();
 
+  // 로그인된 사용자라면 인증링크 없이 접근 못하도록 차단
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
       const isEmailLink = isSignInWithEmailLink(auth, window.location.href);
@@ -27,6 +30,7 @@ const SignupPage = () => {
     return () => unsubscribe();
   }, [navigate]);
 
+  // 이메일 인증 링크 클릭 시 → 비밀번호 설정 화면
   useEffect(() => {
     const url = window.location.href;
     const urlEmail = new URLSearchParams(window.location.search).get("email");
@@ -41,6 +45,7 @@ const SignupPage = () => {
   const handleSendEmail = async (e) => {
     e.preventDefault();
     if (!email) return alert("이메일을 입력해주세요.");
+    if (!agreed) return alert("이용약관 및 개인정보 처리방침에 동의해주세요.");
 
     const actionCodeSettings = {
       url: `${window.location.origin}/signup?email=${encodeURIComponent(email)}`,
@@ -91,7 +96,7 @@ const SignupPage = () => {
         <h1 className="text-2xl font-bold text-center mb-4">회원가입</h1>
 
         {step === "email" && (
-          <form onSubmit={handleSendEmail} className="space-y-3">
+          <form onSubmit={handleSendEmail} className="space-y-4">
             <input
               type="email"
               placeholder="이메일 입력"
@@ -100,6 +105,21 @@ const SignupPage = () => {
               className="w-full border px-3 py-2 rounded"
               required
             />
+
+            <div className="flex items-start gap-2 text-sm text-gray-700">
+              <input
+                id="agree"
+                type="checkbox"
+                checked={agreed}
+                onChange={(e) => setAgreed(e.target.checked)}
+                className="mt-1"
+              />
+              <label htmlFor="agree" className="leading-5">
+                <a href="/terms" target="_blank" className="underline text-black">이용약관</a> 및{" "}
+                <a href="/privacy" target="_blank" className="underline text-black">개인정보 처리방침</a>에 동의합니다.
+              </label>
+            </div>
+
             <button
               type="submit"
               className="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700"

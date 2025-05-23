@@ -27,8 +27,6 @@ const LoginPage = () => {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
-      if (!user.emailVerified) return alert("이메일 인증이 필요합니다.");
-
       const userRef = doc(db, "users", user.uid);
       const docSnap = await getDoc(userRef);
 
@@ -57,8 +55,17 @@ const LoginPage = () => {
       alert("로그인 성공!");
       navigate("/");
     } catch (error) {
-      alert("오류: " + error.message);
-    }
+  if (error.code === "auth/user-not-found") {
+    alert("존재하지 않는 이메일입니다.");
+  } else if (error.code === "auth/wrong-password") {
+    alert("비밀번호가 올바르지 않습니다.");
+  } else if (error.code === "auth/invalid-email") {
+    alert("이메일 형식이 잘못되었습니다.");
+  } else {
+    alert("오류: " + error.message);
+  }
+}
+
   };
 
   const handleResetPassword = async () => {

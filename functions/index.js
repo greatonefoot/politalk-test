@@ -52,6 +52,15 @@ exports.kakaoLogin = kakaoLogin;
 
 // ✅ 네이버 로그인 함수
 exports.naverLogin = functions.https.onRequest((req, res) => {
+  // ✅ Preflight OPTIONS 요청 먼저 처리
+  if (req.method === "OPTIONS") {
+    res.set("Access-Control-Allow-Origin", "*");
+    res.set("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+    res.set("Access-Control-Allow-Headers", "Content-Type");
+    res.status(204).send("");
+    return;
+  }
+
   cors(req, res, async () => {
     try {
       const { code, state } = req.query;

@@ -268,6 +268,8 @@ const renderMainImages = (post) =>
 
 
     <div className="text-sm font-bold truncate">{p.title}</div>
+    <div className="text-sm font-bold truncate">{p.title}</div>
+
     <div className="text-xs text-gray-600 mb-1">
       {authorData[p.id] || "익명"} · 댓글 {commentCounts[p.id] || 0} · 조회 {p.views || 0}
     </div>
@@ -317,7 +319,7 @@ const renderMainImages = (post) =>
 <div className="relative overflow-visible bg-white p-3 pt-6 rounded border border-gray-300 hover:bg-gray-50 transition">
 
 {isToday(p.createdAt) && (
-  <div className="absolute -top-[10px] -left-[30px] px-2 py-[2px] bg-yellow-100 text-yellow-800 text-[10px] font-bold rotate-[-45deg] shadow z-20 w-fit">
+  <div className="absolute -top-[6px] -left-[24px] px-2 py-[2px] bg-yellow-100 text-yellow-800 text-[10px] font-bold rotate-[-45deg] shadow z-20 w-fit">
     NEW
   </div>
 )}

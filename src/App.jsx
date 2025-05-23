@@ -98,7 +98,7 @@ function AppWrapper() {
         <Route path="/" element={<Home />} />
         <Route path="/post/:postId" element={isMobile ? <VotePageMobile /> : <VotePage />} />
         <Route path="/login" element={<LoginPage />} />
-        <Route path="/signup" element={<SignupPage />} />
+        <Route path="/signup-email" element={<SignupPage />} />
         <Route path="/signup-success" element={<SignupSuccessPage />} />
         <Route path="/set-nickname" element={<SetNickname />} />
         <Route path="/terms" element={<TermsPage />} />

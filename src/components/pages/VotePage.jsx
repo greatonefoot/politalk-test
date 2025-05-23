@@ -231,11 +231,12 @@ const VotePage = () => {
               <div key={idx} className={`bg-white rounded-xl shadow-md overflow-hidden w-full max-w-xs transition transform hover:scale-105 ${votedOption === idx ? "ring-2 ring-[#C8A97E]" : ""}`}>
                 {opt.imageUrl && (
                   <img
-                    src={opt.imageUrl}
-                    alt={opt.label || opt.text}
-                    className="w-full h-48 object-cover cursor-pointer"
-                    onClick={() => handleVote(idx)}
-                  />
+  src={opt.imageUrl}
+  alt={opt.label || opt.text}
+  className="w-full object-contain max-h-[300px] bg-white cursor-pointer rounded-t"
+  onClick={() => handleVote(idx)}
+/>
+
                 )}
                 <div className="p-4 text-center">
                   <p className="font-semibold text-lg mb-2">
@@ -330,12 +331,13 @@ const VotePage = () => {
                     {isVisible ? (
                       <>
                         <div className="sticky top-0 z-10 bg-opacity-70 bg-inherit flex justify-between items-center mb-2 py-1 px-1 backdrop-blur">
-                          <button
-                            onClick={() => toggleSection(idx)}
-                            className="text-sm font-semibold text-[#4B3621] underline flex items-center gap-1 hover:text-[#3A2A1A]"
-                          >
-                            🔽 댓글 숨기기
-                          </button>
+                       <button
+  onClick={() => toggleSection(idx)}
+  className="text-sm font-semibold text-[#4B3621] underline flex items-center gap-1 hover:text-[#3A2A1A]"
+>
+  🔽 {opt.label || opt.text || `선택지 ${idx + 1}`} 숨기기
+</button>
+
                           <span className="text-xs text-gray-500">{Math.round(rawPercent)}%</span>
                         </div>
 
@@ -354,12 +356,12 @@ const VotePage = () => {
                         />
                       </>
                     ) : (
-                      <button
-                        onClick={() => toggleSection(idx)}
-                        className="text-sm font-semibold text-[#4B3621] underline hover:text-[#3A2A1A]"
-                      >
-                        🔼 댓글 보기
-                      </button>
+                   <button
+  onClick={() => toggleSection(idx)}
+  className="text-sm font-semibold text-[#4B3621] underline hover:text-[#3A2A1A]"
+>
+  🔼 {opt.label || opt.text || `선택지 ${idx + 1}`} 보기
+</button>
                     )}
                   </div>
                 );

@@ -123,7 +123,7 @@ const LoginPage = () => {
         </form>
 
         <div className="flex justify-between text-sm">
-          <Link to="/signup-email" className="text-blue-600">회원가입 하기</Link>
+          <Link to="/signup" className="text-blue-600">회원가입 하기</Link>
           <button onClick={handleResetPassword} className="text-red-600">비밀번호 재설정</button>
         </div>
 

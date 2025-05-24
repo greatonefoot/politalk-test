@@ -203,8 +203,20 @@ const CreateTopic = () => {
         )
       );
 
-      // ⛔ 여기까지만 코드, 아래 return은 2/2에서 줌!
-      // 데이터 저장은 여기서 진행 가능 (원하면 추가 가능)
+await addDoc(collection(db, "posts"), {
+  title,
+  content,
+  authorId: authorUid,
+  createdAt: new Date(),
+  thumbnailUrl: uploadedThumbnail,
+  mainImages: uploadedMainImages.filter(Boolean),
+  options: options.map((opt, i) => ({
+    text: opt.text,
+    imageUrl: uploadedOptionImages[i] || null,
+    position: opt.position,
+  })),
+});
+
     } finally {
       setIsUploading(false);
     }

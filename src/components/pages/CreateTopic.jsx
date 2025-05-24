@@ -418,13 +418,15 @@ return (
     </button>
   </div>
 )}
-<button
-  type="button"
-  onClick={() => handleRemoveOption(idx)}
-  className="mt-1 text-red-500 text-sm underline"
->
-  ❌ 선택지 삭제
-</button>
+{idx >= 2 && (
+  <button
+    type="button"
+    onClick={() => handleRemoveOption(idx)}
+    className="mt-1 text-red-500 text-sm underline"
+  >
+  삭제
+  </button>
+)}
 
 </div>
 

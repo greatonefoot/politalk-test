@@ -111,7 +111,7 @@ const VotePageMobile = () => {
   }
 
   return (
-    <div className="bg-[#fdfaf6] min-h-screen pb-10">
+    <div className="bg-white min-h-screen pb-10">
       <Header />
       <div className="w-full max-w-[480px] mx-auto p-4">
         {voteData?.title && (

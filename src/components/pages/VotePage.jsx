@@ -194,15 +194,19 @@ const VotePage = () => {
       <HotPostsSidebar />
       <main className="mt-20 px-4 flex flex-col items-center max-w-screen-xl mx-auto">
         <div className="w-full">
-          <h1 className="text-3xl font-extrabold text-center text-[#4B3621] mb-2">
-            {voteData?.title || "제목 없음"}
-          </h1>
+        <div className="bg-white border border-gray-200 shadow-md rounded-xl px-8 py-6 max-w-3xl mx-auto mb-12">
+  <h1 className="text-3xl font-extrabold text-center text-[#4B3621] mb-4">
+    🗳️ {voteData?.title || "제목 없음"}
+  </h1>
 
-          {voteData.content && (
-            <p className="text-lg text-center text-[#333] leading-relaxed mb-6 whitespace-pre-line">
-              {voteData.content}
-            </p>
-          )}
+  {voteData?.content && (
+    <p className="text-lg text-gray-700 leading-relaxed whitespace-pre-line text-center">
+      {voteData.content}
+    </p>
+  )}
+</div>
+
+
 
           {voteData.mainImages?.length > 0 && (
             <div className="w-full max-w-2xl mx-auto mb-6">

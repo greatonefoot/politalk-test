@@ -90,6 +90,8 @@ const CommentSection = ({ postId, optionIndex, votePercent, myVote }) => {
 
   const inputRef = useRef();
   const fileInputRef = useRef();
+  const observerRef = useRef(); // ✅ 댓글 하단 요소 감지용
+
 
   const authorId = useMemo(() => {
     let id = localStorage.getItem("anon-id");
@@ -109,6 +111,24 @@ const CommentSection = ({ postId, optionIndex, votePercent, myVote }) => {
     fetchComments(true);
     fetchBestComments();
   }, [postId, optionIndex, sortType]);
+
+  useEffect(() => {
+  if (!observerRef.current || !hasMore) return;
+
+  const observer = new IntersectionObserver(
+    (entries) => {
+      if (entries[0].isIntersecting && !loading) {
+        fetchComments(false); // 👈 다음 댓글 자동 로딩
+      }
+    },
+    { threshold: 1.0 }
+  );
+
+  observer.observe(observerRef.current);
+
+  return () => observer.disconnect(); // 👈 정리
+}, [observerRef, hasMore, loading]);
+
 
   const fetchPost = async () => {
     const postSnap = await getDoc(doc(db, "posts", postId));
@@ -696,10 +716,9 @@ try {
         ))}
         {loading && <div className="text-center text-sm text-gray-400">로딩 중...</div>}
         {hasMore && !loading && (
-          <div className="text-center mt-4">
-            <button onClick={() => fetchComments(false)} className="text-[#6B4D33] text-sm hover:underline">더 보기 ▼</button>
-          </div>
-        )}
+  <div ref={observerRef} className="h-10" />
+)}
+
       </div>
 
       {/* 댓글 작성 창 */}

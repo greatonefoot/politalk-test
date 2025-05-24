@@ -106,6 +106,17 @@ const CreateTopic = () => {
   };
 
   const handleAddOption = () => {
+    // ✅ 선택지 삭제 함수
+const handleRemoveOption = (index) => {
+  if (options.length <= 2) {
+    alert("선택지는 최소 2개 이상이어야 합니다.");
+    return;
+  }
+  const updated = [...options];
+  updated.splice(index, 1);
+  setOptions(updated);
+};
+
     if (options.length < 6) {
       setOptions(prev => [...prev, { text: "", file: null, previewUrl: null, position: { x: 50, y: 50 } }]);
     } else {
@@ -363,7 +374,8 @@ return (
       </div>
 
       {options.map((opt, idx) => (
-        <div key={idx} className="space-y-2">
+  <div key={idx} className="space-y-2 border p-2 rounded bg-gray-50">
+
           <label className="text-sm font-semibold">🎯 선택지 {idx + 1}</label>
           <input
             type="text"
@@ -406,7 +418,16 @@ return (
     </button>
   </div>
 )}
+<button
+  type="button"
+  onClick={() => handleRemoveOption(idx)}
+  className="mt-1 text-red-500 text-sm underline"
+>
+  ❌ 선택지 삭제
+</button>
+
 </div>
+
 ))}   
 
 

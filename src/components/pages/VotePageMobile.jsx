@@ -114,17 +114,21 @@ const VotePageMobile = () => {
     <div className="bg-white min-h-screen pb-10">
       <Header />
       <div className="w-full max-w-[480px] mx-auto p-4">
-        {voteData?.title && (
-          <h1 className="text-xl font-bold text-center text-[#4B3621] mb-2">
-            {voteData.title}
-          </h1>
-        )}
+        {(voteData?.title || voteData?.content) && (
+  <div className="bg-white border border-gray-200 shadow-sm rounded-lg px-4 py-5 mb-6">
+    {voteData?.title && (
+      <h1 className="text-lg font-extrabold text-[#4B3621] text-center mb-3">
+        🗳️ {voteData.title}
+      </h1>
+    )}
+    {voteData?.content && (
+      <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line text-center">
+        {voteData.content}
+      </p>
+    )}
+  </div>
+)}
 
-        {voteData?.content && (
-          <p className="text-sm text-center text-[#333] leading-relaxed mb-4 whitespace-pre-line">
-            {voteData.content}
-          </p>
-        )}
 
       {voteData.mainImages?.length > 0 && (
   <div className="mb-4">

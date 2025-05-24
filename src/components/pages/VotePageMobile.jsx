@@ -118,7 +118,7 @@ const VotePageMobile = () => {
   <div className="bg-white border border-gray-200 shadow-sm rounded-lg px-4 py-5 mb-6">
     {voteData?.title && (
       <h1 className="text-lg font-extrabold text-[#4B3621] text-center mb-3">
-        🗳️ {voteData.title}
+         {voteData.title}
       </h1>
     )}
     {voteData?.content && (
@@ -128,7 +128,6 @@ const VotePageMobile = () => {
     )}
   </div>
 )}
-
 
       {voteData.mainImages?.length > 0 && (
   <div className="mb-4">

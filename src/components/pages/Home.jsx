@@ -318,7 +318,7 @@ const renderMainImages = (post) =>
 <div className="relative overflow-visible bg-white p-3 pt-6 rounded border border-gray-300 hover:bg-gray-50 transition">
 
 {isToday(p.createdAt) && (
-  <div className="absolute -top-[6px] -left-[24px] px-2 py-[2px] bg-yellow-100 text-yellow-800 text-[10px] font-bold rotate-[-45deg] shadow z-20 w-fit">
+  <div className="absolute top-2 right-2 bg-[#EADDC6] text-[#4B3621] text-xs font-semibold px-2 py-0.5 rounded-full shadow-sm">
     NEW
   </div>
 )}

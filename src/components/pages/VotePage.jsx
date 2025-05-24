@@ -196,7 +196,7 @@ const VotePage = () => {
         <div className="w-full">
         <div className="bg-white border border-gray-200 shadow-md rounded-xl px-8 py-6 max-w-3xl mx-auto mb-12">
   <h1 className="text-3xl font-extrabold text-center text-[#4B3621] mb-4">
-    🗳️ {voteData?.title || "제목 없음"}
+     {voteData?.title || "제목 없음"}
   </h1>
 
   {voteData?.content && (
